@@ -1,0 +1,37 @@
+<!-- templates/proyectos.html -->
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    {% load static %}
+    <meta charset="UTF-8" />
+    <title>Proyectos</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
+  </head>
+  <body>
+    <header class="header">
+      <img src="{% static 'images/logo.png' %}" alt="Reveloper" width="100" />
+      <nav>
+        <ul>
+          <li><a href="{% url 'home' %}">Inicio</a></li>
+          <li><a href="{% url 'usuarios' %}">Usuarios</a></li>
+          <li><a href="{% url 'proyectos' %}">Proyectos</a></li>
+          <li><a href="{% url 'evaluaciones' %}">Evaluaciones</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main>
+      <h1>Lista de Proyectos</h1>
+      <ul>
+        {% for proyecto in proyectos %}
+        <li>
+          <h2>{{ proyecto.nombre }}</h2>
+          <p>{{ proyecto.descripcion }}</p>
+          <p><strong>Estado:</strong> {{ proyecto.estado }}</p>
+          <p><strong>Fecha de Inicio:</strong> {{ proyecto.fecha_inicio }}</p>
+          <p><strong>Fecha de Fin:</strong> {{ proyecto.fecha_fin }}</p>
+        </li>
+        {% endfor %}
+      </ul>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,27 @@
+<!-- templates/usuarios.html -->
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    {% load static %}
+    <meta charset="UTF-8" />
+    <title>Usuarios</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
+  </head>
+  <body>
+    <header class="header">
+      <img src="{% static 'images/logo.png' %}" alt="Reveloper" width="100" />
+      <nav>
+        <ul>
+          <li><a href="{% url 'home' %}">Inicio</a></li>
+          <li><a href="{% url 'usuarios' %}">Usuarios</a></li>
+          <li><a href="{% url 'proyectos' %}">Proyectos</a></li>
+          <li><a href="{% url 'evaluaciones' %}">Evaluaciones</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main>
+      <h1>Gestión de Usuarios</h1>
+      <!-- Contenido específico de la página de usuarios -->
+    </main>
+  </body>
+</html>

@@ -26,7 +26,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'Reveloper',  # Aplicación instalada
 ]
+
+AUTH_USER_MODEL = 'Reveloper.Usuario'  # Configuración del usuario
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

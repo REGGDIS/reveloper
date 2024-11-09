@@ -6,8 +6,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', auth_views.LoginView.as_view(),
          name='login'),  # Ruta para el login
-    # Incluye las URLs de autenticación
+    # URLs de autenticación
     path('accounts/', include('django.contrib.auth.urls')),
-    # Incluye las URLs de tu aplicación
+    # URLs de la aplicación
     path('reveloper/', include('Reveloper.urls')),
 ]
