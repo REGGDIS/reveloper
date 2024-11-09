@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('home/', views.home, name='home'),  # Ruta para la página de inicio
@@ -14,4 +15,6 @@ urlpatterns = [
     path('print-template-dirs/', views.print_template_dirs,
          # Ruta para verificar plantillas (temporal)
          name='print_template_dirs'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
+    path('login/', auth_views.LoginView.as_view(), name='login'),
 ]

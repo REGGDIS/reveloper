@@ -1,10 +1,16 @@
-<!-- templates/home.html -->
 {% extends 'base.html' %}
 
 {% block title %}Inicio{% endblock %}
 
 {% block content %}
 <h1>Bienvenido al Dashboard, {{ usuario.first_name }} {{ usuario.last_name }}</h1>
+
+<!-- Formulario de cerrar sesión -->
+<form id="logout-form" action="{% url 'logout' %}" method="post" style="display: none;">
+    {% csrf_token %}
+</form>
+<a href="#" class="btn btn-secondary" onclick="document.getElementById('logout-form').submit();">Cerrar Sesión</a>
+
 <div class="cards">
     <a href="{% url 'proyectos' %}" class="card">
         <h2>Proyectos</h2>
