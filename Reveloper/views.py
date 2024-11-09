@@ -4,8 +4,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.forms import AuthenticationForm
-# Importa Proyecto y TareaPorDesarrollar
-from .models import Proyecto, TareaPorDesarrollar
+from .models import Proyecto, TareaPorDesarrollar, Usuario
 
 # Vista para el inicio de sesión personalizado
 
@@ -40,7 +39,8 @@ def print_template_dirs(request):
 
 @login_required
 def usuarios(request):
-    return render(request, 'usuarios.html')
+    usuarios = Usuario.objects.all()
+    return render(request, 'usuarios.html', {'usuarios': usuarios})
 
 # Vista para la página de proyectos, accesible solo para usuarios autenticados
 
