@@ -25,7 +25,10 @@ def custom_login(request):
 
 @login_required
 def home(request):
-    return render(request, 'home.html')
+    context = {
+        'usuario': request.user
+    }
+    return render(request, 'home.html', context)
 
 # Vista para imprimir las carpetas de plantillas configuradas
 

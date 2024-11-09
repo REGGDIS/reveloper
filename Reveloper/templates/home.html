@@ -4,7 +4,7 @@
 {% block title %}Inicio{% endblock %}
 
 {% block content %}
-<h1>Bienvenido al Dashboard</h1>
+<h1>Bienvenido al Dashboard, {{ usuario.first_name }} {{ usuario.last_name }}</h1>
 <div class="cards">
     <a href="{% url 'proyectos' %}" class="card">
         <h2>Proyectos</h2>
