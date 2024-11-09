@@ -1,28 +1,18 @@
-<!-- templates/usuarios.html -->
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    {% load static %}
-    <meta charset="UTF-8" />
-    <title>Evaluaciones</title>
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
-  </head>
-  <body>
-    <header class="header">
-      {% load static %}
-      <img src="{% static 'images/logo.png' %}" alt="Reveloper" width="100" />
-      <nav>
-        <ul>
-          <li><a href="{% url 'home' %}">Inicio</a></li>
-          <li><a href="{% url 'usuarios' %}">Usuarios</a></li>
-          <li><a href="{% url 'proyectos' %}">Proyectos</a></li>
-          <li><a href="{% url 'evaluaciones' %}">Evaluaciones</a></li>
-        </ul>
-      </nav>
-    </header>
-    <main>
-      <h1>Gestión de Evaluaciones</h1>
-      <!-- Contenido específico de la página de evaluaciones -->
-    </main>
-  </body>
-</html>
+<!-- templates/evaluaciones.html -->
+{% extends 'base.html' %}
+
+{% block title %}Evaluaciones{% endblock %}
+
+{% block content %}
+<h1>Gestión de Evaluaciones</h1>
+<ul>
+    {% for evaluacion in evaluaciones %}
+        <li>
+            <h2>Evaluación de {{ evaluacion.proyecto.nombre }}</h2>
+            <p><strong>Calificación:</strong> {{ evaluacion.calificacion }}</p>
+            <p><strong>Comentarios:</strong> {{ evaluacion.comentarios }}</p>
+            <p><strong>Fecha de Evaluación:</strong> {{ evaluacion.fecha_evaluacion }}</p>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}

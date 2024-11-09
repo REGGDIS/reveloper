@@ -1,28 +1,19 @@
-<!-- templates/usuarios.html -->
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    {% load static %}
-    <meta charset="UTF-8" />
-    <title>Tareas</title>
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
-  </head>
-  <body>
-    <header class="header">
-      {% load static %}
-      <img src="{% static 'images/logo.png' %}" alt="Reveloper" width="100" />
-      <nav>
-        <ul>
-          <li><a href="{% url 'home' %}">Inicio</a></li>
-          <li><a href="{% url 'usuarios' %}">Usuarios</a></li>
-          <li><a href="{% url 'proyectos' %}">Proyectos</a></li>
-          <li><a href="{% url 'evaluaciones' %}">Evaluaciones</a></li>
-        </ul>
-      </nav>
-    </header>
-    <main>
-      <h1>Gestión de Tareas</h1>
-      <!-- Contenido específico de la página de evaluaciones -->
-    </main>
-  </body>
-</html>
+<!-- templates/tareas.html -->
+{% extends 'base.html' %}
+
+{% block title %}Tareas{% endblock %}
+
+{% block content %}
+<h1>Gestión de Tareas</h1>
+<ul>
+    {% for tarea in tareas %}
+        <li>
+            <h2>{{ tarea.titulo }}</h2>
+            <p>{{ tarea.descripcion }}</p>
+            <p><strong>Estado:</strong> {{ tarea.estado }}</p>
+            <p><strong>Fecha de Creación:</strong> {{ tarea.fecha_creacion }}</p>
+            <p><strong>Fecha de Vencimiento:</strong> {{ tarea.fecha_vencimiento }}</p>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}

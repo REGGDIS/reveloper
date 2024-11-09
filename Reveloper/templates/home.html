@@ -1,39 +1,22 @@
 <!-- templates/home.html -->
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    {% load static %}
-    <meta charset="UTF-8" />
-    <title>Dashboard</title>
-        <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
-  </head>
-  <body>
-    <header class="header">
-      <img src="{% static 'images/logo.png' %}" alt="Reveloper" width="100" />
-      <nav>
-        <ul>
-          <li><a href="{% url 'home' %}">Inicio</a></li>
-          <li><a href="{% url 'usuarios' %}">Usuarios</a></li>
-          <li><a href="{% url 'proyectos' %}">Proyectos</a></li>
-          <li><a href="{% url 'evaluaciones' %}">Evaluaciones</a></li>
-        </ul>
-      </nav>
-    </header>
-    <main>
-      <div class="cards">
-        <a href="{% url 'proyectos' %}" class="card">
-          <h2>Proyectos</h2>
-          <p>Gestiona tus proyectos</p>
-        </a>
-        <a href="{% url 'tareas_por_desarrollar' %}" class="card">
-          <h2>Tareas</h2>
-          <p>Gestiona tus tareas</p>
-        </a>
-        <a href="{% url 'evaluaciones' %}" class="card">
-          <h2>Evaluaciones</h2>
-          <p>Gestiona tus evaluaciones</p>
-        </a>
-      </div>
-    </main>
-  </body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+<h1>Bienvenido al Dashboard</h1>
+<div class="cards">
+    <a href="{% url 'proyectos' %}" class="card">
+        <h2>Proyectos</h2>
+        <p>Gestiona tus proyectos</p>
+    </a>
+    <a href="{% url 'tareas_por_desarrollar' %}" class="card">
+        <h2>Tareas</h2>
+        <p>Gestiona tus tareas</p>
+    </a>
+    <a href="{% url 'evaluaciones' %}" class="card">
+        <h2>Evaluaciones</h2>
+        <p>Gestiona tus evaluaciones</p>
+    </a>
+</div>
+{% endblock %}
