@@ -13,6 +13,7 @@
             <p><strong>Fecha de Creación:</strong> {{ tarea.fecha_creacion }}</p>
             <p><strong>Fecha de Vencimiento:</strong> {{ tarea.fecha_vencimiento }}</p>
             <p><strong>Proyecto:</strong> {{ tarea.proyecto.nombre }}</p>
+            <p><strong>Asignado a:</strong> {{ tarea.usuario.first_name }} {{ tarea.usuario.last_name }}</p>
         </li>
     {% empty %}
         <li>No tienes tareas asignadas.</li>
