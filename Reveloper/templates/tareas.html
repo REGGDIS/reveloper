@@ -14,6 +14,9 @@
             <p><strong>Fecha de Creación:</strong> {{ tarea.fecha_creacion }}</p>
             <p><strong>Fecha de Vencimiento:</strong> {{ tarea.fecha_vencimiento }}</p>
         </li>
+    {% empty %}
+        <li>No tienes tareas asignadas.</li>
     {% endfor %}
 </ul>
 {% endblock %}
+

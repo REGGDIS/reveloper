@@ -70,7 +70,12 @@ def evaluaciones(request):
 
 @login_required
 def tareas_por_desarrollar(request):
-    tareas = TareaPorDesarrollar.objects.all()
+    if request.user.is_superuser:
+        # Si es administrador, mostrar todas las tareas
+        tareas = TareaPorDesarrollar.objects.all()
+    else:
+        # Si no es administrador, mostrar solo las tareas asignadas al usuario
+        tareas = TareaPorDesarrollar.objects.filter(usuario=request.user)
     return render(request, 'tareas.html', {'tareas': tareas})
 
 
