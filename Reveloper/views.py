@@ -72,10 +72,11 @@ def evaluaciones(request):
 def tareas_por_desarrollar(request):
     if request.user.is_superuser:
         # Si es administrador, mostrar todas las tareas
-        tareas = TareaPorDesarrollar.objects.all()
+        tareas = TareaPorDesarrollar.objects.select_related('proyecto').all()
     else:
         # Si no es administrador, mostrar solo las tareas asignadas al usuario
-        tareas = TareaPorDesarrollar.objects.filter(usuario=request.user)
+        tareas = TareaPorDesarrollar.objects.select_related(
+            'proyecto').filter(usuario=request.user)
     return render(request, 'tareas.html', {'tareas': tareas})
 
 

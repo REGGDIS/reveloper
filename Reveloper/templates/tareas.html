@@ -1,4 +1,3 @@
-<!-- templates/tareas.html -->
 {% extends 'base.html' %}
 
 {% block title %}Tareas{% endblock %}
@@ -13,6 +12,7 @@
             <p><strong>Estado:</strong> {{ tarea.estado }}</p>
             <p><strong>Fecha de Creación:</strong> {{ tarea.fecha_creacion }}</p>
             <p><strong>Fecha de Vencimiento:</strong> {{ tarea.fecha_vencimiento }}</p>
+            <p><strong>Proyecto:</strong> {{ tarea.proyecto.nombre }}</p>
         </li>
     {% empty %}
         <li>No tienes tareas asignadas.</li>
