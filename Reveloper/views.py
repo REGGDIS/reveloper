@@ -1,10 +1,15 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.conf import settings
 from django.http import HttpResponse
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.forms import AuthenticationForm
 from .models import Proyecto, TareaPorDesarrollar, Usuario
+from .forms import TareaPorDesarrollarForm
+
+
+def es_admin(user):
+    return user.is_superuser
 
 # Vista para el inicio de sesión personalizado
 
@@ -67,3 +72,34 @@ def evaluaciones(request):
 def tareas_por_desarrollar(request):
     tareas = TareaPorDesarrollar.objects.all()
     return render(request, 'tareas.html', {'tareas': tareas})
+
+
+@login_required
+@user_passes_test(es_admin)
+def crear_tarea(request):
+    if request.method == 'POST':
+        form = TareaPorDesarrollarForm(request.POST)
+        if form.is_valid():
+            tarea = form.save(commit=False)
+            tarea.usuario = request.user  # Asignar el usuario autenticado
+            tarea.save()  # Guardar la tarea con el usuario asignado
+            # Redirige a la lista de proyectos o donde prefieras
+            return redirect('proyectos')
+    else:
+        form = TareaPorDesarrollarForm()
+    return render(request, 'crear_tarea.html', {'form': form})
+
+
+@login_required
+@user_passes_test(es_admin)
+def editar_tarea(request, tarea_id):
+    tarea = get_object_or_404(TareaPorDesarrollar, pk=tarea_id)
+    if request.method == 'POST':
+        form = TareaPorDesarrollarForm(request.POST, instance=tarea)
+        if form.is_valid():
+            form.save()
+            # Redirige a la lista de proyectos o donde prefieras
+            return redirect('proyectos')
+        else:
+            form = TareaPorDesarrollarForm(instance=tarea)
+        return render(request, 'editar_tarea.html', {'form': form})
