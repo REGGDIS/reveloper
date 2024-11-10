@@ -11,3 +11,7 @@ urlpatterns = [
     # URLs de la aplicación
     path('reveloper/', include('Reveloper.urls')),
 ]
+
+admin.site.index_title = "Reveloper"
+admin.site.site_header = "Reveloper Admin"
+admin.site.site_title = "Sitio Reveloper"
