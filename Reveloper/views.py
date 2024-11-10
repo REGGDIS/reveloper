@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.conf import settings
 from django.http import HttpResponse
 from django.contrib.auth import login as auth_login
+from django.contrib.auth import logout
 from django.contrib.auth.forms import AuthenticationForm
 from .models import Proyecto, TareaPorDesarrollar, Usuario
 from .forms import TareaPorDesarrollarForm
@@ -24,6 +25,11 @@ def custom_login(request):
     else:
         form = AuthenticationForm()
     return render(request, 'registration/login.html', {'form': form})
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')
 
 # Vista protegida para el home, accesible solo para usuarios autenticados
 

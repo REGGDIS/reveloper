@@ -15,7 +15,7 @@ urlpatterns = [
     path('print-template-dirs/', views.print_template_dirs,
          # Ruta para verificar plantillas (temporal)
          name='print_template_dirs'),
-    path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
+    path('logout/', views.logout_view, name='logout'),
     path('login/', auth_views.LoginView.as_view(), name='login'),
     path('crear_tarea/', views.crear_tarea, name='crear_tarea'),
     path('editar_tarea/<int:tarea_id>/',
