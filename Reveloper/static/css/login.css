@@ -9,15 +9,19 @@ body.login {
 }
 
 .container {
-  background-color: #ffffff;
+  background-color: #343a40;
   padding: 20px 40px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
+
+  label {
+    color: white;
+  }
 }
 
 h2 {
-  color: #4caf50;
+  color: white;
 }
 
 form {
@@ -34,7 +38,7 @@ form input[type="password"] {
 }
 
 button {
-  background-color: #4caf50;
+  background-color: #007bff;
   color: white;
   padding: 10px;
   border: none;
@@ -43,5 +47,5 @@ button {
 }
 
 button:hover {
-  background-color: #45a049;
+  background-color: #0151a7;
 }

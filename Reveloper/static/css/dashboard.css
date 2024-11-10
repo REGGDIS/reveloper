@@ -5,7 +5,7 @@ body {
 }
 
 .header {
-  background-color: #4caf50;
+  background-color: #343a40;
   color: white;
   padding: 10px 0;
   display: flex;
@@ -40,7 +40,7 @@ body {
 }
 
 .card {
-  background-color: #4caf50;
+  background-color: #138496;
   color: white;
   padding: 20px;
   text-align: center;
@@ -51,5 +51,5 @@ body {
 }
 
 .card:hover {
-  background-color: #45a049;
+  background-color: #0d5b67;
 }

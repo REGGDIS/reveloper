@@ -122,3 +122,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = '/reveloper/home/'  # URL redirigida
 LOGOUT_REDIRECT_URL = '/login/'  # URL a la que se redirige después de cerrar sesión
+
+JAZZMIN_SETTINGS = {
+    "login_logo": "img/logos/logo-reveloper.png",
+    "custom_css": "css/custom_admin.css",
+    "welcome_sign": "Login Admin Reveloper",
+    "site_logo": "img/logos/logo-reveloper.png",
+}
