@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout
 from django.contrib.auth.forms import AuthenticationForm
-from .models import Proyecto, TareaPorDesarrollar, Usuario
+from .models import Proyecto, TareaPorDesarrollar, Usuario, Evaluacion
 from .forms import TareaPorDesarrollarForm
 
 
@@ -69,7 +69,8 @@ def proyectos(request):
 
 @login_required
 def evaluaciones(request):
-    return render(request, 'evaluaciones.html')
+    evaluaciones = Evaluacion.objects.all()  # Recuperar todas las evaluaciones
+    return render(request, 'evaluaciones.html', {'evaluaciones': evaluaciones})
 
 # Vista para la página de tareas por desarrollar, accesible solo para usuarios autenticados
 

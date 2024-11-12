@@ -1,19 +1,20 @@
-<!-- templates/proyectos.html -->
 {% extends 'base.html' %}
 
 {% block title %}Proyectos{% endblock %}
 
 {% block content %}
-<h1>Lista de Proyectos</h1>
-<ul>
-    {% for proyecto in proyectos %}
-        <li>
-            <h2>{{ proyecto.nombre }}</h2>
-            <p>{{ proyecto.descripcion }}</p>
-            <p><strong>Estado:</strong> {{ proyecto.estado }}</p>
-            <p><strong>Fecha de Inicio:</strong> {{ proyecto.fecha_inicio }}</p>
-            <p><strong>Fecha de Fin:</strong> {{ proyecto.fecha_fin }}</p>
-        </li>
-    {% endfor %}
-</ul>
+<div class="container">
+    <h1>Proyectos en curso</h1>
+    <ul>
+        {% for proyecto in proyectos %}
+            <li>
+                <h2>{{ proyecto.nombre }}</h2>
+                <p>{{ proyecto.descripcion }}</p>
+                <p><strong>Estado:</strong> {{ proyecto.estado }}</p>
+                <p><strong>Fecha de Inicio:</strong> {{ proyecto.fecha_inicio }}</p>
+                <p><strong>Fecha de Fin:</strong> {{ proyecto.fecha_fin }}</p>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
 {% endblock %}

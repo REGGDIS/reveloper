@@ -1,5 +1,9 @@
 from django.db import models
+from django.conf import settings
+from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractUser
+from datetime import timedelta
+from django.utils import timezone
 
 # Creación de Modelos
 
@@ -57,12 +61,19 @@ class TareaDesarrollada(models.Model):
 
 
 class Evaluacion(models.Model):
-    id = models.CharField(max_length=100, primary_key=True)
-    fecha_evaluacion = models.DateField()
-    calificacion = models.DecimalField(max_digits=5, decimal_places=2)
-    comentarios = models.TextField(null=True, blank=True)
-    proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    titulo = models.CharField(
+        max_length=200, default="Título Predeterminado")  # Valor predeterminado
+    descripcion = models.TextField(
+        default="Descripción pendiente")  # Valor predeterminado
+    estado = models.CharField(
+        max_length=20, default="Pendiente")  # Valor predeterminado
+    fecha_creacion = models.DateTimeField(
+        default=timezone.now)  # Valor predeterminado
+    fecha_vencimiento = models.DateTimeField(
+        default=timezone.now() + timedelta(days=30))  # Valor predeterminado
+    proyecto = models.ForeignKey('Proyecto', on_delete=models.CASCADE)
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"Evaluación {self.id}"
+        return self.titulo

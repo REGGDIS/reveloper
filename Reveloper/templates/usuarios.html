@@ -1,18 +1,19 @@
-<!-- templates/usuarios.html -->
 {% extends 'base.html' %}
 
 {% block title %}Usuarios{% endblock %}
 
 {% block content %}
-<h1>Gestión de Usuarios</h1>
-<ul>
-    {% for usuario in usuarios %}
-        <li>
-            <h2>{{ usuario.nombre }} {{ usuario.apellido }}</h2>
-            <p><strong>Username:</strong> {{ usuario.username }}</p>
-            <p><strong>Email:</strong> {{ usuario.email }}</p>
-            <p><strong>Fecha de Creación:</strong> {{ usuario.fecha_creacion }}</p>
-        </li>
-    {% endfor %}
-</ul>
+<div class="container">
+    <h1>Usuarios en el sistema</h1>
+    <ul>
+        {% for usuario in usuarios %}
+            <li>
+                <h2>{{ usuario.username }}</h2>
+                <p><strong>Nombre:</strong> {{ usuario.first_name }} {{ usuario.last_name }}</p>
+                <p><strong>Email:</strong> {{ usuario.email }}</p>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
 {% endblock %}
+

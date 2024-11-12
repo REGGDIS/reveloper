@@ -1,18 +1,22 @@
-<!-- templates/evaluaciones.html -->
 {% extends 'base.html' %}
 
 {% block title %}Evaluaciones{% endblock %}
 
 {% block content %}
-<h1>Gestión de Evaluaciones</h1>
-<ul>
-    {% for evaluacion in evaluaciones %}
-        <li>
-            <h2>Evaluación de {{ evaluacion.proyecto.nombre }}</h2>
-            <p><strong>Calificación:</strong> {{ evaluacion.calificacion }}</p>
-            <p><strong>Comentarios:</strong> {{ evaluacion.comentarios }}</p>
-            <p><strong>Fecha de Evaluación:</strong> {{ evaluacion.fecha_evaluacion }}</p>
-        </li>
-    {% endfor %}
-</ul>
+<div class="container">
+    <h1>Evaluaciones</h1>
+    <ul>
+        {% for evaluacion in evaluaciones %}
+            <li>
+                <h2>{{ evaluacion.titulo }}</h2>
+                <p>{{ evaluacion.descripcion }}</p>
+                <p><strong>Estado:</strong> {{ evaluacion.estado }}</p>
+                <p><strong>Fecha de Creación:</strong> {{ evaluacion.fecha_creacion }}</p>
+                <p><strong>Fecha de Vencimiento:</strong> {{ evaluacion.fecha_vencimiento }}</p>
+                <p><strong>Proyecto:</strong> {{ evaluacion.proyecto.nombre }}</p>
+                <p><strong>Asignado a:</strong> {{ evaluacion.usuario.first_name }} {{ evaluacion.usuario.last_name }}</p>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
 {% endblock %}

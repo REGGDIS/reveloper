@@ -3,20 +3,28 @@
 {% block title %}Inicio{% endblock %}
 
 {% block content %}
-<h1>Bienvenido al Dashboard, {{ usuario.first_name }} {{ usuario.last_name }}</h1>
+<div class="container">
+    <h1>Bienvenido al Dashboard, {{ usuario.first_name }} {{ usuario.last_name }}</h1>
 
-<div class="cards">
-    <a href="{% url 'proyectos' %}" class="card">
-        <h2>Proyectos</h2>
-        <p>Gestiona tus proyectos</p>
-    </a>
-    <a href="{% url 'tareas_por_desarrollar' %}" class="card">
-        <h2>Tareas</h2>
-        <p>Gestiona tus tareas</p>
-    </a>
-    <a href="{% url 'evaluaciones' %}" class="card">
-        <h2>Evaluaciones</h2>
-        <p>Gestiona tus evaluaciones</p>
-    </a>
+    <div class="cards">
+        <a href="{% url 'proyectos' %}" class="card">
+            <h2>Proyectos</h2>
+            <p>Gestiona tus proyectos</p>
+        </a>
+        <a href="{% url 'tareas_por_desarrollar' %}" class="card">
+            <h2>Tareas</h2>
+            <p>Gestiona tus tareas</p>
+        </a>
+        <a href="{% url 'evaluaciones' %}" class="card">
+            <h2>Evaluaciones</h2>
+            <p>Gestiona tus evaluaciones</p>
+        </a>
+    </div>
+
+    {% if usuario.is_superuser %}
+        <div class="admin-link">
+            <a href="/admin/" class="btn btn-primary">Admin Django</a>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}
