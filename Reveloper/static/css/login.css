@@ -1,18 +1,29 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body.login {
   font-family: "Arial", sans-serif;
-  background-color: #f0f8ff;
+  background-color: #d8d8d8;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  height: calc(100vh - 20px);
   margin: 0;
+}
+
+.login img {
+  margin-bottom: 20px;
 }
 
 .container {
   background-color: #343a40;
   padding: 20px 40px;
   border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   text-align: center;
   width: 100%;
   max-width: 350px;
@@ -35,24 +46,21 @@ form {
 }
 
 form input[type="text"],
-form input[type="password"] {
+form input[type="password"],
+form button {
   display: block;
   margin-bottom: 15px;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
-  width: 300px;
+  width: 100%;
 }
 
 button {
   background-color: #007bff;
   color: white;
-  padding: 10px;
   border: none;
-  border-radius: 5px;
   cursor: pointer;
-  width: 100%;
-  margin-bottom: 15px;
 }
 
 button:hover {

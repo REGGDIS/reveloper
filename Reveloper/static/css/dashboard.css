@@ -1,82 +1,165 @@
+/* Estilos generales */
 body {
   font-family: Arial, sans-serif;
+  background-color: #d8d8d8 !important;
 }
 
+/* Estilos para el encabezado */
 .header {
   background-color: #343a40;
   color: white;
   padding: 5px 0;
   display: flex;
   align-items: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+
+  img {
+    margin-left: 20px;
+  }
+
+  h3 {
+    margin-left: 10px;
+  }
+
+  nav {
+    margin-left: auto;
+    margin-right: 20px;
+
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+
+      li {
+        margin-right: 30px;
+
+        a {
+          color: white;
+          text-decoration: none;
+
+          &.logout-link {
+            color: yellow;
+          }
+        }
+      }
+    }
+  }
 }
 
-.header img {
-  margin-left: 20px;
-}
-
-.header h3 {
-  margin-left: 10px;
-}
-
-.header nav {
-  margin-left: auto; /* Mueve el nav al extremo derecho */
-  margin-right: 20px;
-}
-
-.header nav ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-}
-
-.header nav ul li {
-  margin-right: 30px;
-}
-
-.header nav ul li a {
-  color: white;
-  text-decoration: none;
-}
-
-.header nav ul li a.logout-link {
-  color: yellow; /* Cambia el color del enlace de cerrar sesión a amarillo */
-}
-
+/* Estilos para las tarjetas */
 .cards {
   display: flex;
-  justify-content: center; /* Centramos las cards horizontalmente */
-  margin: 50px 0; /* Añadimos un margen superior e inferior para separar del borde */
-}
-
-.cards .card {
-  background-color: #138496; /* Color de fondo original */
-  color: white;
-  padding: 20px;
-  text-align: center;
-  border-radius: 8px;
-  width: 30%;
-  margin: 0 15px; /* Añadimos margen lateral entre las cards */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  text-decoration: none;
-}
-
-.cards .card:hover {
-  background-color: #0d5b67; /* Color de fondo al pasar el cursor */
-}
-
-.container h1 {
-  margin-top: 50px; /* Ajuste del margen superior del <h1> */
-}
-
-.admin-link {
-  display: flex;
   justify-content: center;
-  margin-top: 20px;
+  margin: 50px 0;
+
+  .card {
+    background-color: #138496;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    border-radius: 8px;
+    width: 30%;
+    margin: 0 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    text-decoration: none;
+
+    &:hover {
+      background-color: #0d5b67;
+    }
+  }
 }
 
-.container ul {
-  list-style-type: none; /* Elimina los puntos de lista */
-  padding: 0; /* Elimina el padding */
-  text-align: center; /* Centra el contenido */
+/* Estilos para el contenedor de título */
+.container {
+  h1 {
+    margin-top: 50px;
+  }
+
+  ul,
+  .user-list,
+  .project-list {
+    list-style-type: none;
+    padding: 0;
+    text-align: center;
+  }
+
+  .admin-link {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+}
+
+/* Estilos para los elementos de usuario y proyecto */
+.user-item,
+.project-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+
+  span {
+    flex: 1;
+    margin-right: 10px;
+    margin-bottom: 5px;
+  }
+
+  &.user-item {
+    background: #138496;
+    color: white;
+    border: 2px solid #ddd;
+  }
+
+  &.project-item {
+    background: #317fd2;
+    color: white;
+    border: 1px solid #ddd;
+  }
+}
+
+/* Estilos para las tareas */
+.task-container,
+.evaluation-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+
+  .task,
+  .evaluation-card {
+    flex: 1 1 calc(33% - 20px);
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+
+    &:hover {
+      transform: scale(1.02);
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    p {
+      margin: 0.5em 0;
+    }
+  }
+
+  .task {
+    background: #ed9393;
+  }
+
+  .evaluation-card {
+    background: rgb(251, 221, 181);
+
+    .calificacion {
+      font-size: 1.5em;
+      color: #ff5722;
+    }
+  }
 }

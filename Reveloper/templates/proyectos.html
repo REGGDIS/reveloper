@@ -1,20 +1,21 @@
 {% extends 'base.html' %}
 
-{% block title %}Proyectos{% endblock %}
+{% block title %}Lista de Proyectos{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1>Proyectos en curso</h1>
-    <ul>
+    <h1>Lista de Proyectos</h1>
+    <ul class="project-list">
         {% for proyecto in proyectos %}
-            <li>
-                <h2>{{ proyecto.nombre }}</h2>
-                <p>{{ proyecto.descripcion }}</p>
-                <p><strong>Estado:</strong> {{ proyecto.estado }}</p>
-                <p><strong>Fecha de Inicio:</strong> {{ proyecto.fecha_inicio }}</p>
-                <p><strong>Fecha de Fin:</strong> {{ proyecto.fecha_fin }}</p>
+            <li class="project-item">
+                <span><strong>Nombre:</strong> {{ proyecto.nombre }}</span>
+                <span><strong>Descripción:</strong> {{ proyecto.descripcion }}</span>
+                <span><strong>Fecha de Inicio:</strong> {{ proyecto.fecha_inicio }}</span>
+                <span><strong>Fecha de Fin:</strong> {{ proyecto.fecha_fin }}</span>
+                <!-- Puedes agregar más campos según lo necesites -->
             </li>
         {% endfor %}
     </ul>
 </div>
 {% endblock %}
+

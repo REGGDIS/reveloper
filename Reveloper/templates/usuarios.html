@@ -1,16 +1,17 @@
 {% extends 'base.html' %}
 
-{% block title %}Usuarios{% endblock %}
+{% block title %}Lista de Usuarios{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1>Usuarios en el sistema</h1>
-    <ul>
+    <h1>Lista de Usuarios</h1>
+    <ul class="user-list">
         {% for usuario in usuarios %}
-            <li>
-                <h2>{{ usuario.username }}</h2>
-                <p><strong>Nombre:</strong> {{ usuario.first_name }} {{ usuario.last_name }}</p>
-                <p><strong>Email:</strong> {{ usuario.email }}</p>
+            <li class="user-item">
+                <span><strong>Nombre:</strong> {{ usuario.first_name }} {{ usuario.last_name }}</span>
+                <span><strong>Email:</strong> {{ usuario.email }}</span>
+                <span><strong>Fecha de Registro:</strong> {{ usuario.date_joined }}</span>
+                <!-- Puedes agregar más campos según lo necesites -->
             </li>
         {% endfor %}
     </ul>
