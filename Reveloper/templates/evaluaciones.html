@@ -9,13 +9,11 @@
         {% for evaluacion in evaluaciones %}
             <li>
                 <h2>{{ evaluacion.titulo }}</h2>
-                <p>{{ evaluacion.descripcion }}</p>
-                <p><strong>Estado:</strong> {{ evaluacion.estado }}</p>
-                <p><strong>Fecha de Creación:</strong> {{ evaluacion.fecha_creacion }}</p>
-                <p><strong>Fecha de Vencimiento:</strong> {{ evaluacion.fecha_vencimiento }}</p>
-                <p><strong>Proyecto:</strong> {{ evaluacion.proyecto.nombre }}</p>
+                <p><strong>Calificación:</strong> {{ evaluacion.calificacion }}</p>
                 <p><strong>Asignado a:</strong> {{ evaluacion.usuario.first_name }} {{ evaluacion.usuario.last_name }}</p>
-                <p><strong>Calificación:</strong> {{ evaluacion.calificacion }}</p> <!-- Mostrar calificación -->
+                <p>{{ evaluacion.comentarios }}</p>
+                <p><strong>Fecha de Evaluación:</strong> {{ evaluacion.fecha_evaluacion }}</p>
+                <p><strong>Proyecto:</strong> {{ evaluacion.proyecto.nombre }}</p>
             </li>
         {% endfor %}
     </ul>

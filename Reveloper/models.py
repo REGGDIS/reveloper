@@ -63,19 +63,14 @@ class TareaDesarrollada(models.Model):
 class Evaluacion(models.Model):
     titulo = models.CharField(
         max_length=200, default="Título Predeterminado")  # Valor predeterminado
-    descripcion = models.TextField(
-        default="Descripción pendiente")  # Valor predeterminado
-    estado = models.CharField(
-        max_length=20, default="Pendiente")  # Valor predeterminado
-    fecha_creacion = models.DateTimeField(
+    comentarios = models.TextField(default="Comentario pendiente")
+    fecha_evaluacion = models.DateTimeField(
         default=timezone.now)  # Valor predeterminado
-    fecha_vencimiento = models.DateTimeField(
-        default=timezone.now() + timedelta(days=30))  # Valor predeterminado
     proyecto = models.ForeignKey('Proyecto', on_delete=models.CASCADE)
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     calificacion = models.DecimalField(
-        max_digits=4, decimal_places=1, null=True, blank=True)  # Campo de calificación
+        max_digits=4, decimal_places=1, null=True, blank=True)
 
     def __str__(self):
         return self.titulo
