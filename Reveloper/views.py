@@ -97,7 +97,6 @@ def crear_tarea(request):
             tarea = form.save(commit=False)
             tarea.usuario = request.user  # Asignar el usuario autenticado
             tarea.save()  # Guardar la tarea con el usuario asignado
-            # Redirige a la lista de proyectos o donde prefieras
             return redirect('proyectos')
     else:
         form = TareaPorDesarrollarForm()

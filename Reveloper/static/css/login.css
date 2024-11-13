@@ -14,10 +14,14 @@ body.login {
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
+  width: 100%;
+  max-width: 350px;
+}
 
-  label {
-    color: white;
-  }
+.container label {
+  color: white;
+  display: block;
+  margin-bottom: 10px;
 }
 
 h2 {
@@ -27,14 +31,17 @@ h2 {
 form {
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 form input[type="text"],
 form input[type="password"] {
+  display: block;
   margin-bottom: 15px;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
+  width: 300px;
 }
 
 button {
@@ -44,6 +51,8 @@ button {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  width: 100%;
+  margin-bottom: 15px;
 }
 
 button:hover {
