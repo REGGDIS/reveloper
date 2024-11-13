@@ -74,6 +74,8 @@ class Evaluacion(models.Model):
     proyecto = models.ForeignKey('Proyecto', on_delete=models.CASCADE)
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    calificacion = models.DecimalField(
+        max_digits=4, decimal_places=1, null=True, blank=True)  # Campo de calificación
 
     def __str__(self):
         return self.titulo

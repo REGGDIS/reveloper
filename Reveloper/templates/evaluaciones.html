@@ -15,6 +15,7 @@
                 <p><strong>Fecha de Vencimiento:</strong> {{ evaluacion.fecha_vencimiento }}</p>
                 <p><strong>Proyecto:</strong> {{ evaluacion.proyecto.nombre }}</p>
                 <p><strong>Asignado a:</strong> {{ evaluacion.usuario.first_name }} {{ evaluacion.usuario.last_name }}</p>
+                <p><strong>Calificación:</strong> {{ evaluacion.calificacion }}</p> <!-- Mostrar calificación -->
             </li>
         {% endfor %}
     </ul>
