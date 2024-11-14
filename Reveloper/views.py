@@ -9,6 +9,7 @@ from .models import Proyecto, TareaPorDesarrollar, Usuario, Evaluacion
 from .forms import TareaPorDesarrollarForm
 
 
+# Función de Verificación para Administradores
 def es_admin(user):
     return user.is_superuser
 
@@ -52,6 +53,7 @@ def print_template_dirs(request):
 
 
 @login_required
+@user_passes_test(es_admin)
 def usuarios(request):
     usuarios = Usuario.objects.all()
     return render(request, 'usuarios.html', {'usuarios': usuarios})

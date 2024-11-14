@@ -15,7 +15,9 @@
         <nav>
             <ul>
                 <li><a href="{% url 'home' %}">Inicio</a></li>
-                <li><a href="{% url 'usuarios' %}">Usuarios</a></li>
+                {% if user.is_authenticated and user.is_superuser %}
+                    <li><a href="{% url 'usuarios' %}">Usuarios</a></li>
+                {% endif %}
                 <li><a href="{% url 'proyectos' %}">Proyectos</a></li>
                 <li><a href="{% url 'tareas_por_desarrollar' %}">Tareas</a></li>
                 <li><a href="{% url 'evaluaciones' %}">Evaluaciones</a></li>
@@ -28,4 +30,3 @@
     </main>
 </body>
 </html>
-
