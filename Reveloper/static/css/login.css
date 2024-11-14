@@ -44,12 +44,18 @@ body.login {
 
 h2 {
   color: white;
+  margin-bottom: 20px; /* Añadir margen inferior al título */
 }
 
 form {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+/* Añadir márgenes inferiores a los elementos del formulario */
+form .form-group {
+  margin-bottom: 20px;
 }
 
 form input[type="text"],
@@ -90,4 +96,24 @@ body.login:before {
   z-index: 0;
   display: grid;
   place-content: center;
+}
+
+/* Estilo para el contenedor de la contraseña con ojito */
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-wrapper input[type="password"],
+.password-wrapper input[type="text"] {
+  padding-right: 30px;
+}
+
+/* Estilo para el icono de "ojito" */
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
 }

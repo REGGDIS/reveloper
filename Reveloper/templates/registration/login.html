@@ -1,23 +1,41 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <title>Reveloper Login</title>
     {% load static %}
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="{% static 'css/login.css' %}"
-    />
+    <link rel="stylesheet" type="text/css" href="{% static 'css/login.css' %}">
     <link rel="shortcut icon" href="{% static 'img/iconos/logo-reveloper-icon.ico' %}" type="image/x-icon">
-  </head>
-  <body class="login">
+</head>
+<body class="login">
     <img src="{% static 'img/logos/logo-reveloper.png' %}" alt="Reveloper" width="100">
     <div class="container">
-      <h2>Login</h2>
-      <form method="post">
-        {% csrf_token %} {{ form.as_p }}
-        <button type="submit">Login</button>
-      </form>
+        <h2>Login</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_username">Username</label>
+                {{ form.username }}
+            </div>
+            <div class="form-group password-wrapper">
+                <label for="id_password">Password</label>
+                {{ form.password }}
+                <span class="toggle-password" onclick="togglePassword()">👁️</span>
+            </div>
+            <button type="submit">Login</button>
+        </form>
     </div>
-  </body>
+    <script>
+        function togglePassword() {
+            var passwordField = document.getElementById("id_password");
+            var toggleIcon = document.querySelector(".toggle-password");
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                toggleIcon.textContent = "🙈"; // Cambia el icono a uno de ocultar
+            } else {
+                passwordField.type = "password";
+                toggleIcon.textContent = "👁️"; // Cambia el icono a uno de mostrar
+            }
+        }
+    </script>
+</body>
 </html>
