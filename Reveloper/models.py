@@ -71,6 +71,8 @@ class Evaluacion(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     calificacion = models.DecimalField(
         max_digits=4, decimal_places=1, null=True, blank=True)
+    tarea = models.ForeignKey('TareaPorDesarrollar',
+                              on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.titulo
