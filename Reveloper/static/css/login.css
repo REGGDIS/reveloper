@@ -78,8 +78,8 @@ button:hover {
 body.login:before {
   content: "Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper";
   white-space: pre-line;
-  color: #000;
-  opacity: 0.05;
+  color: white;
+  opacity: 0.3;
   position: absolute;
   top: 0;
   left: 0;
