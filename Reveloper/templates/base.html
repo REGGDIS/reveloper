@@ -9,7 +9,7 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="shortcut icon" href="{% static 'img/iconos/logo-reveloper-icon.ico' %}" type="image/x-icon">
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
     <header class="header">
         <img src="{% static 'img/logos/logo-reveloper.png' %}" alt="Reveloper" width="30">
         <h3>Reveloper</h3>
@@ -26,8 +26,17 @@
             </ul>
         </nav>
     </header>
-    <main>
+    <main class="flex-grow-1">
         {% block content %}{% endblock %}
     </main>
+    <footer class="footer bg-dark text-white py-3 mt-auto">
+        <div class="container text-center">
+            <span>&copy; 2024 Reveloper. Todos los derechos reservados.</span>
+        </div>
+    </footer>
+    <!-- Añadir Bootstrap JS y dependencias -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
