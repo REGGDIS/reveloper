@@ -6,21 +6,25 @@
 <div class="container">
     <h1>Evaluaciones</h1>
     <div class="evaluation-container">
-        {% for evaluacion in evaluaciones %}
-            <div class="evaluation-card">
-                <h2>{{ evaluacion.titulo }}</h2>
-                <p class="calificacion"><strong>Calificación:</strong> <strong>{{ evaluacion.calificacion }}</strong></p>
-                {% if evaluacion.tarea %}
-                    <p><strong>Tarea:</strong> <strong>{{ evaluacion.tarea.titulo }}</strong></p>
-                {% else %}
-                    <p><strong>Tarea:</strong> <strong>Sin Tarea Asignada</strong></p>
-                {% endif %}
-                <p><strong>Asignado a:</strong> {{ evaluacion.usuario.first_name }} {{ evaluacion.usuario.last_name }}</p>
-                <p>{{ evaluacion.comentarios }}</p>
-                <p><strong>Fecha de Evaluación:</strong> {{ evaluacion.fecha_evaluacion }}</p>
-                <p><strong>Proyecto:</strong> {{ evaluacion.proyecto.nombre }}</p>
-            </div>
-        {% endfor %}
+        {% if evaluaciones %}
+            {% for evaluacion in evaluaciones %}
+                <div class="evaluation-card">
+                    <h2>{{ evaluacion.titulo }}</h2>
+                    <p class="calificacion"><strong>Calificación:</strong> <strong>{{ evaluacion.calificacion }}</strong></p>
+                    {% if evaluacion.tarea %}
+                        <p><strong>Tarea:</strong> <strong>{{ evaluacion.tarea.titulo }}</strong></p>
+                    {% else %}
+                        <p><strong>Tarea:</strong> <strong>Sin Tarea Asignada</strong></p>
+                    {% endif %}
+                    <p><strong>Asignado a:</strong> {{ evaluacion.usuario.first_name }} {{ evaluacion.usuario.last_name }}</p>
+                    <p>{{ evaluacion.comentarios }}</p>
+                    <p><strong>Fecha de Evaluación:</strong> {{ evaluacion.fecha_evaluacion }}</p>
+                    <p><strong>Proyecto:</strong> {{ evaluacion.proyecto.nombre }}</p>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No tienes evaluaciones asignadas.</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

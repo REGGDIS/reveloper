@@ -69,7 +69,11 @@ def proyectos(request):
 
 @login_required
 def evaluaciones(request):
-    evaluaciones = Evaluacion.objects.all()  # Recuperar todas las evaluaciones
+    if request.user.is_superuser:  # El administrador puede ver todas las evaluaciones
+        evaluaciones = Evaluacion.objects.all()
+    else:  # Otros usuarios solo ven sus evaluaciones
+        evaluaciones = Evaluacion.objects.filter(usuario=request.user)
+
     return render(request, 'evaluaciones.html', {'evaluaciones': evaluaciones})
 
 # Vista para la página de tareas por desarrollar, accesible solo para usuarios autenticados
