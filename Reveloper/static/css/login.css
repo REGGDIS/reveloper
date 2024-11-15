@@ -67,7 +67,7 @@ form button {
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
-  width: 280px; /* Ancho fijo */
+  width: 280px;
 }
 
 button {
@@ -75,7 +75,7 @@ button {
   color: white;
   border: none;
   cursor: pointer;
-  width: 280px; /* Ancho fijo */
+  width: 280px;
 }
 
 button:hover {
@@ -106,7 +106,7 @@ body.login:before {
 
 .password-wrapper input[type="password"] {
   padding-right: 30px;
-  width: 100%; /* Asegurarse de que el ancho sea completo dentro del wrapper */
+  width: 100%;
 }
 
 .toggle-password {

@@ -9,6 +9,10 @@ from .models import Proyecto, TareaPorDesarrollar, Usuario, Evaluacion
 from .forms import TareaPorDesarrollarForm
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics
+from reportlab.lib import colors
+from reportlab.lib.units import inch
 import io
 
 
@@ -132,16 +136,28 @@ def generate_pdf(request):
     buffer = io.BytesIO()
     # Crear el PDF
     p = canvas.Canvas(buffer, pagesize=letter)
-    p.setFont("Helvetica", 12)
 
-    # Añadir contenido al PDF
-    p.drawString(100, 750, "Informe de Proyecto")
-    p.drawString(100, 735, f"Usuario: {request.user.username}")
-    p.drawString(100, 720, "Lista de Proyectos:")
+    # Registrar y usar una fuente personalizada
+    pdfmetrics.registerFont(TTFont('Arial', 'Arial.ttf'))
+    p.setFont("Arial", 12)
+
+    # Añadir una imagen de logotipo en la parte superior del documento
+    p.drawImage("Reveloper/static/img/logos/logo-reveloper.png",
+                100, 700, width=2*inch, height=1*inch)
+
+    # Título del documento
+    p.setFont("Helvetica-Bold", 16)
+    p.setFillColor(colors.darkblue)
+    p.drawString(100, 650, "Informe de Proyecto")
+
+    p.setFont("Helvetica", 12)
+    p.setFillColor(colors.black)
+    p.drawString(100, 630, f"Usuario: {request.user.username}")
+    p.drawString(100, 615, "Lista de Proyectos:")
 
     # Obtener datos del contexto
     projects = Proyecto.objects.all()
-    y = 700
+    y = 595
     for project in projects:
         p.drawString(100, y, f"ID: {project.id}, Nombre: {project.nombre}")
         y -= 15
@@ -153,6 +169,12 @@ def generate_pdf(request):
         y -= 15
         p.drawString(100, y, f"Estado: {project.get_estado_display()}")
         y -= 30  # Añadir espacio adicional entre proyectos
+
+        # Ajustar posición de la línea divisoria
+        p.setStrokeColor(colors.grey)
+        line_y = y + 7.5  # Centrar la línea divisoria entre proyectos
+        p.line(100, line_y, 500, line_y)
+        y -= 10  # Añadir un pequeño margen después de la línea
 
     # Cerrar y guardar el PDF
     p.showPage()
@@ -166,19 +188,33 @@ def generate_pdf(request):
 def generate_task_pdf(request):
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
+
+    # Registrar y usar una fuente personalizada
+    pdfmetrics.registerFont(TTFont('Arial', 'Arial.ttf'))
+    p.setFont("Arial", 12)
+
+    # Añadir una imagen de logotipo en la parte superior del documento
+    p.drawImage("Reveloper/static/img/logos/logo-reveloper.png",
+                100, 700, width=2*inch, height=1*inch)
+
+    # Título del documento
+    p.setFont("Helvetica-Bold", 16)
+    p.setFillColor(colors.darkblue)
+    p.drawString(100, 650, "Informe de Tareas")
+
     p.setFont("Helvetica", 12)
-    p.drawString(100, 750, "Informe de Tareas")
-    p.drawString(100, 735, f"Usuario: {request.user.username}")
+    p.setFillColor(colors.black)
+    p.drawString(100, 630, f"Usuario: {request.user.username}")
 
     # Verificar si el usuario es administrador
     if request.user.is_superuser:
         tareas = TareaPorDesarrollar.objects.all()
-        p.drawString(100, 720, "Lista de Todas las Tareas:")
+        p.drawString(100, 610, "Lista de Todas las Tareas:")
     else:
         tareas = TareaPorDesarrollar.objects.filter(usuario=request.user)
-        p.drawString(100, 720, "Lista de Tareas Asignadas:")
+        p.drawString(100, 610, "Lista de Tareas Asignadas:")
 
-    y = 700
+    y = 590
     for tarea in tareas:
         p.drawString(100, y, f"Título: {tarea.titulo}")
         y -= 15
@@ -197,6 +233,12 @@ def generate_task_pdf(request):
                      tarea.usuario.last_name}")
         y -= 30
 
+        # Ajustar posición de la línea divisoria
+        p.setStrokeColor(colors.grey)
+        line_y = y + 7.5  # Centrar la línea divisoria entre tareas
+        p.line(100, line_y, 500, line_y)
+        y -= 10  # Añadir un pequeño margen después de la línea
+
     p.showPage()
     p.save()
     buffer.seek(0)
@@ -206,19 +248,33 @@ def generate_task_pdf(request):
 def generate_evaluation_pdf(request):
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
+
+    # Registrar y usar una fuente personalizada
+    pdfmetrics.registerFont(TTFont('Arial', 'Arial.ttf'))
+    p.setFont("Arial", 12)
+
+    # Añadir una imagen de logotipo en la parte superior del documento
+    p.drawImage("Reveloper/static/img/logos/logo-reveloper.png",
+                100, 700, width=2*inch, height=1*inch)
+
+    # Título del documento
+    p.setFont("Helvetica-Bold", 16)
+    p.setFillColor(colors.darkblue)
+    p.drawString(100, 650, "Informe de Evaluaciones")
+
     p.setFont("Helvetica", 12)
-    p.drawString(100, 750, "Informe de Evaluaciones")
-    p.drawString(100, 735, f"Usuario: {request.user.username}")
+    p.setFillColor(colors.black)
+    p.drawString(100, 630, f"Usuario: {request.user.username}")
 
     # Verificar si el usuario es administrador
     if request.user.is_superuser:
         evaluaciones = Evaluacion.objects.all()
-        p.drawString(100, 720, "Lista de Todas las Evaluaciones:")
+        p.drawString(100, 610, "Lista de Todas las Evaluaciones:")
     else:
         evaluaciones = Evaluacion.objects.filter(usuario=request.user)
-        p.drawString(100, 720, "Lista de Evaluaciones Asignadas:")
+        p.drawString(100, 610, "Lista de Evaluaciones Asignadas:")
 
-    y = 700
+    y = 590
     for evaluacion in evaluaciones:
         p.drawString(100, y, f"Título: {evaluacion.titulo}")
         y -= 15
@@ -238,6 +294,12 @@ def generate_evaluation_pdf(request):
         p.drawString(100, y, f"Proyecto: {evaluacion.proyecto.nombre}")
         y -= 30
 
+        # Ajustar posición de la línea divisoria
+        p.setStrokeColor(colors.grey)
+        line_y = y + 7.5  # Centrar la línea divisoria entre evaluaciones
+        p.line(100, line_y, 500, line_y)
+        y -= 10  # Añadir un pequeño margen después de la línea
+
     p.showPage()
     p.save()
     buffer.seek(0)
@@ -251,13 +313,27 @@ def generate_user_pdf(request):
 
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
+
+    # Registrar y usar una fuente personalizada
+    pdfmetrics.registerFont(TTFont('Arial', 'Arial.ttf'))
+    p.setFont("Arial", 12)
+
+    # Añadir una imagen de logotipo en la parte superior del documento
+    p.drawImage("Reveloper/static/img/logos/logo-reveloper.png",
+                100, 700, width=2*inch, height=1*inch)
+
+    # Título del documento
+    p.setFont("Helvetica-Bold", 16)
+    p.setFillColor(colors.darkblue)
+    p.drawString(100, 650, "Informe de Usuarios")
+
     p.setFont("Helvetica", 12)
-    p.drawString(100, 750, "Informe de Usuarios")
-    p.drawString(100, 735, f"Generado por: {request.user.username}")
-    p.drawString(100, 720, "Lista de Usuarios:")
+    p.setFillColor(colors.black)
+    p.drawString(100, 630, f"Generado por: {request.user.username}")
+    p.drawString(100, 615, "Lista de Usuarios:")
 
     usuarios = Usuario.objects.all()
-    y = 700
+    y = 595
     for usuario in usuarios:
         p.drawString(100, y, f"Nombre: {usuario.first_name} {
                      usuario.last_name}")
@@ -266,6 +342,12 @@ def generate_user_pdf(request):
         y -= 15
         p.drawString(100, y, f"Fecha de Registro: {usuario.date_joined}")
         y -= 30
+
+        # Ajustar posición de la línea divisoria
+        p.setStrokeColor(colors.grey)
+        line_y = y + 7.5  # Centrar la línea divisoria entre usuarios
+        p.line(100, line_y, 500, line_y)
+        y -= 10  # Añadir un pequeño margen después de la línea
 
     p.showPage()
     p.save()

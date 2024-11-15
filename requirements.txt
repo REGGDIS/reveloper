@@ -1,20 +1,39 @@
-asgiref==3.8.1
-Brotli==1.1.0
-cffi==1.17.1
-chardet==5.2.0
-cssselect2==0.7.0
+# Framework principal
 Django==5.1.3
-django-jazzmin==3.0.1
-fonttools==4.55.0
+
+# Dependencias relacionadas con Django y administración
+django-jazzmin==3.0.1   # Tema para el admin de Django
+sqlparse==0.5.1         # Analizador SQL, requerido por Django
+asgiref==3.8.1          # Implementación de ASGI para Django
+tzdata==2024.2          # Datos de zonas horarias
+
+# Conector para MySQL
 mysqlclient==2.2.5
-pillow==10.4.0
-pycparser==2.22
-pydyf==0.11.0
-pyphen==0.15.0
-reportlab==4.2.5
-sqlparse==0.5.1
-tinycss2==1.4.0
-tinyhtml5==2.0.0
-tzdata==2024.2
-webencodings==0.5.1
-zopfli==0.2.3.post1
+
+# Soporte para imágenes
+pillow==10.4.0          # Procesamiento de imágenes (cargar, editar, guardar)
+
+# Generación de PDF y documentos
+reportlab==4.2.5        # Generación avanzada de PDFs
+pyphen==0.15.0          # División silábica para texto (útil en reportes)
+pydyf==0.11.0           # Generación de contenido PDF
+
+# CSS y HTML
+cssselect2==0.7.0       # Selección CSS en documentos XML/HTML
+tinycss2==1.4.0         # Analizador de hojas de estilo CSS
+tinyhtml5==2.0.0        # Generación simplificada de HTML5
+webencodings==0.5.1     # Codificaciones usadas en documentos HTML/CSS
+
+# Compresión y optimización
+Brotli==1.1.0           # Algoritmo de compresión Brotli
+zopfli==0.2.3.post1     # Algoritmo de compresión Zopfli (útil para optimizar recursos estáticos)
+
+# Tipografías
+fonttools==4.55.0       # Procesamiento avanzado de fuentes
+
+# Manejo de archivos binarios y seguridad
+cffi==1.17.1            # Interfaz para llamadas a bibliotecas C
+pycparser==2.22         # Analizador para cffi
+
+# Red y codificaciones
+chardet==5.2.0          # Detección de codificaciones de texto
