@@ -1,3 +1,4 @@
+/* Ajustes generales de estilo */
 *,
 *::before,
 *::after {
@@ -66,7 +67,7 @@ form button {
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
-  width: 280px;
+  width: 280px; /* Ancho fijo */
 }
 
 button {
@@ -74,6 +75,7 @@ button {
   color: white;
   border: none;
   cursor: pointer;
+  width: 280px; /* Ancho fijo */
 }
 
 button:hover {
@@ -99,12 +101,12 @@ body.login:before {
 
 .password-wrapper {
   position: relative;
-  width: 100%;
+  width: 280px; /* Ancho fijo */
 }
 
-.password-wrapper input[type="password"],
-.password-wrapper input[type="text"] {
+.password-wrapper input[type="password"] {
   padding-right: 30px;
+  width: 100%; /* Asegurarse de que el ancho sea completo dentro del wrapper */
 }
 
 .toggle-password {
