@@ -7,6 +7,9 @@ from django.contrib.auth import logout
 from django.contrib.auth.forms import AuthenticationForm
 from .models import Proyecto, TareaPorDesarrollar, Usuario, Evaluacion
 from .forms import TareaPorDesarrollarForm
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+import io
 
 
 # Función de Verificación para Administradores
@@ -122,3 +125,149 @@ def editar_tarea(request, tarea_id):
         else:
             form = TareaPorDesarrollarForm(instance=tarea)
         return render(request, 'editar_tarea.html', {'form': form})
+
+
+def generate_pdf(request):
+    # Crear un buffer de bytes para el PDF
+    buffer = io.BytesIO()
+    # Crear el PDF
+    p = canvas.Canvas(buffer, pagesize=letter)
+    p.setFont("Helvetica", 12)
+
+    # Añadir contenido al PDF
+    p.drawString(100, 750, "Informe de Proyecto")
+    p.drawString(100, 735, f"Usuario: {request.user.username}")
+    p.drawString(100, 720, "Lista de Proyectos:")
+
+    # Obtener datos del contexto
+    projects = Proyecto.objects.all()
+    y = 700
+    for project in projects:
+        p.drawString(100, y, f"ID: {project.id}, Nombre: {project.nombre}")
+        y -= 15
+        p.drawString(100, y, f"Descripción: {project.descripcion}")
+        y -= 15
+        p.drawString(100, y, f"Fecha de Inicio: {project.fecha_inicio}")
+        y -= 15
+        p.drawString(100, y, f"Fecha de Fin: {project.fecha_fin}")
+        y -= 15
+        p.drawString(100, y, f"Estado: {project.get_estado_display()}")
+        y -= 30  # Añadir espacio adicional entre proyectos
+
+    # Cerrar y guardar el PDF
+    p.showPage()
+    p.save()
+
+    # Obtener el valor de los bytes del buffer y escribirlo en la respuesta
+    buffer.seek(0)
+    return HttpResponse(buffer, content_type='application/pdf')
+
+
+def generate_task_pdf(request):
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    p.setFont("Helvetica", 12)
+    p.drawString(100, 750, "Informe de Tareas")
+    p.drawString(100, 735, f"Usuario: {request.user.username}")
+
+    # Verificar si el usuario es administrador
+    if request.user.is_superuser:
+        tareas = TareaPorDesarrollar.objects.all()
+        p.drawString(100, 720, "Lista de Todas las Tareas:")
+    else:
+        tareas = TareaPorDesarrollar.objects.filter(usuario=request.user)
+        p.drawString(100, 720, "Lista de Tareas Asignadas:")
+
+    y = 700
+    for tarea in tareas:
+        p.drawString(100, y, f"Título: {tarea.titulo}")
+        y -= 15
+        p.drawString(100, y, f"Descripción: {tarea.descripcion}")
+        y -= 15
+        p.drawString(100, y, f"Estado: {tarea.estado}")
+        y -= 15
+        p.drawString(100, y, f"Fecha de Creación: {tarea.fecha_creacion}")
+        y -= 15
+        p.drawString(100, y, f"Fecha de Vencimiento: {
+                     tarea.fecha_vencimiento}")
+        y -= 15
+        p.drawString(100, y, f"Proyecto: {tarea.proyecto.nombre}")
+        y -= 15
+        p.drawString(100, y, f"Asignado a: {tarea.usuario.first_name} {
+                     tarea.usuario.last_name}")
+        y -= 30
+
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    return HttpResponse(buffer, content_type='application/pdf')
+
+
+def generate_evaluation_pdf(request):
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    p.setFont("Helvetica", 12)
+    p.drawString(100, 750, "Informe de Evaluaciones")
+    p.drawString(100, 735, f"Usuario: {request.user.username}")
+
+    # Verificar si el usuario es administrador
+    if request.user.is_superuser:
+        evaluaciones = Evaluacion.objects.all()
+        p.drawString(100, 720, "Lista de Todas las Evaluaciones:")
+    else:
+        evaluaciones = Evaluacion.objects.filter(usuario=request.user)
+        p.drawString(100, 720, "Lista de Evaluaciones Asignadas:")
+
+    y = 700
+    for evaluacion in evaluaciones:
+        p.drawString(100, y, f"Título: {evaluacion.titulo}")
+        y -= 15
+        p.drawString(100, y, f"Calificación: {evaluacion.calificacion}")
+        y -= 15
+        if evaluacion.tarea:
+            p.drawString(100, y, f"Tarea: {evaluacion.tarea.titulo}")
+        else:
+            p.drawString(100, y, "Tarea: Sin Tarea Asignada")
+        y -= 15
+        p.drawString(100, y, f"Asignado a: {evaluacion.usuario.first_name} {
+                     evaluacion.usuario.last_name}")
+        y -= 15
+        p.drawString(100, y, f"Fecha de Evaluación: {
+                     evaluacion.fecha_evaluacion}")
+        y -= 15
+        p.drawString(100, y, f"Proyecto: {evaluacion.proyecto.nombre}")
+        y -= 30
+
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    return HttpResponse(buffer, content_type='application/pdf')
+
+
+def generate_user_pdf(request):
+    # Esta vista sólo debe ser accesible para administradores
+    if not request.user.is_superuser:
+        return HttpResponse("No tienes permiso para acceder a esta página.", status=403)
+
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    p.setFont("Helvetica", 12)
+    p.drawString(100, 750, "Informe de Usuarios")
+    p.drawString(100, 735, f"Generado por: {request.user.username}")
+    p.drawString(100, 720, "Lista de Usuarios:")
+
+    usuarios = Usuario.objects.all()
+    y = 700
+    for usuario in usuarios:
+        p.drawString(100, y, f"Nombre: {usuario.first_name} {
+                     usuario.last_name}")
+        y -= 15
+        p.drawString(100, y, f"Email: {usuario.email}")
+        y -= 15
+        p.drawString(100, y, f"Fecha de Registro: {usuario.date_joined}")
+        y -= 30
+
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    return HttpResponse(buffer, content_type='application/pdf')

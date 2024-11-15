@@ -26,5 +26,7 @@
             <p>No tienes evaluaciones asignadas.</p>
         {% endif %}
     </div>
+    <!-- Botón para generar el informe PDF -->
+    <a href="{% url 'generate_evaluation_pdf' %}" class="btn btn-primary evaluation-btn">Descargar Informe PDF</a>
 </div>
 {% endblock %}

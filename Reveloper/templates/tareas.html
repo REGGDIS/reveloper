@@ -22,7 +22,7 @@
             <p>No tienes tareas asignadas</p>
         {% endif %}
     </div>
+    <!-- Botón para generar el informe PDF con clase añadida -->
+    <a href="{% url 'generate_task_pdf' %}" class="btn btn-primary task-btn">Descargar Informe PDF</a>
 </div>
 {% endblock %}
-
-

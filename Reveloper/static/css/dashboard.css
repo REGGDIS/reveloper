@@ -168,3 +168,14 @@ body {
 .mt-5 {
   margin-top: 3rem;
 }
+
+/* Agregar margen superior al botón para separarlo de las tarjetas*/
+.task-btn {
+  margin-top: 20px;
+  display: inline-block;
+}
+
+.evaluation-btn {
+  margin-top: 20px;
+  display: inline-block;
+}

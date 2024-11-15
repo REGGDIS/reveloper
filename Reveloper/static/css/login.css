@@ -80,7 +80,6 @@ button:hover {
   background-color: #0151a7;
 }
 
-/* Fondo con patrón de "Reveloper" */
 body.login:before {
   content: "Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper Reveloper";
   white-space: pre-line;
@@ -98,7 +97,6 @@ body.login:before {
   place-content: center;
 }
 
-/* Estilo para el contenedor de la contraseña con ojito */
 .password-wrapper {
   position: relative;
   width: 100%;
@@ -109,7 +107,6 @@ body.login:before {
   padding-right: 30px;
 }
 
-/* Estilo para el icono de "ojito" */
 .toggle-password {
   position: absolute;
   right: 10px;
