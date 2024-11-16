@@ -71,7 +71,12 @@ def usuarios(request):
 @login_required
 def proyectos(request):
     proyectos = Proyecto.objects.all()
-    return render(request, 'proyectos.html', {'proyectos': proyectos})
+    for proyecto in proyectos:
+        proyecto.tareas = TareaPorDesarrollar.objects.filter(proyecto=proyecto)
+        context = {
+            'proyectos': proyectos
+        }
+    return render(request, 'proyectos.html', context)
 
 # Vista para la página de evaluaciones, accesible solo para usuarios autenticados
 

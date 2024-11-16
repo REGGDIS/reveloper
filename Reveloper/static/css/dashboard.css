@@ -165,6 +165,14 @@ body {
   }
 }
 
+.task-item {
+  background-color: #ed9393;
+  color: black;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
 .mt-5 {
   margin-top: 3rem;
 }
@@ -178,4 +186,9 @@ body {
 .evaluation-btn {
   margin-top: 20px;
   display: inline-block;
+}
+
+.pdf-button {
+  margin-bottom: 20px; /* Espacio debajo del botón */
+  display: inline-block; /* Asegura que se comporte como un botón */
 }

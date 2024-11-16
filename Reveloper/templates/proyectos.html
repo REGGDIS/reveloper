@@ -12,11 +12,22 @@
                 <span><strong>Descripción:</strong> {{ proyecto.descripcion }}</span>
                 <span><strong>Fecha de Inicio:</strong> {{ proyecto.fecha_inicio }}</span>
                 <span><strong>Fecha de Fin:</strong> {{ proyecto.fecha_fin }}</span>
+                <ul class="task-list">
+                    {% for tarea in proyecto.tareas %}
+                        <li class="task-item">
+                            <span><strong>Tarea:</strong> {{ tarea.titulo }}</span>
+                            <span><strong>Asignado a:</strong> {{ tarea.usuario.first_name }} {{ tarea.usuario.last_name }}</span>
+                            <span><strong>Estado:</strong> {{ tarea.estado }}</span>
+                            <span><strong>Fecha de Creación:</strong> {{ tarea.fecha_creacion }}</span>
+                            <span><strong>Fecha de Vencimiento:</strong> {{ tarea.fecha_vencimiento }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
             </li>
         {% endfor %}
     </ul>
     <!-- Botón para generar el informe PDF -->
-    <a href="{% url 'generate_pdf' %}" class="btn btn-primary">Descargar Informe PDF</a>
+    <a href="{% url 'generate_pdf' %}" class="btn btn-primary pdf-button">Descargar Informe PDF</a>
 </div>
 {% endblock %}
 
