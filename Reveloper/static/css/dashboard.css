@@ -177,18 +177,25 @@ body {
   margin-top: 3rem;
 }
 
-/* Agregar margen superior al botón para separarlo de las tarjetas*/
+/* Botones informes PDF*/
 .task-btn {
   margin-top: 20px;
+  margin-bottom: 20px;
   display: inline-block;
 }
 
 .evaluation-btn {
   margin-top: 20px;
+  margin-bottom: 20px;
   display: inline-block;
 }
 
 .pdf-button {
-  margin-bottom: 20px; /* Espacio debajo del botón */
-  display: inline-block; /* Asegura que se comporte como un botón */
+  margin-bottom: 20px;
+  display: inline-block;
+}
+
+.user-btn {
+  margin-bottom: 20px;
+  display: inline-block;
 }
