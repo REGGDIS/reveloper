@@ -51,13 +51,15 @@ class TareaPorDesarrollar(models.Model):
 
 
 class TareaDesarrollada(models.Model):
+    # Clave primaria gestionada automáticamente
+    id = models.AutoField(primary_key=True)
     descripcion = models.TextField()
     fecha_entrega = models.DateTimeField()
     tarea_por_desarrollar = models.OneToOneField(
-        TareaPorDesarrollar, on_delete=models.CASCADE, primary_key=True)
+        TareaPorDesarrollar, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
-        return self.tarea_por_desarrollar.titulo
+        return self.tarea_por_desarrollar.titulo if self.tarea_por_desarrollar else "Tarea por Desarrollar eliminada"
 
 
 class Evaluacion(models.Model):
