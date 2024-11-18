@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
 
+
 urlpatterns = [
     path('home/', views.home, name='home'),  # Ruta para la página de inicio
     # Ruta para la página de usuarios

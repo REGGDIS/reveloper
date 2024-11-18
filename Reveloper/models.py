@@ -49,6 +49,10 @@ class TareaPorDesarrollar(models.Model):
     def __str__(self):
         return self.titulo
 
+    class Meta:
+        verbose_name = "Tarea"
+        verbose_name_plural = "Tareas"
+
 
 class TareaDesarrollada(models.Model):
     id = models.AutoField(primary_key=True)
@@ -77,3 +81,7 @@ class Evaluacion(models.Model):
 
     def __str__(self):
         return self.titulo
+
+    class Meta:
+        verbose_name = "Evaluación"
+        verbose_name_plural = "Evaluaciones"
