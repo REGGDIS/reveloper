@@ -51,7 +51,6 @@ class TareaPorDesarrollar(models.Model):
 
 
 class TareaDesarrollada(models.Model):
-    # Clave primaria gestionada automáticamente
     id = models.AutoField(primary_key=True)
     descripcion = models.TextField()
     fecha_entrega = models.DateTimeField()
