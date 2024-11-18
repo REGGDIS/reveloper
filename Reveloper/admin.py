@@ -19,5 +19,5 @@ class CustomUserAdmin(BaseUserAdmin):
 admin.site.register(Usuario, CustomUserAdmin)
 admin.site.register(Proyecto)
 admin.site.register(TareaPorDesarrollar)
-admin.site.register(TareaDesarrollada)
+# admin.site.register(TareaDesarrollada)
 admin.site.register(Evaluacion)

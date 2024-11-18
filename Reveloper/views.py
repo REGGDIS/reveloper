@@ -73,9 +73,12 @@ def proyectos(request):
     proyectos = Proyecto.objects.all()
     for proyecto in proyectos:
         proyecto.tareas = TareaPorDesarrollar.objects.filter(proyecto=proyecto)
-        context = {
-            'proyectos': proyectos
-        }
+
+    # Definir context fuera del bucle for
+    context = {
+        'proyectos': proyectos
+    }
+
     return render(request, 'proyectos.html', context)
 
 # Vista para la página de evaluaciones, accesible solo para usuarios autenticados
