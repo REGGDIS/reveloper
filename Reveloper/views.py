@@ -1,5 +1,5 @@
+import tempfile
 from .models import Evaluacion
-from django.shortcuts import render
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.conf import settings
@@ -7,6 +7,7 @@ from django.http import HttpResponse
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.models import User
 from .models import Proyecto, TareaPorDesarrollar, Usuario, Evaluacion
 from .forms import TareaPorDesarrollarForm
 from reportlab.pdfgen import canvas
@@ -16,6 +17,11 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.lib import colors
 from reportlab.lib.units import inch
 import io
+import os
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+from io import BytesIO
+import base64
 
 
 # Función de Verificación para Administradores
@@ -402,3 +408,82 @@ def generate_user_pdf(request):
     p.save()
     buffer.seek(0)
     return HttpResponse(buffer, content_type='application/pdf')
+
+
+@login_required
+def vista_evaluaciones(request):
+    if request.user.is_superuser:  # Si es administrador, muestra todas las evaluaciones
+        evaluaciones = Evaluacion.objects.all()
+    else:  # Si es usuario normal, muestra solo sus evaluaciones
+        evaluaciones = Evaluacion.objects.filter(usuario=request.user)
+
+    graph = generar_grafico_evaluaciones(request)
+    context = {
+        'evaluaciones': evaluaciones,
+        'graph': graph
+    }
+    return render(request, 'evaluaciones.html', context)
+
+
+def generar_grafico_evaluaciones(request):
+    if request.user.is_superuser:
+        evaluaciones = Evaluacion.objects.all()
+    else:
+        evaluaciones = Evaluacion.objects.filter(usuario=request.user)
+
+    fechas = [evaluacion.fecha_evaluacion for evaluacion in evaluaciones]
+    puntajes = [evaluacion.calificacion for evaluacion in evaluaciones]
+
+    # Definir una paleta de colores fija
+    colores = ListedColormap(["#FF6347", "#4682B4", "#8A2BE2",
+                             "#5F9EA0", "#7FFF00", "#FF7F50", "#FFD700", "#DC143C"]).colors
+
+    plt.figure(figsize=(10, 5))
+    # Usar los colores necesarios
+    plt.bar(fechas, puntajes, color=colores[:len(fechas)])
+    plt.title('Evaluaciones a lo largo del tiempo')
+    plt.xlabel('Fecha')
+    plt.ylabel('Puntaje')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    plt.close()
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    graph = base64.b64encode(image_png).decode('utf-8')
+    buffer.close()
+
+    return graph
+
+
+def generar_informe_grafico_pdf(request):
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="informe_grafico_evaluaciones.pdf"'
+
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    p.drawString(100, height - 40, "Informe de Evaluaciones")
+
+    graph = generar_grafico_evaluaciones(request)
+    graph_data = base64.b64decode(graph)
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
+        temp_file.write(graph_data)
+        temp_file_path = temp_file.name
+
+    p.drawImage(temp_file_path, 50, height - 300, width=500, height=200)
+
+    p.showPage()
+    p.save()
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.write(pdf)
+
+    os.remove(temp_file_path)
+
+    return response

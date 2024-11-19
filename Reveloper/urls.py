@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
+from .views import vista_evaluaciones, generar_informe_grafico_pdf
 
 
 urlpatterns = [
@@ -26,4 +27,7 @@ urlpatterns = [
     path('generate_evaluation_pdf/', views.generate_evaluation_pdf,
          name='generate_evaluation_pdf'),
     path('generate_user_pdf/', views.generate_user_pdf, name='generate_user_pdf'),
+    path('evaluaciones/', vista_evaluaciones, name='vista_evaluaciones'),
+    path('generar_informe_grafico_pdf/', generar_informe_grafico_pdf,
+         name='generar_informe_grafico_pdf'),
 ]
