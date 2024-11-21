@@ -3,7 +3,7 @@ body {
   font-family: Arial, sans-serif;
   background: linear-gradient(
     to bottom,
-    #f0f0f0 30%,
+    #f0f0f0 40%,
     #a9a9a9 100%
   ) !important; /* Degradado de gris claro a gris oscuro */
   background-size: cover;

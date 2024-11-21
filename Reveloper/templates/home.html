@@ -4,20 +4,22 @@
 
 {% block content %}
 <div class="container">
-    <h1>Bienvenido al Dashboard, {{ usuario.first_name }} {{ usuario.last_name }}</h1>
+    <marquee behavior="scroll" direction="left" scrollamount="10">
+        <h1>Bienvenido al Dashboard, {{ usuario.first_name }} {{ usuario.last_name }}</h1>
+    </marquee>
 
     <div class="cards">
         <a href="{% url 'proyectos' %}" class="card card-proyectos">
             <h2>Proyectos</h2>
-            <p>Revisa los proyectos</p>
+            <p>Gestiona tus proyectos</p>
         </a>
         <a href="{% url 'tareas_por_desarrollar' %}" class="card card-tareas">
             <h2>Tareas</h2>
-            <p>Revisa tus tareas</p>
+            <p>Gestiona tus tareas</p>
         </a>
         <a href="{% url 'evaluaciones' %}" class="card card-evaluaciones">
             <h2>Evaluaciones</h2>
-            <p>Revisa tus evaluaciones</p>
+            <p>Gestiona tus evaluaciones</p>
         </a>
     </div>
 
