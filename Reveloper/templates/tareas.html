@@ -5,24 +5,48 @@
 {% block content %}
 <div class="container">
     <h1>Tareas por Desarrollar</h1>
-    <div class="task-container">
-        {% if tareas %}
-            {% for tarea in tareas %}
-                <div class="task">
-                    <h2>{{ tarea.titulo }}</h2>
-                    <p><strong>Descripción:</strong> {{ tarea.descripcion }}</p>
-                    <p><strong>Estado:</strong> {{ tarea.estado }}</p>
-                    <p><strong>Fecha de Creación:</strong> {{ tarea.fecha_creacion }}</p>
-                    <p><strong>Fecha de Vencimiento:</strong> {{ tarea.fecha_vencimiento }}</p>
-                    <p><strong>Proyecto:</strong> {{ tarea.proyecto.nombre }}</p>
-                    <p><strong>Asignado a:</strong> {{ tarea.usuario.first_name }} {{ tarea.usuario.last_name }}</p>
-                </div>
-            {% endfor %}
-        {% else %}
-            <p>No tienes tareas asignadas</p>
-        {% endif %}
+    <div class="button-group d-flex align-items-center mb-3">
+        <button type="button" class="btn btn-info mr-2" data-toggle="modal" data-target="#taskListModal">
+            Mostrar Lista de Tareas
+        </button>
+        <!-- Botón para generar el informe PDF -->
+        <a href="{% url 'generate_task_pdf' %}" class="btn btn-primary task-btn">Descargar Informe PDF</a>
     </div>
-    <!-- Botón para generar el informe PDF con clase añadida -->
-    <a href="{% url 'generate_task_pdf' %}" class="btn btn-primary task-btn">Descargar Informe PDF</a>
+
+    <!-- Modal -->
+    <div class="modal fade" id="taskListModal" tabindex="-1" role="dialog" aria-labelledby="taskListModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-bottom modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="taskListModalLabel">Tareas por Desarrollar</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="task-container">
+                        {% if tareas %}
+                            {% for tarea in tareas %}
+                                <div class="task">
+                                    <h2>{{ tarea.titulo }}</h2>
+                                    <p><strong>Descripción:</strong> {{ tarea.descripcion }}</p>
+                                    <p><strong>Estado:</strong> {{ tarea.estado }}</p>
+                                    <p><strong>Fecha de Creación:</strong> {{ tarea.fecha_creacion }}</p>
+                                    <p><strong>Fecha de Vencimiento:</strong> {{ tarea.fecha_vencimiento }}</p>
+                                    <p><strong>Proyecto:</strong> {{ tarea.proyecto.nombre }}</p>
+                                    <p><strong>Asignado a:</strong> {{ tarea.usuario.first_name }} {{ tarea.usuario.last_name }}</p>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p>No tienes tareas asignadas</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

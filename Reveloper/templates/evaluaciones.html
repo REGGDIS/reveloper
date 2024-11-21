@@ -5,31 +5,54 @@
 {% block content %}
 <div class="container">
     <h1>Evaluaciones</h1>
-    <div class="evaluation-container">
-        {% if evaluaciones %}
-            {% for evaluacion in evaluaciones %}
-                <div class="evaluation-card">
-                    <h2>{{ evaluacion.titulo }}</h2>
-                    <p class="calificacion"><strong>Calificación:</strong> <strong>{{ evaluacion.calificacion }}</strong></p>
-                    {% if evaluacion.tarea %}
-                        <p><strong>Tarea:</strong> <strong>{{ evaluacion.tarea.titulo }}</strong></p>
-                    {% else %}
-                        <p><strong>Tarea:</strong> <strong>Sin Tarea Asignada</strong></p>
-                    {% endif %}
-                    <p><strong>Asignado a:</strong> {{ evaluacion.usuario.first_name }} {{ evaluacion.usuario.last_name }}</p>
-                    <p>{{ evaluacion.comentarios }}</p>
-                    <p><strong>Fecha de Evaluación:</strong> {{ evaluacion.fecha_evaluacion }}</p>
-                    <p><strong>Proyecto:</strong> {{ evaluacion.proyecto.nombre }}</p>
-                </div>
-            {% endfor %}
-        {% else %}
-            <p>No tienes evaluaciones asignadas.</p>
-        {% endif %}
+    <div class="button-group d-flex align-items-center mb-3">
+        <button type="button" class="btn btn-info mr-2" data-toggle="modal" data-target="#evaluationListModal">
+            Mostrar Lista de Evaluaciones
+        </button>
+        <!-- Botón para generar el informe PDF -->
+        <a href="{% url 'generate_evaluation_pdf' %}" class="btn btn-primary mr-2 evaluation-btn">Descargar Informe PDF</a>
+        <!-- Botón para descargar el informe con el gráfico -->
+        <a href="{% url 'generar_informe_grafico_pdf' %}" class="btn btn-secondary evaluation-btn">Descargar Informe con Gráfico</a>
     </div>
 
-    <!-- Botón para descargar el informe PDF -->
-    <a href="{% url 'generate_evaluation_pdf' %}" class="btn btn-primary evaluation-btn">Descargar Informe PDF</a>
-    <!-- Botón para descargar el informe con el gráfico -->
-    <a href="{% url 'generar_informe_grafico_pdf' %}" class="btn btn-secondary evaluation-btn">Descargar Informe con Gráfico</a>
+    <!-- Modal -->
+    <div class="modal fade" id="evaluationListModal" tabindex="-1" role="dialog" aria-labelledby="evaluationListModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-bottom modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="evaluationListModalLabel">Lista de Evaluaciones</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="evaluation-container">
+                        {% if evaluaciones %}
+                            {% for evaluacion in evaluaciones %}
+                                <div class="evaluation-card">
+                                    <h2>{{ evaluacion.titulo }}</h2>
+                                    <p class="calificacion"><strong>Calificación:</strong> <strong>{{ evaluacion.calificacion }}</strong></p>
+                                    {% if evaluacion.tarea %}
+                                        <p><strong>Tarea:</strong> <strong>{{ evaluacion.tarea.titulo }}</strong></p>
+                                    {% else %}
+                                        <p><strong>Tarea:</strong> <strong>Sin Tarea Asignada</strong></p>
+                                    {% endif %}
+                                    <p><strong>Asignado a:</strong> {{ evaluacion.usuario.first_name }} {{ evaluacion.usuario.last_name }}</p>
+                                    <p>{{ evaluacion.comentarios }}</p>
+                                    <p><strong>Fecha de Evaluación:</strong> {{ evaluacion.fecha_evaluacion }}</p>
+                                    <p><strong>Proyecto:</strong> {{ evaluacion.proyecto.nombre }}</p>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p>No tienes evaluaciones asignadas.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -1,27 +1,28 @@
-import tempfile
-from .models import Evaluacion
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.conf import settings
-from django.http import HttpResponse
-from django.contrib.auth import login as auth_login
-from django.contrib.auth import logout
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.models import User
-from .models import Proyecto, TareaPorDesarrollar, Usuario, Evaluacion
-from .forms import TareaPorDesarrollarForm
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfbase import pdfmetrics
-from reportlab.lib import colors
-from reportlab.lib.units import inch
 import io
-import os
-import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
-from io import BytesIO
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from .forms import TareaPorDesarrollarForm
+from .models import Proyecto, TareaPorDesarrollar, Usuario, Evaluacion
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import logout
+from django.contrib.auth import login as auth_login
+from django.http import HttpResponse
+from django.conf import settings
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.shortcuts import render, get_object_or_404, redirect
 import base64
+from io import BytesIO
+from matplotlib.colors import ListedColormap
+import matplotlib.pyplot as plt
+import os
+import tempfile
+import matplotlib
+matplotlib.use('Agg')  # Usar backend 'Agg' para evitar problemas de GUI
 
 
 # Función de Verificación para Administradores
@@ -101,7 +102,7 @@ def evaluaciones(request):
 
     return render(request, 'evaluaciones.html', {'evaluaciones': evaluaciones})
 
-# Vista para la página de tareas por desarrollar, accesible solo para usuarios autenticados
+# Vista para la página de tareas, accesible solo para usuarios autenticados
 
 
 @login_required
