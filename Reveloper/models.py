@@ -54,15 +54,15 @@ class TareaPorDesarrollar(models.Model):
         verbose_name_plural = "Tareas"
 
 
-class TareaDesarrollada(models.Model):
-    id = models.AutoField(primary_key=True)
-    descripcion = models.TextField()
-    fecha_entrega = models.DateTimeField()
-    tarea_por_desarrollar = models.OneToOneField(
-        TareaPorDesarrollar, on_delete=models.SET_NULL, null=True)
+# class TareaDesarrollada(models.Model):
+#    id = models.AutoField(primary_key=True)
+#    descripcion = models.TextField()
+#    fecha_entrega = models.DateTimeField()
+#    tarea_por_desarrollar = models.OneToOneField(
+#        TareaPorDesarrollar, on_delete=models.SET_NULL, null=True)
 
-    def __str__(self):
-        return self.tarea_por_desarrollar.titulo if self.tarea_por_desarrollar else "Tarea por Desarrollar eliminada"
+#    def __str__(self):
+#        return self.tarea_por_desarrollar.titulo if self.tarea_por_desarrollar else "Tarea por Desarrollar eliminada"
 
 
 class Evaluacion(models.Model):
