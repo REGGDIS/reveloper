@@ -54,8 +54,6 @@ body {
   margin: 50px 0;
 
   .card {
-    background-color: #138496;
-    color: white;
     padding: 20px;
     text-align: center;
     border-radius: 8px;
@@ -63,9 +61,41 @@ body {
     margin: 0 15px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     text-decoration: none;
+    color: white;
 
     &:hover {
-      background-color: #0d5b67;
+      text-decoration: none;
+
+      h2,
+      p {
+        color: white;
+      }
+    }
+  }
+
+  .card-proyectos {
+    background-color: #317fd2 !important;
+
+    &:hover {
+      background-color: #1258a3 !important;
+    }
+  }
+
+  .card-tareas {
+    background-color: #ff7676 !important;
+    color: rgb(45, 44, 44);
+
+    &:hover {
+      background-color: #df4b4b !important;
+    }
+  }
+
+  .card-evaluaciones {
+    background-color: rgb(253, 203, 138) !important;
+    color: #ff5722;
+
+    &:hover {
+      background-color: rgb(245, 183, 101) !important;
     }
   }
 }
