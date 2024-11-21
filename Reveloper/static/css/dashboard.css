@@ -1,7 +1,16 @@
 /* Estilos generales */
 body {
   font-family: Arial, sans-serif;
-  background-color: #d8d8d8 !important;
+  background: linear-gradient(
+    to bottom,
+    #f0f0f0 30%,
+    #a9a9a9 100%
+  ) !important; /* Degradado de gris claro a gris oscuro */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: #ffffff; /* Asegurar que el texto sea legible */
 }
 
 /* Estilos para el encabezado */
