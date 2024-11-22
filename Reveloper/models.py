@@ -14,6 +14,7 @@ class Usuario(AbstractUser):
     nombre = models.CharField(max_length=255)
     apellido = models.CharField(max_length=255)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+    tareas_completadas = models.IntegerField(default=0)  # Nuevo campo
 
     def __str__(self):
         return f"{self.username}"
@@ -84,6 +85,8 @@ def transfer_to_completadas(sender, instance, **kwargs):
             usuario=instance.usuario,
             comentario="Tarea completada y transferida automáticamente."
         )
+        instance.usuario.tareas_completadas += 1
+        instance.usuario.save()
 
 
 class Evaluacion(models.Model):

@@ -13,8 +13,19 @@ body {
   color: #ffffff; /* Asegurar que el texto sea legible */
 }
 
+/* Estilo específico para la página de rendimiento */
+.body-dashboard {
+  background: #ffffff !important; /* Fondo blanco */
+  color: #000000; /* Asegurar que el texto sea legible en fondo blanco */
+  position: relative; /* Para manejar la superposición */
+  top: -24px; /* Ajusta este valor según la altura de tu header */
+  padding-top: 10px; /* Añadir espacio para el contenido */
+  z-index: 1; /* Asegurar que esté detrás del header */
+}
+
 /* Estilos para el encabezado */
 .header {
+  z-index: 5;
   background-color: #343a40;
   color: white;
   padding: 5px 0;

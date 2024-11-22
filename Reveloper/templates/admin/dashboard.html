@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard de Rendimiento{% endblock %}
+
+{% block content %}
+<div class="container mt-4 body-dashboard">
+    <h1>Dashboard de Rendimiento</h1>
+    <!-- Botón para volver a la lista de usuarios -->
+    <a href="{% url 'usuarios' %}" class="btn btn-secondary mb-3">Volver a la Lista de Usuarios</a>
+    <div class="mb-4">
+        {% for usuario in usuarios %}
+            <p>{{ usuario.username }}: {{ usuario.tareas_completadas }}</p>
+        {% endfor %}
+    </div>
+    <canvas id="tareasChart" width="400" height="200"></canvas>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var ctx = document.getElementById('tareasChart').getContext('2d');
+
+        // Preparar los datos para el gráfico
+        var labels = JSON.parse('{{ labels_json|escapejs }}');
+        var data = JSON.parse('{{ data_json|escapejs }}');
+
+        var tareasChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Tareas Completadas',
+                    data: data,
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',  // Color de barra más oscuro
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: 'black',  // Color de las etiquetas del eje Y
+                            font: {
+                                size: 14  // Tamaño de fuente más grande para el eje Y
+                            }
+                        },
+                        grid: {
+                            color: 'black'  // Color de las líneas del eje Y
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: 'black',  // Color de las etiquetas del eje X
+                            font: {
+                                size: 14  // Tamaño de fuente más grande para el eje X
+                            }
+                        },
+                        grid: {
+                            color: 'black'  // Color de las líneas del eje X
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'black',  // Color de las etiquetas de la leyenda
+                            font: {
+                                size: 16  // Tamaño de fuente más grande para la leyenda
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</div>
+{% endblock %}

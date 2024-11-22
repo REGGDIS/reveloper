@@ -7,6 +7,8 @@ from .forms import CustomUserCreationForm, CustomUserChangeForm
 class CustomUserAdmin(BaseUserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
+    list_display = ('username', 'nombre', 'apellido', 'email',
+                    'tareas_completadas')  # Añadido 'tareas_completadas'
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
@@ -20,8 +22,6 @@ admin.site.register(Usuario, CustomUserAdmin)
 admin.site.register(Proyecto)
 admin.site.register(TareaPorDesarrollar)
 admin.site.register(Evaluacion)
-
-# Registro del Modelo TareasCompletadas
 
 
 @admin.register(TareasCompletadas)

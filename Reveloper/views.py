@@ -1,4 +1,5 @@
 import io
+import json
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
@@ -64,6 +65,24 @@ def home(request):
 def print_template_dirs(request):
     print(settings.TEMPLATES[0]['DIRS'])
     return HttpResponse('Template Dirs Printed')
+
+# Vista para generar los datos que se mostrarán en el gráfico
+
+
+@login_required
+@user_passes_test(es_admin)
+def dashboard(request):
+    usuarios = Usuario.objects.all()
+    labels = [usuario.username for usuario in usuarios]
+    data = [usuario.tareas_completadas for usuario in usuarios]
+
+    context = {
+        'usuarios': usuarios,
+        'labels_json': json.dumps(labels),
+        'data_json': json.dumps(data)
+    }
+    return render(request, 'admin/dashboard.html', context)
+
 
 # Vista para la página de usuarios, accesible solo para usuarios autenticados
 
