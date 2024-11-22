@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractUser
 from datetime import timedelta
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 # Creación de Modelos
 
@@ -54,15 +56,34 @@ class TareaPorDesarrollar(models.Model):
         verbose_name_plural = "Tareas"
 
 
-# class TareaDesarrollada(models.Model):
-#    id = models.AutoField(primary_key=True)
-#    descripcion = models.TextField()
-#    fecha_entrega = models.DateTimeField()
-#    tarea_por_desarrollar = models.OneToOneField(
-#        TareaPorDesarrollar, on_delete=models.SET_NULL, null=True)
+class TareasCompletadas(models.Model):
+    tarea_original_id = models.CharField(max_length=100)
+    titulo = models.CharField(max_length=255)
+    fecha_entrega = models.DateTimeField()
+    estado = models.CharField(max_length=50)
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+    comentario = models.TextField(blank=True, null=True)
 
-#    def __str__(self):
-#        return self.tarea_por_desarrollar.titulo if self.tarea_por_desarrollar else "Tarea por Desarrollar eliminada"
+    def __str__(self):
+        return self.titulo
+
+    class Meta:
+        verbose_name = "Tarea Completada"
+        verbose_name_plural = "Tareas Completadas"
+
+
+@receiver(post_save, sender=TareaPorDesarrollar)
+def transfer_to_completadas(sender, instance, **kwargs):
+    if instance.estado == "completada":
+        TareasCompletadas.objects.create(
+            tarea_original_id=instance.id,
+            titulo=instance.titulo,
+            fecha_entrega=instance.fecha_vencimiento,
+            estado=instance.estado,
+            usuario=instance.usuario,
+            comentario="Tarea completada y transferida automáticamente."
+        )
 
 
 class Evaluacion(models.Model):
