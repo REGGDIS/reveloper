@@ -1,23 +1,22 @@
+from io import BytesIO  # Añadir la importación correcta
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth import login as auth_login, logout
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.models import User
+from django.http import HttpResponse
+from django.conf import settings
+from .models import TareaPorDesarrollar, Proyecto, Usuario, Evaluacion
+from .forms import TareaPorDesarrollarForm
 import io
 import json
+import base64
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-from .forms import TareaPorDesarrollarForm
-from .models import Proyecto, TareaPorDesarrollar, Usuario, Evaluacion
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import logout
-from django.contrib.auth import login as auth_login
-from django.http import HttpResponse
-from django.conf import settings
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.shortcuts import render, get_object_or_404, redirect
-import base64
-from io import BytesIO
 from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 import os
@@ -25,8 +24,9 @@ import tempfile
 import matplotlib
 matplotlib.use('Agg')  # Usar backend 'Agg' para evitar problemas de GUI
 
-
 # Función de Verificación para Administradores
+
+
 def es_admin(user):
     return user.is_superuser
 
@@ -44,6 +44,8 @@ def custom_login(request):
         form = AuthenticationForm()
     return render(request, 'registration/login.html', {'form': form})
 
+# Vista para cerrar sesión
+
 
 def logout_view(request):
     logout(request)
@@ -54,10 +56,15 @@ def logout_view(request):
 
 @login_required
 def home(request):
+    tareas_pendientes = TareaPorDesarrollar.objects.filter(
+        usuario=request.user, estado='pendiente')
     context = {
-        'usuario': request.user
+        'usuario': request.user,
+        # Serializar a JSON
+        'tareas_pendientes': json.dumps(list(tareas_pendientes.values('titulo')))
     }
     return render(request, 'home.html', context)
+
 
 # Vista para imprimir las carpetas de plantillas configuradas
 

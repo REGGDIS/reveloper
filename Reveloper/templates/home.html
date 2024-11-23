@@ -29,4 +29,21 @@
         </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Obtener las tareas pendientes del contexto
+    var tareasPendientes = JSON.parse('{{ tareas_pendientes|escapejs }}');
+    console.log(tareasPendientes);  // Verificar en la consola del navegador
+
+    // Si hay tareas pendientes, mostrar un mensaje pop-up
+    if (tareasPendientes.length > 0) {
+        var mensaje = "Tienes las siguientes tareas pendientes:\n\n";
+        tareasPendientes.forEach(function(tarea, index) {
+            mensaje += (index + 1) + ". " + tarea.titulo + "\n";
+        });
+        alert(mensaje);
+    }
+});
+</script>
 {% endblock %}
