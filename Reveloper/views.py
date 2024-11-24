@@ -4,10 +4,12 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login as auth_login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
+from django.utils import timezone
 from django.http import HttpResponse
 from django.conf import settings
 from .models import TareaPorDesarrollar, Proyecto, Usuario, Evaluacion
 from .forms import TareaPorDesarrollarForm
+from .forms import EvaluacionForm
 import io
 import json
 import base64
@@ -161,31 +163,50 @@ def marcar_tarea_en_revision(request, tarea_id):
 
 # Vista para Revisar Tareas y Crear Evaluaciones
 
-def es_admin(user):
-    return user.is_superuser
-
 
 @login_required
 @user_passes_test(es_admin)
 def revisar_tareas(request):
     tareas_en_revision = TareaPorDesarrollar.objects.filter(
         estado='en revision')
+
     if request.method == 'POST':
         tarea_id = request.POST.get('tarea_id')
         tarea = get_object_or_404(TareaPorDesarrollar, id=tarea_id)
-        tarea.estado = 'completada'
-        tarea.save()
-        # Crear evaluación automáticamente
-        Evaluacion.objects.create(
-            titulo=f"Evaluación de {tarea.titulo}",
-            comentarios="Comentario pendiente",
-            proyecto=tarea.proyecto,
-            usuario=tarea.usuario,
-            tarea=tarea,
-            calificacion=None  # Calificación pendiente
-        )
-        return redirect('revisar_tareas')
-    return render(request, 'revisar_tareas.html', {'tareas': tareas_en_revision})
+
+        # Procesar el formulario de evaluación
+        form = EvaluacionForm(request.POST)
+        if form.is_valid():
+            tarea.estado = 'completada'
+            tarea.save()
+
+            # Obtener los puntajes del formulario
+            tiempo_entrega = form.cleaned_data['tiempo_entrega']
+            complejidad_tarea = form.cleaned_data['complejidad_tarea']
+            numero_revisiones = form.cleaned_data['numero_revisiones']
+
+            # Calcular la calificación automática
+            calificacion = tiempo_entrega + complejidad_tarea + numero_revisiones
+            comentarios = f"Evaluación automática: Tiempo de Entrega: {tiempo_entrega}, Complejidad de la Tarea: {
+                complejidad_tarea}, Número de Revisiones: {numero_revisiones}"
+
+            # Crear evaluación automática
+            Evaluacion.objects.create(
+                titulo=f"Evaluación para {tarea.titulo}",
+                comentarios=comentarios,
+                fecha_evaluacion=timezone.now(),
+                proyecto=tarea.proyecto,
+                usuario=tarea.usuario,
+                calificacion=calificacion,
+                tarea=tarea
+            )
+
+            return redirect('revisar_tareas')
+
+    else:
+        form = EvaluacionForm()
+
+    return render(request, 'revisar_tareas.html', {'tareas': tareas_en_revision, 'form': form})
 
 
 @login_required

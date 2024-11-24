@@ -19,6 +19,7 @@
                     <form action="{% url 'revisar_tareas' %}" method="POST">
                         {% csrf_token %}
                         <input type="hidden" name="tarea_id" value="{{ tarea.id }}">
+                        {{ form.as_p }}
                         <button type="submit" class="btn btn-success">Aceptar Tarea Completada</button>
                     </form>
                 </div>

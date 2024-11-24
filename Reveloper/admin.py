@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import Usuario, Proyecto, TareaPorDesarrollar, Evaluacion, TareasCompletadas
+from .models import Usuario, Proyecto, TareaPorDesarrollar, Evaluacion, TareasCompletadas, EvaluacionConfig
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 
 
@@ -22,6 +22,7 @@ admin.site.register(Usuario, CustomUserAdmin)
 admin.site.register(Proyecto)
 admin.site.register(TareaPorDesarrollar)
 admin.site.register(Evaluacion)
+admin.site.register(EvaluacionConfig)
 
 
 @admin.register(TareasCompletadas)
