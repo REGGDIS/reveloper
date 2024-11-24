@@ -145,11 +145,16 @@ def tareas_por_desarrollar(request):
 
 
 # Vista para Marcar Tarea como "En Revisión"
+
+
 @login_required
 def marcar_tarea_en_revision(request, tarea_id):
     tarea = get_object_or_404(TareaPorDesarrollar, id=tarea_id)
-    if tarea.usuario == request.user and tarea.estado != 'completada':
-        tarea.estado = 'en revision'
+    if tarea.usuario == request.user:
+        if tarea.estado == 'pendiente':
+            tarea.estado = 'en progreso'
+        elif tarea.estado == 'en progreso':
+            tarea.estado = 'en revision'
         tarea.save()
     return redirect('tareas_por_desarrollar')
 
