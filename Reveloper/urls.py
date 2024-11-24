@@ -25,6 +25,10 @@ urlpatterns = [
     path('evaluaciones/', vista_evaluaciones, name='vista_evaluaciones'),
     path('generar_informe_grafico_pdf/', generar_informe_grafico_pdf,
          name='generar_informe_grafico_pdf'),
-    # Ajustar la ruta a 'dashboard/' directamente
     path('dashboard/', dashboard, name='dashboard'),
+
+    # Nuevas rutas
+    path('tareas/marcar_como_revision/<str:tarea_id>/',
+         views.marcar_tarea_en_revision, name='marcar_tarea_en_revision'),
+    path('revisar_tareas/', views.revisar_tareas, name='revisar_tareas'),
 ]

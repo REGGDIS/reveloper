@@ -47,7 +47,9 @@ class TareaPorDesarrollar(models.Model):
     estado = models.CharField(max_length=20, choices=[
         ('pendiente', 'Pendiente'),
         ('en progreso', 'En Progreso'),
-        ('completada', 'Completada')])
+        ('completada', 'Completada'),
+        ('en revision', 'En Revisión')  # Añadir nuevo estado
+    ])
 
     def __str__(self):
         return self.titulo

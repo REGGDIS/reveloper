@@ -18,6 +18,7 @@
                 <li><a href="{% url 'home' %}">Inicio</a></li>
                 {% if user.is_authenticated and user.is_superuser %}
                     <li><a href="{% url 'usuarios' %}">Usuarios</a></li>
+                    <li><a href="{% url 'revisar_tareas' %}">Revisar Tareas</a></li>  <!-- Nuevo enlace -->
                 {% endif %}
                 <li><a href="{% url 'proyectos' %}">Proyectos</a></li>
                 <li><a href="{% url 'tareas_por_desarrollar' %}">Tareas</a></li>

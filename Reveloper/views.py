@@ -144,6 +144,45 @@ def tareas_por_desarrollar(request):
     return render(request, 'tareas.html', {'tareas': tareas})
 
 
+# Vista para Marcar Tarea como "En Revisión"
+@login_required
+def marcar_tarea_en_revision(request, tarea_id):
+    tarea = get_object_or_404(TareaPorDesarrollar, id=tarea_id)
+    if tarea.usuario == request.user and tarea.estado != 'completada':
+        tarea.estado = 'en revision'
+        tarea.save()
+    return redirect('tareas_por_desarrollar')
+
+
+# Vista para Revisar Tareas y Crear Evaluaciones
+
+def es_admin(user):
+    return user.is_superuser
+
+
+@login_required
+@user_passes_test(es_admin)
+def revisar_tareas(request):
+    tareas_en_revision = TareaPorDesarrollar.objects.filter(
+        estado='en revision')
+    if request.method == 'POST':
+        tarea_id = request.POST.get('tarea_id')
+        tarea = get_object_or_404(TareaPorDesarrollar, id=tarea_id)
+        tarea.estado = 'completada'
+        tarea.save()
+        # Crear evaluación automáticamente
+        Evaluacion.objects.create(
+            titulo=f"Evaluación de {tarea.titulo}",
+            comentarios="Comentario pendiente",
+            proyecto=tarea.proyecto,
+            usuario=tarea.usuario,
+            tarea=tarea,
+            calificacion=None  # Calificación pendiente
+        )
+        return redirect('revisar_tareas')
+    return render(request, 'revisar_tareas.html', {'tareas': tareas_en_revision})
+
+
 @login_required
 @user_passes_test(es_admin)
 def crear_tarea(request):

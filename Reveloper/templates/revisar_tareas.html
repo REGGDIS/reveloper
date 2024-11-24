@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Revisar Tareas{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Revisar Tareas</h1>
+    <div class="task-container">
+        {% if tareas %}
+            {% for tarea in tareas %}
+                <div class="task">
+                    <h2>{{ tarea.titulo }}</h2>
+                    <p><strong>Descripción:</strong> {{ tarea.descripcion }}</p>
+                    <p><strong>Estado:</strong> {{ tarea.estado }}</p>
+                    <p><strong>Fecha de Creación:</strong> {{ tarea.fecha_creacion }}</p>
+                    <p><strong>Fecha de Vencimiento:</strong> {{ tarea.fecha_vencimiento }}</p>
+                    <p><strong>Proyecto:</strong> {{ tarea.proyecto.nombre }}</p>
+                    <p><strong>Asignado a:</strong> {{ tarea.usuario.first_name }} {{ tarea.usuario.last_name }}</p>
+                    <form action="{% url 'revisar_tareas' %}" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="tarea_id" value="{{ tarea.id }}">
+                        <button type="submit" class="btn btn-success">Aceptar Tarea Completada</button>
+                    </form>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No hay tareas en revisión</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

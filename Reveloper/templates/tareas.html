@@ -35,6 +35,12 @@
                                     <p><strong>Fecha de Vencimiento:</strong> {{ tarea.fecha_vencimiento }}</p>
                                     <p><strong>Proyecto:</strong> {{ tarea.proyecto.nombre }}</p>
                                     <p><strong>Asignado a:</strong> {{ tarea.usuario.first_name }} {{ tarea.usuario.last_name }}</p>
+                                    {% if tarea.estado == 'en progreso' %}
+                                        <form action="{% url 'marcar_tarea_en_revision' tarea.id %}" method="POST">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-warning">Marcar como En Revisión</button>
+                                        </form>
+                                    {% endif %}
                                 </div>
                             {% endfor %}
                         {% else %}
