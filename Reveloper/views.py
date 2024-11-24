@@ -250,28 +250,41 @@ def generate_pdf(request):
 
     # Título del documento
     logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
-    title = "Informe de Proyecto"
+    title = "Informe de Proyectos"
     username = f"Usuario: {request.user.username}"
     subtitle = "Lista de Proyectos:"
 
     # Estilos de párrafo
     styleN = styles["BodyText"]
     styleH = styles["Heading1"]
-    styleN = ParagraphStyle('Normal', spaceAfter=10)
-    styleH = ParagraphStyle('Heading1', spaceAfter=10,
-                            fontSize=16, textColor=colors.darkblue)
+    styleN = ParagraphStyle('Normal', spaceAfter=5, leading=10)
+    styleH = ParagraphStyle('Heading1', spaceAfter=10, fontSize=16,
+                            textColor=colors.darkblue, fontName='Helvetica-Bold')
 
     # Estilo para el ID y nombre del proyecto
     styleID = ParagraphStyle('Normal', spaceAfter=10,
                              fontSize=14, textColor=colors.black, leading=15)
 
+    # Estilo para el nombre de las tareas
+    styleTaskTitle = ParagraphStyle('Normal', spaceAfter=8, fontSize=12,
+                                    textColor=colors.black, leading=12, fontName='Helvetica-Bold')
+
+    # Estilo para el desarrollador asignado
+    styleAssignedTo = ParagraphStyle(
+        'Normal', spaceAfter=8, fontSize=12, textColor=colors.black, leading=12)
+
+    # Estilo para el nombre del usuario
+    styleUsername = ParagraphStyle(
+        'Normal', spaceAfter=12, fontSize=14, textColor=colors.black, fontName='Helvetica-Bold')
+
     # Añadir logotipo y títulos
     story.append(Paragraph(
         f'<img src="{logo_path}" width="100" height="50" valign="middle"/>', styleN))
-    story.append(Spacer(1, 12))
+    # Aumentar el espaciado entre el logo y el título
+    story.append(Spacer(1, 20))
     story.append(Paragraph(title, styleH))
     story.append(Spacer(1, 12))
-    story.append(Paragraph(username, styleN))
+    story.append(Paragraph(username, styleUsername))
     story.append(Spacer(1, 12))
     story.append(Paragraph(subtitle, styleN))
     story.append(Spacer(1, 12))
@@ -279,19 +292,16 @@ def generate_pdf(request):
     # Obtener datos del contexto
     projects = Proyecto.objects.all()
     for project in projects:
-        story.append(Paragraph(f"ID: {project.id}, Nombre: {
-                     project.nombre}", styleID))
+        # Aplicar subrayado con etiquetas HTML
+        story.append(Paragraph(f"<u>ID: {project.id}, Nombre: {
+                     project.nombre}</u>", styleID))
         story.append(Spacer(1, 10))
 
         # Ajustar texto de la descripción
         story.append(Paragraph(f"Descripción: {project.descripcion}", styleN))
-        story.append(Spacer(1, 10))
-
         story.append(Paragraph(f"Fecha de Inicio: {
                      project.fecha_inicio}", styleN))
-        story.append(Spacer(1, 10))
         story.append(Paragraph(f"Fecha de Fin: {project.fecha_fin}", styleN))
-        story.append(Spacer(1, 10))
         story.append(
             Paragraph(f"Estado: {project.get_estado_display()}", styleN))
         story.append(Spacer(1, 10))
@@ -300,19 +310,15 @@ def generate_pdf(request):
         tareas = TareaPorDesarrollar.objects.filter(
             proyecto=project).select_related('usuario')
         for tarea in tareas:
-            story.append(Paragraph(f"Tarea: {tarea.titulo}", styleN))
-            story.append(Spacer(1, 8))
+            story.append(Paragraph(f"Tarea: {tarea.titulo}", styleTaskTitle))
             story.append(Paragraph(f"Asignado a: {tarea.usuario.first_name} {
-                         tarea.usuario.last_name}", styleN))
-            story.append(Spacer(1, 8))
+                         tarea.usuario.last_name}", styleAssignedTo))
             story.append(Paragraph(f"Estado: {tarea.estado}", styleN))
-            story.append(Spacer(1, 8))
             story.append(Paragraph(f"Fecha de Creación: {
                          tarea.fecha_creacion}", styleN))
-            story.append(Spacer(1, 8))
             story.append(Paragraph(f"Fecha de Vencimiento: {
                          tarea.fecha_vencimiento}", styleN))
-            story.append(Spacer(1, 12))
+            story.append(Spacer(1, 10))
 
         story.append(Spacer(1, 12))
         # Añadir una línea horizontal de margen a margen para separar proyectos
@@ -325,172 +331,220 @@ def generate_pdf(request):
     return HttpResponse(buffer, content_type='application/pdf')
 
 
+@login_required
 def generate_task_pdf(request):
     buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-
-    # Registrar y usar una fuente personalizada
-    pdfmetrics.registerFont(TTFont('Arial', 'Arial.ttf'))
-    p.setFont("Arial", 12)
-
-    # Añadir una imagen de logotipo en la parte superior del documento
-    p.drawImage("Reveloper/static/img/logos/logo-reveloper.png",
-                100, 700, width=2*inch, height=1*inch)
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    story = []
 
     # Título del documento
-    p.setFont("Helvetica-Bold", 16)
-    p.setFillColor(colors.darkblue)
-    p.drawString(100, 650, "Informe de Tareas")
+    logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
+    title = "Informe de Tareas"
+    username = f"Usuario: {request.user.username}"
 
-    p.setFont("Helvetica", 12)
-    p.setFillColor(colors.black)
-    p.drawString(100, 630, f"Usuario: {request.user.username}")
+    # Estilos de párrafo
+    styleN = styles["BodyText"]
+    styleH = styles["Heading1"]
+    styleN = ParagraphStyle('Normal', spaceAfter=5, leading=10)
+    styleH = ParagraphStyle('Heading1', spaceAfter=10, fontSize=16,
+                            textColor=colors.darkblue, fontName='Helvetica-Bold')
+
+    # Estilo para el título de las tareas
+    styleTaskTitle = ParagraphStyle('Normal', spaceAfter=8, fontSize=12,
+                                    textColor=colors.black, leading=12, fontName='Helvetica-Bold')
+
+    # Estilo para el asignado a
+    styleAssignedTo = ParagraphStyle(
+        'Normal', spaceAfter=8, fontSize=12, textColor=colors.black, leading=12, fontName='Helvetica-Bold')
+
+    # Estilo para el nombre del usuario
+    styleUsername = ParagraphStyle(
+        'Normal', spaceAfter=12, fontSize=14, textColor=colors.black, fontName='Helvetica-Bold')
+
+    # Añadir logotipo y títulos
+    story.append(Paragraph(
+        f'<img src="{logo_path}" width="100" height="50" valign="middle"/>', styleN))
+    # Aumentar el espaciado entre el logo y el título
+    story.append(Spacer(1, 20))
+    story.append(Paragraph(title, styleH))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph(username, styleUsername))
+    story.append(Spacer(1, 12))
 
     # Verificar si el usuario es administrador
     if request.user.is_superuser:
         tareas = TareaPorDesarrollar.objects.all()
-        p.drawString(100, 610, "Lista de Todas las Tareas:")
+        subtitle = "Lista de Todas las Tareas:"
     else:
         tareas = TareaPorDesarrollar.objects.filter(usuario=request.user)
-        p.drawString(100, 610, "Lista de Tareas Asignadas:")
+        subtitle = "Lista de Tareas Asignadas:"
 
-    y = 590
+    story.append(Paragraph(subtitle, styleN))
+    story.append(Spacer(1, 12))
+
     for tarea in tareas:
-        p.drawString(100, y, f"Título: {tarea.titulo}")
-        y -= 15
-        p.drawString(100, y, f"Descripción: {tarea.descripcion}")
-        y -= 15
-        p.drawString(100, y, f"Estado: {tarea.estado}")
-        y -= 15
-        p.drawString(100, y, f"Fecha de Creación: {tarea.fecha_creacion}")
-        y -= 15
-        p.drawString(100, y, f"Fecha de Vencimiento: {
-                     tarea.fecha_vencimiento}")
-        y -= 15
-        p.drawString(100, y, f"Proyecto: {tarea.proyecto.nombre}")
-        y -= 15
-        p.drawString(100, y, f"Asignado a: {tarea.usuario.first_name} {
-                     tarea.usuario.last_name}")
-        y -= 30
+        story.append(Paragraph(f"Título: {tarea.titulo}", styleTaskTitle))
+        story.append(Paragraph(f"Descripción: {tarea.descripcion}", styleN))
+        story.append(Paragraph(f"Estado: {tarea.estado}", styleN))
+        story.append(Paragraph(f"Fecha de Creación: {
+                     tarea.fecha_creacion}", styleN))
+        story.append(Paragraph(f"Fecha de Vencimiento: {
+                     tarea.fecha_vencimiento}", styleN))
+        story.append(Paragraph(f"Proyecto: {tarea.proyecto.nombre}", styleN))
+        story.append(Paragraph(f"Asignado a: {tarea.usuario.first_name} {
+                     tarea.usuario.last_name}", styleAssignedTo))
+        story.append(Spacer(1, 10))
 
-        # Ajustar posición de la línea divisoria
-        p.setStrokeColor(colors.grey)
-        line_y = y + 7.5  # Centrar la línea divisoria entre tareas
-        p.line(100, line_y, 500, line_y)
-        y -= 10  # Añadir un pequeño margen después de la línea
+        # Añadir una línea horizontal de margen a margen para separar tareas
+        story.append(HRFlowable(width="100%", thickness=1,
+                     color=colors.grey, spaceBefore=1, spaceAfter=24))
 
-    p.showPage()
-    p.save()
+    # Cerrar y guardar el PDF
+    doc.build(story)
     buffer.seek(0)
     return HttpResponse(buffer, content_type='application/pdf')
 
 
+@login_required
 def generate_evaluation_pdf(request):
     buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-
-    # Registrar y usar una fuente personalizada
-    pdfmetrics.registerFont(TTFont('Arial', 'Arial.ttf'))
-    p.setFont("Arial", 12)
-
-    # Añadir una imagen de logotipo en la parte superior del documento
-    p.drawImage("Reveloper/static/img/logos/logo-reveloper.png",
-                100, 700, width=2*inch, height=1*inch)
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    story = []
 
     # Título del documento
-    p.setFont("Helvetica-Bold", 16)
-    p.setFillColor(colors.darkblue)
-    p.drawString(100, 650, "Informe de Evaluaciones")
+    logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
+    title = "Informe de Evaluaciones"
+    username = f"Usuario: {request.user.username}"
 
-    p.setFont("Helvetica", 12)
-    p.setFillColor(colors.black)
-    p.drawString(100, 630, f"Usuario: {request.user.username}")
+    # Estilos de párrafo
+    styleN = styles["BodyText"]
+    styleH = styles["Heading1"]
+    styleN = ParagraphStyle('Normal', spaceAfter=5, leading=10)
+    styleH = ParagraphStyle('Heading1', spaceAfter=10, fontSize=16,
+                            textColor=colors.darkblue, fontName='Helvetica-Bold')
+
+    # Estilo para el título de las evaluaciones
+    styleEvaluationTitle = ParagraphStyle(
+        'Normal', spaceAfter=8, fontSize=12, textColor=colors.black, leading=12, fontName='Helvetica-Bold')
+
+    # Estilo para la calificación
+    styleCalificacion = ParagraphStyle(
+        'Normal', spaceAfter=8, fontSize=14, textColor=colors.black, leading=12, fontName='Helvetica-Bold')
+
+    # Estilo para el asignado a
+    styleAssignedTo = ParagraphStyle(
+        'Normal', spaceAfter=8, fontSize=12, textColor=colors.black, leading=12)
+
+    # Estilo para el nombre del usuario
+    styleUsername = ParagraphStyle(
+        'Normal', spaceAfter=12, fontSize=14, textColor=colors.black, fontName='Helvetica-Bold')
+
+    # Añadir logotipo y títulos
+    story.append(Paragraph(
+        f'<img src="{logo_path}" width="100" height="50" valign="middle"/>', styleN))
+    # Aumentar el espaciado entre el logo y el título
+    story.append(Spacer(1, 20))
+    story.append(Paragraph(title, styleH))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph(username, styleUsername))
+    story.append(Spacer(1, 12))
 
     # Verificar si el usuario es administrador
     if request.user.is_superuser:
         evaluaciones = Evaluacion.objects.all()
-        p.drawString(100, 610, "Lista de Todas las Evaluaciones:")
+        subtitle = "Lista de Todas las Evaluaciones:"
     else:
         evaluaciones = Evaluacion.objects.filter(usuario=request.user)
-        p.drawString(100, 610, "Lista de Evaluaciones Asignadas:")
+        subtitle = "Lista de Evaluaciones Asignadas:"
 
-    y = 590
+    story.append(Paragraph(subtitle, styleN))
+    story.append(Spacer(1, 12))
+
     for evaluacion in evaluaciones:
-        p.drawString(100, y, f"Título: {evaluacion.titulo}")
-        y -= 15
-        p.drawString(100, y, f"Calificación: {evaluacion.calificacion}")
-        y -= 15
+        story.append(
+            Paragraph(f"Título: {evaluacion.titulo}", styleEvaluationTitle))
+        story.append(Paragraph(f"Calificación: {
+                     evaluacion.calificacion}", styleCalificacion))
         if evaluacion.tarea:
-            p.drawString(100, y, f"Tarea: {evaluacion.tarea.titulo}")
+            story.append(
+                Paragraph(f"Tarea: {evaluacion.tarea.titulo}", styleN))
         else:
-            p.drawString(100, y, "Tarea: Sin Tarea Asignada")
-        y -= 15
-        p.drawString(100, y, f"Asignado a: {evaluacion.usuario.first_name} {
-                     evaluacion.usuario.last_name}")
-        y -= 15
-        p.drawString(100, y, f"Fecha de Evaluación: {
-                     evaluacion.fecha_evaluacion}")
-        y -= 15
-        p.drawString(100, y, f"Proyecto: {evaluacion.proyecto.nombre}")
-        y -= 30
+            story.append(Paragraph("Tarea: Sin Tarea Asignada", styleN))
+        story.append(Paragraph(f"Asignado a: {evaluacion.usuario.first_name} {
+                     evaluacion.usuario.last_name}", styleAssignedTo))
+        story.append(Paragraph(f"Fecha de Evaluación: {
+                     evaluacion.fecha_evaluacion}", styleN))
+        story.append(
+            Paragraph(f"Proyecto: {evaluacion.proyecto.nombre}", styleN))
+        story.append(Spacer(1, 10))
 
-        # Ajustar posición de la línea divisoria
-        p.setStrokeColor(colors.grey)
-        line_y = y + 7.5  # Centrar la línea divisoria entre evaluaciones
-        p.line(100, line_y, 500, line_y)
-        y -= 10  # Añadir un pequeño margen después de la línea
+        # Añadir una línea horizontal de margen a margen para separar evaluaciones
+        story.append(HRFlowable(width="100%", thickness=1,
+                     color=colors.grey, spaceBefore=1, spaceAfter=24))
 
-    p.showPage()
-    p.save()
+    # Cerrar y guardar el PDF
+    doc.build(story)
     buffer.seek(0)
     return HttpResponse(buffer, content_type='application/pdf')
 
 
+@login_required
 def generate_user_pdf(request):
     # Esta vista sólo debe ser accesible para administradores
     if not request.user.is_superuser:
         return HttpResponse("No tienes permiso para acceder a esta página.", status=403)
 
     buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-
-    # Registrar y usar una fuente personalizada
-    pdfmetrics.registerFont(TTFont('Arial', 'Arial.ttf'))
-    p.setFont("Arial", 12)
-
-    # Añadir una imagen de logotipo en la parte superior del documento
-    p.drawImage("Reveloper/static/img/logos/logo-reveloper.png",
-                100, 700, width=2*inch, height=1*inch)
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    story = []
 
     # Título del documento
-    p.setFont("Helvetica-Bold", 16)
-    p.setFillColor(colors.darkblue)
-    p.drawString(100, 650, "Informe de Usuarios")
+    logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
+    title = "Informe de Usuarios"
+    generated_by = f"Generado por: {request.user.username}"
+    subtitle = "Lista de Usuarios:"
 
-    p.setFont("Helvetica", 12)
-    p.setFillColor(colors.black)
-    p.drawString(100, 630, f"Generado por: {request.user.username}")
-    p.drawString(100, 615, "Lista de Usuarios:")
+    # Estilos de párrafo
+    styleN = styles["BodyText"]
+    styleH = styles["Heading1"]
+    styleN = ParagraphStyle('Normal', spaceAfter=5, leading=10)
+    styleH = ParagraphStyle('Heading1', spaceAfter=10, fontSize=16,
+                            textColor=colors.darkblue, fontName='Helvetica-Bold')
+
+    # Estilo para el nombre de los usuarios
+    styleUserName = ParagraphStyle('Normal', spaceAfter=10, fontSize=14,
+                                   textColor=colors.black, leading=15, fontName='Helvetica-Bold')
+
+    # Añadir logotipo y títulos
+    story.append(Paragraph(
+        f'<img src="{logo_path}" width="100" height="50" valign="middle"/>', styleN))
+    # Aumentar el espaciado entre el logo y el título
+    story.append(Spacer(1, 20))
+    story.append(Paragraph(title, styleH))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph(generated_by, styleUserName))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph(subtitle, styleN))
+    story.append(Spacer(1, 12))
 
     usuarios = Usuario.objects.all()
-    y = 595
     for usuario in usuarios:
-        p.drawString(100, y, f"Nombre: {usuario.first_name} {
-                     usuario.last_name}")
-        y -= 15
-        p.drawString(100, y, f"Email: {usuario.email}")
-        y -= 15
-        p.drawString(100, y, f"Fecha de Registro: {usuario.date_joined}")
-        y -= 30
+        story.append(Paragraph(f"Nombre: {usuario.first_name} {
+                     usuario.last_name}", styleUserName))
+        story.append(Paragraph(f"Email: {usuario.email}", styleN))
+        story.append(Paragraph(f"Fecha de Registro: {
+                     usuario.date_joined}", styleN))
+        story.append(Spacer(1, 10))
 
-        # Ajustar posición de la línea divisoria
-        p.setStrokeColor(colors.grey)
-        line_y = y + 7.5  # Centrar la línea divisoria entre usuarios
-        p.line(100, line_y, 500, line_y)
-        y -= 10  # Añadir un pequeño margen después de la línea
+        # Añadir una línea horizontal de margen a margen para separar usuarios
+        story.append(HRFlowable(width="100%", thickness=1,
+                     color=colors.grey, spaceBefore=1, spaceAfter=24))
 
-    p.showPage()
-    p.save()
+    # Cerrar y guardar el PDF
+    doc.build(story)
     buffer.seek(0)
     return HttpResponse(buffer, content_type='application/pdf')
 
