@@ -19,6 +19,8 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, HRFlowable
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 import os
@@ -241,93 +243,84 @@ def editar_tarea(request, tarea_id):
 
 @login_required
 def generate_pdf(request):
-    # Crear un buffer de bytes para el PDF
     buffer = io.BytesIO()
-    # Crear el PDF
-    p = canvas.Canvas(buffer, pagesize=letter)
-
-    # Registrar y usar una fuente personalizada
-    pdfmetrics.registerFont(TTFont('Arial', 'Arial.ttf'))
-    p.setFont("Arial", 12)
-
-    # Añadir una imagen de logotipo en la parte superior del documento
-    p.drawImage("Reveloper/static/img/logos/logo-reveloper.png",
-                100, 700, width=2*inch, height=1*inch)
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    story = []
 
     # Título del documento
-    p.setFont("Helvetica-Bold", 16)
-    p.setFillColor(colors.darkblue)
-    p.drawString(100, 650, "Informe de Proyecto")
+    logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
+    title = "Informe de Proyecto"
+    username = f"Usuario: {request.user.username}"
+    subtitle = "Lista de Proyectos:"
 
-    p.setFont("Helvetica", 12)
-    p.setFillColor(colors.black)
-    p.drawString(100, 630, f"Usuario: {request.user.username}")
-    p.drawString(100, 615, "Lista de Proyectos:")
+    # Estilos de párrafo
+    styleN = styles["BodyText"]
+    styleH = styles["Heading1"]
+    styleN = ParagraphStyle('Normal', spaceAfter=10)
+    styleH = ParagraphStyle('Heading1', spaceAfter=10,
+                            fontSize=16, textColor=colors.darkblue)
 
-    # Margen inferior para el contenido
-    bottom_margin = 50
+    # Estilo para el ID y nombre del proyecto
+    styleID = ParagraphStyle('Normal', spaceAfter=10,
+                             fontSize=14, textColor=colors.black, leading=15)
+
+    # Añadir logotipo y títulos
+    story.append(Paragraph(
+        f'<img src="{logo_path}" width="100" height="50" valign="middle"/>', styleN))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph(title, styleH))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph(username, styleN))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph(subtitle, styleN))
+    story.append(Spacer(1, 12))
 
     # Obtener datos del contexto
     projects = Proyecto.objects.all()
-    y = 595
     for project in projects:
-        if y < bottom_margin:  # Salto de página si el espacio es insuficiente
-            p.showPage()
-            y = 750
-            p.setFont("Helvetica", 12)
+        story.append(Paragraph(f"ID: {project.id}, Nombre: {
+                     project.nombre}", styleID))
+        story.append(Spacer(1, 10))
 
-        p.drawString(100, y, f"ID: {project.id}, Nombre: {project.nombre}")
-        y -= 15
-        p.drawString(100, y, f"Descripción: {project.descripcion}")
-        y -= 15
-        p.drawString(100, y, f"Fecha de Inicio: {project.fecha_inicio}")
-        y -= 15
-        p.drawString(100, y, f"Fecha de Fin: {project.fecha_fin}")
-        y -= 15
-        p.drawString(100, y, f"Estado: {project.get_estado_display()}")
-        y -= 15
-        y -= 10  # Añadir un pequeño espacio antes de las tareas
+        # Ajustar texto de la descripción
+        story.append(Paragraph(f"Descripción: {project.descripcion}", styleN))
+        story.append(Spacer(1, 10))
+
+        story.append(Paragraph(f"Fecha de Inicio: {
+                     project.fecha_inicio}", styleN))
+        story.append(Spacer(1, 10))
+        story.append(Paragraph(f"Fecha de Fin: {project.fecha_fin}", styleN))
+        story.append(Spacer(1, 10))
+        story.append(
+            Paragraph(f"Estado: {project.get_estado_display()}", styleN))
+        story.append(Spacer(1, 10))
 
         # Añadir tareas al PDF
         tareas = TareaPorDesarrollar.objects.filter(
             proyecto=project).select_related('usuario')
         for tarea in tareas:
-            if y < bottom_margin:  # Salto de página si el espacio es insuficiente
-                p.showPage()
-                y = 750
-                p.setFont("Helvetica", 12)
+            story.append(Paragraph(f"Tarea: {tarea.titulo}", styleN))
+            story.append(Spacer(1, 8))
+            story.append(Paragraph(f"Asignado a: {tarea.usuario.first_name} {
+                         tarea.usuario.last_name}", styleN))
+            story.append(Spacer(1, 8))
+            story.append(Paragraph(f"Estado: {tarea.estado}", styleN))
+            story.append(Spacer(1, 8))
+            story.append(Paragraph(f"Fecha de Creación: {
+                         tarea.fecha_creacion}", styleN))
+            story.append(Spacer(1, 8))
+            story.append(Paragraph(f"Fecha de Vencimiento: {
+                         tarea.fecha_vencimiento}", styleN))
+            story.append(Spacer(1, 12))
 
-            p.drawString(120, y, f"Tarea: {tarea.titulo}")
-            y -= 15
-            p.drawString(120, y, f"Asignado a: {tarea.usuario.first_name} {
-                         tarea.usuario.last_name}")
-            y -= 15
-            p.drawString(120, y, f"Estado: {tarea.estado}")
-            y -= 15
-            p.drawString(120, y, f"Fecha de Creación: {tarea.fecha_creacion}")
-            y -= 15
-            p.drawString(120, y, f"Fecha de Vencimiento: {
-                         tarea.fecha_vencimiento}")
-            y -= 15
-            y -= 5  # Añadir un pequeño espacio entre tareas
-
-        y -= 10  # Añadir un pequeño espacio antes de la línea
-        p.setStrokeColor(colors.grey)
-        # Añadir una línea horizontal más corta para separar proyectos
-        p.line(100, y, 500, y)
-        y -= 20  # Añadir un espacio adicional entre proyectos
-
-        # Verificar si el último contenido está demasiado cerca del borde
-        if y < bottom_margin:
-            p.showPage()
-            y = 750
-            p.setFont("Helvetica", 12)
+        story.append(Spacer(1, 12))
+        # Añadir una línea horizontal de margen a margen para separar proyectos
+        story.append(HRFlowable(width="100%", thickness=1,
+                     color=colors.grey, spaceBefore=1, spaceAfter=24))
 
     # Cerrar y guardar el PDF
-    p.showPage()
-    p.save()
-
-    # Obtener el valor de los bytes del buffer y escribirlo en la respuesta
+    doc.build(story)
     buffer.seek(0)
     return HttpResponse(buffer, content_type='application/pdf')
 
