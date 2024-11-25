@@ -7,9 +7,8 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.http import HttpResponse
 from django.conf import settings
-from .models import TareaPorDesarrollar, Proyecto, Usuario, Evaluacion
-from .forms import TareaPorDesarrollarForm
-from .forms import EvaluacionForm
+from .models import TareaPorDesarrollar, Proyecto, Usuario, Evaluacion, EvaluacionConfig
+from .forms import TareaPorDesarrollarForm, EvaluacionForm
 import io
 import json
 import base64
@@ -27,6 +26,7 @@ import os
 import tempfile
 import matplotlib
 matplotlib.use('Agg')  # Usar backend 'Agg' para evitar problemas de GUI
+
 
 # Función de Verificación para Administradores
 
@@ -165,12 +165,16 @@ def marcar_tarea_en_revision(request, tarea_id):
 
 # Vista para Revisar Tareas y Crear Evaluaciones
 
-
 @login_required
 @user_passes_test(es_admin)
 def revisar_tareas(request):
     tareas_en_revision = TareaPorDesarrollar.objects.filter(
         estado='en revision')
+
+    # Obtener la nota máxima de la configuración de evaluación
+    evaluacion_config = EvaluacionConfig.objects.first()
+    # Valor por defecto
+    nota_maxima = evaluacion_config.nota_maxima if evaluacion_config else 100
 
     if request.method == 'POST':
         tarea_id = request.POST.get('tarea_id')
@@ -185,12 +189,14 @@ def revisar_tareas(request):
             # Obtener los puntajes del formulario
             tiempo_entrega = form.cleaned_data['tiempo_entrega']
             complejidad_tarea = form.cleaned_data['complejidad_tarea']
-            numero_revisiones = form.cleaned_data['numero_revisiones']
+            cumplimiento_requerimientos = form.cleaned_data['cumplimiento_requerimientos']
+            calidad_codigo = form.cleaned_data['calidad_codigo']
 
             # Calcular la calificación automática
-            calificacion = tiempo_entrega + complejidad_tarea + numero_revisiones
+            calificacion = tiempo_entrega + complejidad_tarea + \
+                cumplimiento_requerimientos + calidad_codigo
             comentarios = f"Evaluación automática: Tiempo de Entrega: {tiempo_entrega}, Complejidad de la Tarea: {
-                complejidad_tarea}, Número de Revisiones: {numero_revisiones}"
+                complejidad_tarea}, Cumplimiento de Requerimientos: {cumplimiento_requerimientos}, Calidad del Código: {calidad_codigo}"
 
             # Crear evaluación automática
             Evaluacion.objects.create(
@@ -208,7 +214,7 @@ def revisar_tareas(request):
     else:
         form = EvaluacionForm()
 
-    return render(request, 'revisar_tareas.html', {'tareas': tareas_en_revision, 'form': form})
+    return render(request, 'revisar_tareas.html', {'tareas': tareas_en_revision, 'form': form, 'nota_maxima': nota_maxima})
 
 
 @login_required

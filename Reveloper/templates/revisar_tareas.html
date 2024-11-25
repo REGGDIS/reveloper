@@ -5,6 +5,7 @@
 {% block content %}
 <div class="container">
     <h1>Revisar Tareas</h1>
+    <p><strong>Nota Máxima Vigente: <span style="font-size: 1.5em;">{{ nota_maxima }}</span></strong></p>
     <div class="task-container">
         {% if tareas %}
             {% for tarea in tareas %}

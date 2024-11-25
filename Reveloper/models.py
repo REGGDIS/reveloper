@@ -112,16 +112,18 @@ class Evaluacion(models.Model):
         verbose_name = "Evaluación"
         verbose_name_plural = "Evaluaciones"
 
+
 # Modelo de criterios de evaluación
-
-
 class EvaluacionConfig(models.Model):
     tiempo_entrega = models.DecimalField(
-        max_digits=4, decimal_places=1, default=2.5)
+        max_digits=4, decimal_places=1, default=25.0)
     complejidad_tarea = models.DecimalField(
-        max_digits=4, decimal_places=1, default=2.5)
-    numero_revisiones = models.DecimalField(
-        max_digits=4, decimal_places=1, default=2.0)
+        max_digits=4, decimal_places=1, default=25.0)
+    cumplimiento_requerimientos = models.DecimalField(
+        max_digits=4, decimal_places=1, default=25.0)
+    calidad_codigo = models.DecimalField(
+        max_digits=4, decimal_places=1, default=25.0)
+    nota_maxima = models.IntegerField(default=100)
 
     def __str__(self):
         return "Configuración de Evaluación"

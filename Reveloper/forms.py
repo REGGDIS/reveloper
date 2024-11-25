@@ -27,5 +27,7 @@ class EvaluacionForm(forms.Form):
         max_digits=4, decimal_places=1, label="Tiempo de Entrega")
     complejidad_tarea = forms.DecimalField(
         max_digits=4, decimal_places=1, label="Complejidad de la Tarea")
-    numero_revisiones = forms.DecimalField(
-        max_digits=4, decimal_places=1, label="Número de Revisiones")
+    cumplimiento_requerimientos = forms.DecimalField(
+        max_digits=4, decimal_places=1, label="Cumplimiento de Requerimientos")
+    calidad_codigo = forms.DecimalField(
+        max_digits=4, decimal_places=1, label="Calidad del Código")
