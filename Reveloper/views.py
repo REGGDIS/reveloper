@@ -570,9 +570,9 @@ def vista_evaluaciones(request):
     return render(request, 'evaluaciones.html', context)
 
 
-def generar_grafico_evaluaciones(request):
+def generar_grafico_evaluaciones(request, desarrollador):
     if request.user.is_superuser:
-        evaluaciones = Evaluacion.objects.all()
+        evaluaciones = Evaluacion.objects.filter(usuario=desarrollador)
     else:
         evaluaciones = Evaluacion.objects.filter(usuario=request.user)
 
@@ -586,7 +586,7 @@ def generar_grafico_evaluaciones(request):
     plt.figure(figsize=(10, 5))
     # Usar los colores necesarios
     plt.bar(fechas, puntajes, color=colores[:len(fechas)])
-    plt.title('Evaluaciones a lo largo del tiempo')
+    plt.title(f'Evaluaciones de {desarrollador.username}')
     plt.xlabel('Fecha')
     plt.ylabel('Puntaje')
     plt.xticks(rotation=45)
@@ -603,7 +603,50 @@ def generar_grafico_evaluaciones(request):
     return graph
 
 
-def generar_informe_grafico_pdf(request):
+def generar_informe_grafico_pdf_admin(request):
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="informe_grafico_evaluaciones.pdf"'
+
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    initial_height = height - 40  # Espacio inicial desde la parte superior
+
+    p.drawString(100, initial_height, "Informe de Evaluaciones")
+    height = initial_height - 20  # Ajustar después del título principal
+
+    # Filtra los usuarios que no son administradores
+    desarrolladores = Usuario.objects.filter(is_staff=False)
+
+    for desarrollador in desarrolladores:
+        graph = generar_grafico_evaluaciones(request, desarrollador)
+        graph_data = base64.b64decode(graph)
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
+            temp_file.write(graph_data)
+            temp_file_path = temp_file.name
+
+        p.drawString(100, height, f"Desarrollador: {desarrollador.username}")
+        height -= 20  # Ajustar espacio entre el nombre del desarrollador y el gráfico
+
+        p.drawImage(temp_file_path, 50, height - 250, width=500, height=200)
+        height -= 270  # Ajustar espacio después del gráfico
+
+        if height < 320:  # Añadir una nueva página si no hay suficiente espacio
+            p.showPage()
+            height = initial_height
+
+        os.remove(temp_file_path)
+
+    p.save()
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.write(pdf)
+
+    return response
+
+
+def generar_informe_grafico_pdf_desarrollador(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="informe_grafico_evaluaciones.pdf"'
 
@@ -613,13 +656,15 @@ def generar_informe_grafico_pdf(request):
 
     p.drawString(100, height - 40, "Informe de Evaluaciones")
 
-    graph = generar_grafico_evaluaciones(request)
+    desarrollador = request.user  # Asumimos que el desarrollador está autenticado
+    graph = generar_grafico_evaluaciones(request, desarrollador)
     graph_data = base64.b64decode(graph)
 
     with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
         temp_file.write(graph_data)
         temp_file_path = temp_file.name
 
+    p.drawString(100, height - 60, f"Desarrollador: {desarrollador.username}")
     p.drawImage(temp_file_path, 50, height - 300, width=500, height=200)
 
     p.showPage()
