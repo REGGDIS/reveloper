@@ -20,7 +20,14 @@
                     <form action="{% url 'revisar_tareas' %}" method="POST">
                         {% csrf_token %}
                         <input type="hidden" name="tarea_id" value="{{ tarea.id }}">
+                        
+                        <!-- Calificación Dinámica -->
+                        <div>
+                            <p><strong>Calificación: <span id="calificacion_total_{{ tarea.id }}">0</span></strong></p>
+                        </div>
+                        
                         {{ form.as_p }}
+
                         <button type="submit" class="btn btn-success">Aceptar Tarea Completada</button>
                     </form>
                 </div>
@@ -30,4 +37,29 @@
         {% endif %}
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Seleccionar todos los formularios
+        const forms = document.querySelectorAll('form');
+
+        forms.forEach(form => {
+            const calificacionTotalElement = form.querySelector('[id^="calificacion_total_"]');
+            const inputs = form.querySelectorAll('input[type="number"]');
+
+            // Actualizar calificación total cuando se cambia el valor de un input
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    let calificacionTotal = 0;
+
+                    inputs.forEach(input => {
+                        const value = parseFloat(input.value) || 0;
+                        calificacionTotal += value;
+                    });
+
+                    calificacionTotalElement.innerText = calificacionTotal.toFixed(2);  // Mostrar la calificación con dos decimales
+                });
+            });
+        });
+    });
+</script>
 {% endblock %}
