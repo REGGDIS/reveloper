@@ -18,7 +18,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, HRFlowable
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Image, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
@@ -717,53 +717,82 @@ def generar_informe_pdf_busqueda(request):
     resultados_ids = request.session.get('resultados', [])
     resultados = Proyecto.objects.filter(id__in=resultados_ids)
 
-    buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    story = []
 
-    p.setFont("Helvetica", 12)
-    p.drawString(100, height - 40, "Informe de Proyectos")
+    # Título del documento
+    logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
+    title = "Informe de Búsqueda de Proyectos"
+    username = f"Usuario: {request.user.username}"
+    subtitle = "Resultados de la Búsqueda:"
 
-    y_position = height - 60
+    # Estilos de párrafo
+    styleN = styles["BodyText"]
+    styleH = styles["Heading1"]
+    styleN = ParagraphStyle('Normal', spaceAfter=5, leading=10)
+    styleH = ParagraphStyle('Heading1', spaceAfter=10, fontSize=16,
+                            textColor=colors.darkblue, fontName='Helvetica-Bold')
+
+    # Estilo para el ID y nombre del proyecto
+    styleID = ParagraphStyle('Normal', spaceAfter=10,
+                             fontSize=14, textColor=colors.black, leading=15)
+
+    # Estilo para el nombre de las tareas
+    styleTaskTitle = ParagraphStyle('Normal', spaceAfter=8, fontSize=12,
+                                    textColor=colors.black, leading=12, fontName='Helvetica-Bold')
+
+    # Estilo para el desarrollador asignado
+    styleAssignedTo = ParagraphStyle(
+        'Normal', spaceAfter=8, fontSize=12, textColor=colors.black, leading=12)
+
+    # Estilo para el nombre del usuario
+    styleUsername = ParagraphStyle(
+        'Normal', spaceAfter=12, fontSize=14, textColor=colors.black, fontName='Helvetica-Bold')
+
+    # Añadir logotipo y títulos
+    story.append(Paragraph(
+        f'<img src="{logo_path}" width="100" height="50" valign="middle"/>', styleN))
+    story.append(Spacer(1, 20))
+    story.append(Paragraph(title, styleH))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph(username, styleUsername))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph(subtitle, styleN))
+    story.append(Spacer(1, 12))
+
+    # Agregar datos al documento
     for proyecto in resultados:
-        p.drawString(100, y_position, f"Nombre: {proyecto.nombre}")
-        y_position -= 20
-        p.drawString(100, y_position, f"Descripción: {proyecto.descripcion}")
-        y_position -= 20
-        p.drawString(100, y_position, f"Fecha de Inicio: {
-                     proyecto.fecha_inicio}")
-        y_position -= 20
-        p.drawString(100, y_position, f"Fecha de Fin: {proyecto.fecha_fin}")
-        y_position -= 20
-        p.drawString(100, y_position, "Tareas:")
-        y_position -= 20
+        story.append(Paragraph(f"<u>ID: {proyecto.id}, Nombre: {
+                     proyecto.nombre}</u>", styleID))
+        story.append(Spacer(1, 10))
+        story.append(Paragraph(f"Descripción: {proyecto.descripcion}", styleN))
+        story.append(Paragraph(f"Fecha de Inicio: {
+                     proyecto.fecha_inicio}", styleN))
+        story.append(Paragraph(f"Fecha de Fin: {proyecto.fecha_fin}", styleN))
+        story.append(
+            Paragraph(f"Estado: {proyecto.get_estado_display()}", styleN))
+        story.append(Spacer(1, 10))
 
+        # Añadir tareas al PDF
         tareas = TareaPorDesarrollar.objects.filter(proyecto=proyecto)
         for tarea in tareas:
-            p.drawString(120, y_position, f"Tarea: {tarea.titulo}")
-            y_position -= 20
-            p.drawString(120, y_position, f"Asignado a: {
-                         tarea.usuario.first_name} {tarea.usuario.last_name}")
-            y_position -= 20
-            p.drawString(120, y_position, f"Estado: {tarea.estado}")
-            y_position -= 20
-            p.drawString(120, y_position, f"Fecha de Creación: {
-                         tarea.fecha_creacion}")
-            y_position -= 20
-            p.drawString(120, y_position, f"Fecha de Vencimiento: {
-                         tarea.fecha_vencimiento}")
-            y_position -= 20
-            if y_position < 40:
-                p.showPage()
-                p.setFont("Helvetica", 12)
-                y_position = height - 40
+            story.append(Paragraph(f"Tarea: {tarea.titulo}", styleTaskTitle))
+            story.append(Paragraph(f"Asignado a: {tarea.usuario.first_name} {
+                         tarea.usuario.last_name}", styleAssignedTo))
+            story.append(Paragraph(f"Estado: {tarea.estado}", styleN))
+            story.append(Paragraph(f"Fecha de Creación: {
+                         tarea.fecha_creacion}", styleN))
+            story.append(Paragraph(f"Fecha de Vencimiento: {
+                         tarea.fecha_vencimiento}", styleN))
+            story.append(Spacer(1, 10))
 
-        y_position -= 20
-        if y_position < 40:
-            p.showPage()
-            p.setFont("Helvetica", 12)
-            y_position = height - 40
+        story.append(Spacer(1, 12))
+        story.append(HRFlowable(width="100%", thickness=1,
+                     color=colors.grey, spaceBefore=1, spaceAfter=24))
 
-    p.save()
+    # Cerrar y guardar el PDF
+    doc.build(story)
     buffer.seek(0)
     return HttpResponse(buffer, content_type='application/pdf')
