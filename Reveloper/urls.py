@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
-from .views import vista_evaluaciones, generar_informe_grafico_pdf_desarrollador, generar_informe_grafico_pdf_admin, dashboard
+from .views import vista_evaluaciones, generar_informe_grafico_pdf_desarrollador, generar_informe_grafico_pdf_admin, dashboard, buscar_proyectos, busqueda, generar_informe_pdf_busqueda
 
 urlpatterns = [
     path('home/', views.home, name='home'),
@@ -33,4 +33,10 @@ urlpatterns = [
     path('tareas/marcar_como_revision/<str:tarea_id>/',
          views.marcar_tarea_en_revision, name='marcar_tarea_en_revision'),
     path('revisar_tareas/', views.revisar_tareas, name='revisar_tareas'),
+    path('buscar_proyectos/', buscar_proyectos, name='buscar_proyectos'),
+    # Nueva ruta para la sección de búsqueda
+    path('busqueda/', busqueda, name='busqueda'),
+    path('generar_informe_pdf_busqueda/', generar_informe_pdf_busqueda,
+         # Nueva ruta para generar el informe PDF de búsqueda
+         name='generar_informe_pdf_busqueda'),
 ]

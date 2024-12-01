@@ -1,4 +1,4 @@
-from io import BytesIO  # Añadir la importación correcta
+from io import BytesIO
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login as auth_login, logout
@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import os
 import tempfile
 import matplotlib
-matplotlib.use('Agg')  # Usar backend 'Agg' para evitar problemas de GUI
+matplotlib.use('Agg')
 
 
 # Función de Verificación para Administradores
@@ -245,6 +245,35 @@ def editar_tarea(request, tarea_id):
         else:
             form = TareaPorDesarrollarForm(instance=tarea)
         return render(request, 'editar_tarea.html', {'form': form})
+
+
+# Vista para la búsqueda
+@login_required
+@user_passes_test(es_admin)
+def busqueda(request):
+    return render(request, 'busqueda.html')
+
+
+def buscar_proyectos(request):
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+    resultados = []
+
+    if fecha_inicio and fecha_fin:
+        resultados = Proyecto.objects.filter(
+            fecha_inicio__gte=fecha_inicio, fecha_fin__lte=fecha_fin)
+        for proyecto in resultados:
+            proyecto.tareas = TareaPorDesarrollar.objects.filter(
+                proyecto=proyecto)
+
+    request.session['resultados'] = [proyecto.id for proyecto in resultados]
+
+    context = {
+        'resultados': resultados,
+        'proyectos': Proyecto.objects.all()
+    }
+
+    return render(request, 'busqueda.html', context)
 
 
 @login_required
@@ -677,3 +706,64 @@ def generar_informe_grafico_pdf_desarrollador(request):
     os.remove(temp_file_path)
 
     return response
+
+# INFORMES PDF BÚSQUEDA
+# Informe PDF para la búsqueda de proyectos
+
+
+@login_required
+@user_passes_test(es_admin)
+def generar_informe_pdf_busqueda(request):
+    resultados_ids = request.session.get('resultados', [])
+    resultados = Proyecto.objects.filter(id__in=resultados_ids)
+
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    p.setFont("Helvetica", 12)
+    p.drawString(100, height - 40, "Informe de Proyectos")
+
+    y_position = height - 60
+    for proyecto in resultados:
+        p.drawString(100, y_position, f"Nombre: {proyecto.nombre}")
+        y_position -= 20
+        p.drawString(100, y_position, f"Descripción: {proyecto.descripcion}")
+        y_position -= 20
+        p.drawString(100, y_position, f"Fecha de Inicio: {
+                     proyecto.fecha_inicio}")
+        y_position -= 20
+        p.drawString(100, y_position, f"Fecha de Fin: {proyecto.fecha_fin}")
+        y_position -= 20
+        p.drawString(100, y_position, "Tareas:")
+        y_position -= 20
+
+        tareas = TareaPorDesarrollar.objects.filter(proyecto=proyecto)
+        for tarea in tareas:
+            p.drawString(120, y_position, f"Tarea: {tarea.titulo}")
+            y_position -= 20
+            p.drawString(120, y_position, f"Asignado a: {
+                         tarea.usuario.first_name} {tarea.usuario.last_name}")
+            y_position -= 20
+            p.drawString(120, y_position, f"Estado: {tarea.estado}")
+            y_position -= 20
+            p.drawString(120, y_position, f"Fecha de Creación: {
+                         tarea.fecha_creacion}")
+            y_position -= 20
+            p.drawString(120, y_position, f"Fecha de Vencimiento: {
+                         tarea.fecha_vencimiento}")
+            y_position -= 20
+            if y_position < 40:
+                p.showPage()
+                p.setFont("Helvetica", 12)
+                y_position = height - 40
+
+        y_position -= 20
+        if y_position < 40:
+            p.showPage()
+            p.setFont("Helvetica", 12)
+            y_position = height - 40
+
+    p.save()
+    buffer.seek(0)
+    return HttpResponse(buffer, content_type='application/pdf')

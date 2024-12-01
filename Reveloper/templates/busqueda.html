@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Búsqueda de Proyectos{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Búsqueda de Proyectos</h1>
+    <!-- Formulario de búsqueda -->
+    <form method="GET" action="{% url 'buscar_proyectos' %}" class="mb-4">
+        <div class="form-row">
+            <div class="form-group col-md-5">
+                <label for="fecha_inicio">Fecha de Inicio:</label>
+                <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" required>
+            </div>
+            <div class="form-group col-md-5">
+                <label for="fecha_fin">Fecha de Fin:</label>
+                <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" required>
+            </div>
+            <div class="form-group col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">Buscar</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Resultados de la búsqueda -->
+    {% if resultados %}
+        <h2 class="mt-4">Proyectos Encontrados:</h2>
+        <ul class="list-group">
+            {% for proyecto in resultados %}
+                <li class="list-group-item">
+                    <strong>Nombre:</strong> {{ proyecto.nombre }}<br>
+                    <strong>Descripción:</strong> {{ proyecto.descripcion }}<br>
+                    <strong>Fecha de Inicio:</strong> {{ proyecto.fecha_inicio }}<br>
+                    <strong>Fecha de Fin:</strong> {{ proyecto.fecha_fin }}
+                    <!-- Mostrar Tareas -->
+                    <ul class="task-list mt-2">
+                        {% for tarea in proyecto.tareas %}
+                            <li class="task-item">
+                                <span><strong>Tarea:</strong> {{ tarea.titulo }}</span><br>
+                                <span><strong>Asignado a:</strong> {{ tarea.usuario.first_name }} {{ tarea.usuario.last_name }}</span><br>
+                                <span><strong>Estado:</strong> {{ tarea.estado }}</span><br>
+                                <span><strong>Fecha de Creación:</strong> {{ tarea.fecha_creacion }}</span><br>
+                                <span><strong>Fecha de Vencimiento:</strong> {{ tarea.fecha_vencimiento }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+        </ul>
+        <!-- Botón Descargar informe PDF -->
+        <a href="{% url 'generar_informe_pdf_busqueda' %}" class="btn btn-success mt-4 mb-4">Descargar informe PDF</a>
+    {% endif %}
+</div>
+{% endblock %}
