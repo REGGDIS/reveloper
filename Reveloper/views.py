@@ -262,6 +262,36 @@ def busqueda(request):
     return render(request, 'busqueda.html', context)
 
 
+@login_required
+@user_passes_test(es_admin)
+def buscar_usuarios(request):
+    nombre_o_apellido = request.GET.get('nombre_o_apellido', '')
+    fecha_alta_desde = request.GET.get('fecha_alta_desde', '')
+    fecha_alta_hasta = request.GET.get('fecha_alta_hasta', '')
+    resultados_usuarios = []
+
+    query = Q()
+    if nombre_o_apellido:
+        query &= Q(first_name__icontains=nombre_o_apellido) | Q(
+            last_name__icontains=nombre_o_apellido)
+    if fecha_alta_desde and fecha_alta_hasta:
+        query &= Q(date_joined__gte=fecha_alta_desde) & Q(
+            date_joined__lte=fecha_alta_hasta)
+
+    if query:
+        resultados_usuarios = Usuario.objects.filter(query)
+
+    request.session['resultados_usuarios'] = [
+        usuario.id for usuario in resultados_usuarios]
+
+    context = {
+        'resultados_usuarios': resultados_usuarios,
+        'usuarios': Usuario.objects.all()
+    }
+
+    return render(request, 'busqueda.html', context)
+
+
 def buscar_proyectos(request):
     fecha_inicio_desde = request.GET.get('fecha_inicio_desde')
     fecha_inicio_hasta = request.GET.get('fecha_inicio_hasta')
@@ -898,6 +928,56 @@ def generar_informe_pdf_tareas(request):
         story.append(
             Paragraph(f"Fecha de Vencimiento: {tarea.fecha_vencimiento}", styleN))
         story.append(Paragraph(f"Estado: {tarea.estado}", styleN))
+        story.append(Spacer(1, 12))
+        story.append(HRFlowable(width="100%", thickness=1,
+                     color=colors.grey, spaceBefore=1, spaceAfter=24))
+
+    doc.build(story)
+    buffer.seek(0)
+    return HttpResponse(buffer, content_type='application/pdf')
+
+
+@login_required
+@user_passes_test(es_admin)
+def generar_informe_pdf_usuarios(request):
+    nombre_o_apellido = request.GET.get('nombre_o_apellido', '')
+    fecha_alta_desde = request.GET.get('fecha_alta_desde', '')
+    fecha_alta_hasta = request.GET.get('fecha_alta_hasta', '')
+    resultados_usuarios = request.session.get('resultados_usuarios', [])
+    usuarios = Usuario.objects.filter(id__in=resultados_usuarios)
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    story = []
+
+    # Título del documento
+    # Asegúrate de que la ruta al logotipo sea correcta
+    logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
+    title = "Informe de Búsqueda de Usuarios"
+    subtitle = "Lista de Usuarios encontrados:"
+
+    styleN = ParagraphStyle('Normal', spaceAfter=5, leading=10)
+    styleH = ParagraphStyle('Heading1', spaceAfter=10, fontSize=16,
+                            textColor=colors.darkblue, fontName='Helvetica-Bold')
+
+    # Añadir logotipo y títulos
+    logo = Image(logo_path, width=2*inch, height=1*inch)
+    logo.hAlign = 'LEFT'
+    story.append(logo)
+    story.append(Spacer(1, 20))
+    story.append(Paragraph(title, styleH))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph(subtitle, styleN))
+    story.append(Spacer(1, 12))
+
+    for usuario in usuarios:
+        story.append(Paragraph(f"ID: {usuario.id}", styleN))
+        story.append(
+            Paragraph(f"Nombre: {usuario.first_name} {usuario.last_name}", styleN))
+        story.append(Paragraph(f"Email: {usuario.email}", styleN))
+        story.append(
+            Paragraph(f"Fecha de Alta: {usuario.date_joined}", styleN))
         story.append(Spacer(1, 12))
         story.append(HRFlowable(width="100%", thickness=1,
                      color=colors.grey, spaceBefore=1, spaceAfter=24))
