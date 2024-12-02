@@ -253,8 +253,10 @@ def editar_tarea(request, tarea_id):
 @user_passes_test(es_admin)
 def busqueda(request):
     proyectos = Proyecto.objects.all()
+    tareas = TareaPorDesarrollar.objects.all()
     context = {
-        'proyectos': proyectos
+        'proyectos': proyectos,
+        'tareas': tareas,
     }
     return render(request, 'busqueda.html', context)
 
@@ -286,6 +288,30 @@ def buscar_proyectos(request):
     context = {
         'resultados': resultados,
         'proyectos': Proyecto.objects.all()
+    }
+
+    return render(request, 'busqueda.html', context)
+
+
+@login_required
+@user_passes_test(es_admin)
+def buscar_tareas(request):
+    tarea_id = request.GET.get('tarea_id')
+    titulo_palabras = request.GET.get('titulo_palabras')
+    resultados_tareas = []
+
+    query = Q()
+    if tarea_id:
+        query &= Q(id=tarea_id)
+    if titulo_palabras:
+        query &= Q(titulo__icontains=titulo_palabras)
+
+    if query:
+        resultados_tareas = TareaPorDesarrollar.objects.filter(query)
+
+    context = {
+        'resultados_tareas': resultados_tareas,
+        'tareas': TareaPorDesarrollar.objects.all()
     }
 
     return render(request, 'busqueda.html', context)
