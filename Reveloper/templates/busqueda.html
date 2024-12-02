@@ -8,23 +8,33 @@
     <!-- Formulario de búsqueda -->
     <form method="GET" action="{% url 'buscar_proyectos' %}" class="mb-4">
         <div class="form-row">
-            <div class="form-group col-md-5">
+            <div class="form-group col-md-3">
                 <label for="fecha_inicio_desde">Fecha de Inicio Desde:</label>
-                <input type="date" class="form-control" id="fecha_inicio_desde" name="fecha_inicio_desde" required>
+                <input type="date" class="form-control" id="fecha_inicio_desde" name="fecha_inicio_desde">
             </div>
-            <div class="form-group col-md-5">
+            <div class="form-group col-md-3">
                 <label for="fecha_inicio_hasta">Fecha de Inicio Hasta:</label>
-                <input type="date" class="form-control" id="fecha_inicio_hasta" name="fecha_inicio_hasta" required>
+                <input type="date" class="form-control" id="fecha_inicio_hasta" name="fecha_inicio_hasta">
             </div>
-            <div class="form-group col-md-2 d-flex align-items-end">
+            <div class="form-group col-md-3">
+                <label for="proyecto_id">ID del Proyecto:</label>
+                <select class="form-control" id="proyecto_id" name="proyecto_id">
+                    <option value="">Seleccione un Proyecto</option>
+                    {% for proyecto in proyectos %}
+                        <option value="{{ proyecto.id }}">{{ proyecto.id }} - {{ proyecto.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group col-md-3">
+                <label for="titulo_palabras">Título (Palabras Clave):</label>
+                <input type="text" class="form-control" id="titulo_palabras" name="titulo_palabras" placeholder="Palabras clave">
+            </div>
+            <div class="form-group col-md-12 d-flex justify-content-between">
                 <button type="submit" class="btn btn-primary">Buscar</button>
+                <!-- Botón de Limpiar Búsqueda -->
+                <a href="{% url 'busqueda' %}" class="btn btn-secondary">Limpiar Búsqueda</a>
             </div>
         </div>
-    </form>
-
-    <!-- Botón Limpiar Búsqueda -->
-    <form method="GET" action="{% url 'busqueda' %}">
-        <button type="submit" class="btn btn-secondary mt-2 mb-4">Limpiar Búsqueda</button>
     </form>
 
     <!-- Resultados de la búsqueda -->
@@ -56,6 +66,8 @@
         <form method="GET" action="{% url 'generar_informe_pdf_busqueda' %}">
             <input type="hidden" name="fecha_inicio_desde" value="{{ request.GET.fecha_inicio_desde }}">
             <input type="hidden" name="fecha_inicio_hasta" value="{{ request.GET.fecha_inicio_hasta }}">
+            <input type="hidden" name="proyecto_id" value="{{ request.GET.proyecto_id }}">
+            <input type="hidden" name="titulo_palabras" value="{{ request.GET.titulo_palabras }}">
             <button type="submit" class="btn btn-success mt-4 mb-4">Descargar informe PDF</button>
         </form>
     {% endif %}

@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.http import HttpResponse
 from django.conf import settings
+from django.db.models import Q
 from .models import TareaPorDesarrollar, Proyecto, Usuario, Evaluacion, EvaluacionConfig
 from .forms import TareaPorDesarrollarForm, EvaluacionForm
 import io
@@ -251,17 +252,31 @@ def editar_tarea(request, tarea_id):
 @login_required
 @user_passes_test(es_admin)
 def busqueda(request):
-    return render(request, 'busqueda.html')
+    proyectos = Proyecto.objects.all()
+    context = {
+        'proyectos': proyectos
+    }
+    return render(request, 'busqueda.html', context)
 
 
 def buscar_proyectos(request):
     fecha_inicio_desde = request.GET.get('fecha_inicio_desde')
     fecha_inicio_hasta = request.GET.get('fecha_inicio_hasta')
+    proyecto_id = request.GET.get('proyecto_id')
+    titulo_palabras = request.GET.get('titulo_palabras')
     resultados = []
 
+    query = Q()
     if fecha_inicio_desde and fecha_inicio_hasta:
-        resultados = Proyecto.objects.filter(
-            fecha_inicio__gte=fecha_inicio_desde, fecha_inicio__lte=fecha_inicio_hasta)
+        query &= Q(fecha_inicio__gte=fecha_inicio_desde) & Q(
+            fecha_inicio__lte=fecha_inicio_hasta)
+    if proyecto_id:
+        query &= Q(id=proyecto_id)
+    if titulo_palabras:
+        query &= Q(nombre__icontains=titulo_palabras)
+
+    if query:
+        resultados = Proyecto.objects.filter(query)
         for proyecto in resultados:
             proyecto.tareas = TareaPorDesarrollar.objects.filter(
                 proyecto=proyecto)
@@ -328,8 +343,8 @@ def generate_pdf(request):
     projects = Proyecto.objects.all()
     for project in projects:
         # Aplicar subrayado con etiquetas HTML
-        story.append(Paragraph(f"<u>ID: {project.id}, Nombre: {
-                     project.nombre}</u>", styleID))
+        story.append(Paragraph(f"< u > ID: {project.id}, Nombre: {
+                     project.nombre} < /u >", styleID))
         story.append(Spacer(1, 10))
 
         # Ajustar texto de la descripción
@@ -714,8 +729,12 @@ def generar_informe_grafico_pdf_desarrollador(request):
 @login_required
 @user_passes_test(es_admin)
 def generar_informe_pdf_busqueda(request):
+    from django.utils.html import strip_tags
+
     fecha_inicio_desde = request.GET.get('fecha_inicio_desde', '')
     fecha_inicio_hasta = request.GET.get('fecha_inicio_hasta', '')
+    proyecto_id = request.GET.get('proyecto_id', '')
+    titulo_palabras = request.GET.get('titulo_palabras', '')
     resultados_ids = request.session.get('resultados', [])
     resultados = Proyecto.objects.filter(id__in=resultados_ids)
 
@@ -728,8 +747,7 @@ def generar_informe_pdf_busqueda(request):
     logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
     title = "Informe de Búsqueda de Proyectos"
     username = f"Usuario: {request.user.username}"
-    subtitle = f"Lista de Proyectos iniciados entre {
-        fecha_inicio_desde} y {fecha_inicio_hasta}:"
+    subtitle = f"Lista de Proyectos iniciados entre {fecha_inicio_desde} y {fecha_inicio_hasta}:"
 
     # Estilos de párrafo
     styleN = styles["BodyText"]
@@ -767,12 +785,14 @@ def generar_informe_pdf_busqueda(request):
 
     # Agregar datos al documento
     for proyecto in resultados:
-        story.append(Paragraph(f"<u>ID: {proyecto.id}, Nombre: {
-                     proyecto.nombre}</u>", styleID))
+        # Strip HTML tags from project title
+        project_title = strip_tags(
+            f"<u>ID: {proyecto.id}, Nombre: {proyecto.nombre}</u>")
+        story.append(Paragraph(project_title, styleID))
         story.append(Spacer(1, 10))
         story.append(Paragraph(f"Descripción: {proyecto.descripcion}", styleN))
-        story.append(Paragraph(f"Fecha de Inicio: {
-                     proyecto.fecha_inicio}", styleN))
+        story.append(
+            Paragraph(f"Fecha de Inicio: {proyecto.fecha_inicio}", styleN))
         story.append(Paragraph(f"Fecha de Fin: {proyecto.fecha_fin}", styleN))
         story.append(
             Paragraph(f"Estado: {proyecto.get_estado_display()}", styleN))
@@ -782,13 +802,13 @@ def generar_informe_pdf_busqueda(request):
         tareas = TareaPorDesarrollar.objects.filter(proyecto=proyecto)
         for tarea in tareas:
             story.append(Paragraph(f"Tarea: {tarea.titulo}", styleTaskTitle))
-            story.append(Paragraph(f"Asignado a: {tarea.usuario.first_name} {
-                         tarea.usuario.last_name}", styleAssignedTo))
+            story.append(Paragraph(
+                f"Asignado a: {tarea.usuario.first_name} {tarea.usuario.last_name}", styleAssignedTo))
             story.append(Paragraph(f"Estado: {tarea.estado}", styleN))
-            story.append(Paragraph(f"Fecha de Creación: {
-                         tarea.fecha_creacion}", styleN))
-            story.append(Paragraph(f"Fecha de Vencimiento: {
-                         tarea.fecha_vencimiento}", styleN))
+            story.append(
+                Paragraph(f"Fecha de Creación: {tarea.fecha_creacion}", styleN))
+            story.append(
+                Paragraph(f"Fecha de Vencimiento: {tarea.fecha_vencimiento}", styleN))
             story.append(Spacer(1, 10))
 
         story.append(Spacer(1, 12))
