@@ -255,13 +255,13 @@ def busqueda(request):
 
 
 def buscar_proyectos(request):
-    fecha_inicio = request.GET.get('fecha_inicio')
-    fecha_fin = request.GET.get('fecha_fin')
+    fecha_inicio_desde = request.GET.get('fecha_inicio_desde')
+    fecha_inicio_hasta = request.GET.get('fecha_inicio_hasta')
     resultados = []
 
-    if fecha_inicio and fecha_fin:
+    if fecha_inicio_desde and fecha_inicio_hasta:
         resultados = Proyecto.objects.filter(
-            fecha_inicio__gte=fecha_inicio, fecha_fin__lte=fecha_fin)
+            fecha_inicio__gte=fecha_inicio_desde, fecha_inicio__lte=fecha_inicio_hasta)
         for proyecto in resultados:
             proyecto.tareas = TareaPorDesarrollar.objects.filter(
                 proyecto=proyecto)
@@ -714,6 +714,8 @@ def generar_informe_grafico_pdf_desarrollador(request):
 @login_required
 @user_passes_test(es_admin)
 def generar_informe_pdf_busqueda(request):
+    fecha_inicio_desde = request.GET.get('fecha_inicio_desde', '')
+    fecha_inicio_hasta = request.GET.get('fecha_inicio_hasta', '')
     resultados_ids = request.session.get('resultados', [])
     resultados = Proyecto.objects.filter(id__in=resultados_ids)
 
@@ -726,7 +728,8 @@ def generar_informe_pdf_busqueda(request):
     logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
     title = "Informe de Búsqueda de Proyectos"
     username = f"Usuario: {request.user.username}"
-    subtitle = "Resultados de la Búsqueda:"
+    subtitle = f"Lista de Proyectos iniciados entre {
+        fecha_inicio_desde} y {fecha_inicio_hasta}:"
 
     # Estilos de párrafo
     styleN = styles["BodyText"]
