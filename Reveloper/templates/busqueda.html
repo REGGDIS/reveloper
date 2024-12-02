@@ -61,7 +61,7 @@
                 </li>
             {% endfor %}
         </ul>
-        <!-- Botón Descargar informe PDF -->
+        <!-- Botón Descargar informe PDF de proyectos -->
         <form method="GET" action="{% url 'generar_informe_pdf_busqueda' %}">
             <input type="hidden" name="fecha_inicio_desde" value="{{ request.GET.fecha_inicio_desde }}">
             <input type="hidden" name="fecha_inicio_hasta" value="{{ request.GET.fecha_inicio_hasta }}">
@@ -85,8 +85,8 @@
                 </select>
             </div>
             <div class="form-group col-md-3">
-                <label for="titulo_palabras">Título (Palabras Clave):</label>
-                <input type="text" class="form-control" id="titulo_palabras" name="titulo_palabras" placeholder="Palabras clave">
+                <label for="titulo_palabras_tarea">Título (Palabras Clave):</label>
+                <input type="text" class="form-control" id="titulo_palabras_tarea" name="titulo_palabras" placeholder="Palabras clave">
             </div>
             <div class="form-group col-md-12 d-flex justify-content-between">
                 <button type="submit" class="btn btn-primary">Buscar</button>
@@ -110,6 +110,12 @@
                 </li>
             {% endfor %}
         </ul>
+        <!-- Botón Descargar informe PDF de tareas -->
+        <form method="GET" action="{% url 'generar_informe_pdf_tareas' %}">
+            <input type="hidden" name="tarea_id" value="{{ request.GET.tarea_id }}">
+            <input type="hidden" name="titulo_palabras" value="{{ request.GET.titulo_palabras }}">
+            <button type="submit" class="btn btn-success mt-4 mb-4">Descargar informe PDF</button>
+        </form>
     {% endif %}
 </div>
 {% endblock %}

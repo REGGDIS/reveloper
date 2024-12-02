@@ -5,6 +5,7 @@ from django.contrib.auth import login as auth_login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.utils.html import strip_tags
 from django.http import HttpResponse
 from django.conf import settings
 from django.db.models import Q
@@ -308,6 +309,10 @@ def buscar_tareas(request):
 
     if query:
         resultados_tareas = TareaPorDesarrollar.objects.filter(query)
+
+    # Almacenar los IDs de las tareas encontradas en la sesión
+    request.session['resultados_tareas'] = [
+        tarea.id for tarea in resultados_tareas]
 
     context = {
         'resultados_tareas': resultados_tareas,
@@ -842,6 +847,61 @@ def generar_informe_pdf_busqueda(request):
                      color=colors.grey, spaceBefore=1, spaceAfter=24))
 
     # Cerrar y guardar el PDF
+    doc.build(story)
+    buffer.seek(0)
+    return HttpResponse(buffer, content_type='application/pdf')
+
+
+@login_required
+@user_passes_test(es_admin)
+def generar_informe_pdf_tareas(request):
+    tarea_id = request.GET.get('tarea_id', '')
+    titulo_palabras = request.GET.get('titulo_palabras', '')
+    resultados_tareas = request.session.get('resultados_tareas', [])
+
+    # Asegurarse de que la consulta esté utilizando los IDs de las tareas
+    tareas = TareaPorDesarrollar.objects.filter(id__in=resultados_tareas)
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    story = []
+
+    # Título del documento
+    # Asegúrate de que la ruta al logotipo sea correcta
+    logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
+    title = "Informe de Búsqueda de Tareas"
+    subtitle = "Lista de Tareas encontradas:"
+
+    styleN = ParagraphStyle('Normal', spaceAfter=5, leading=10)
+    styleH = ParagraphStyle('Heading1', spaceAfter=10, fontSize=16,
+                            textColor=colors.darkblue, fontName='Helvetica-Bold')
+
+    # Añadir logotipo y títulos
+    logo = Image(logo_path, width=2*inch, height=1*inch)
+    logo.hAlign = 'LEFT'
+    story.append(logo)
+    story.append(Spacer(1, 20))
+    story.append(Paragraph(title, styleH))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph(subtitle, styleN))
+    story.append(Spacer(1, 12))
+
+    for tarea in tareas:
+        story.append(Paragraph(f"ID: {tarea.id}", styleN))
+        story.append(Paragraph(f"Título: {tarea.titulo}", styleN))
+        story.append(Paragraph(f"Descripción: {tarea.descripcion}", styleN))
+        story.append(Paragraph(
+            f"Asignado a: {tarea.usuario.first_name} {tarea.usuario.last_name}", styleN))
+        story.append(
+            Paragraph(f"Fecha de Creación: {tarea.fecha_creacion}", styleN))
+        story.append(
+            Paragraph(f"Fecha de Vencimiento: {tarea.fecha_vencimiento}", styleN))
+        story.append(Paragraph(f"Estado: {tarea.estado}", styleN))
+        story.append(Spacer(1, 12))
+        story.append(HRFlowable(width="100%", thickness=1,
+                     color=colors.grey, spaceBefore=1, spaceAfter=24))
+
     doc.build(story)
     buffer.seek(0)
     return HttpResponse(buffer, content_type='application/pdf')
