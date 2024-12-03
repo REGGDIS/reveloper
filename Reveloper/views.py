@@ -1192,3 +1192,33 @@ def exportar_todos_proyectos_excel(request):
     response['Content-Disposition'] = 'attachment; filename=todos_proyectos.xlsx'
     wb.save(response)
     return response
+
+
+def exportar_todas_tareas_excel(request):
+    tareas = TareaPorDesarrollar.objects.all()
+
+    # Crear el archivo Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Todas las Tareas"
+
+    # Añadir encabezados
+    ws.append(["ID", "Título", "Descripción", "Estado", "Fecha de Creación",
+              "Fecha de Vencimiento", "Proyecto", "Asignado a"])
+
+    # Añadir datos de las tareas
+    for tarea in tareas:
+        # Convertir datetime a naive (sin zona horaria)
+        fecha_creacion = datetime.combine(
+            tarea.fecha_creacion, datetime.min.time()) if tarea.fecha_creacion else ''
+        fecha_vencimiento = datetime.combine(
+            tarea.fecha_vencimiento, datetime.min.time()) if tarea.fecha_vencimiento else ''
+        ws.append([tarea.id, tarea.titulo, tarea.descripcion, tarea.estado, fecha_creacion, fecha_vencimiento,
+                  tarea.proyecto.nombre, f"{tarea.usuario.first_name} {tarea.usuario.last_name}"])
+
+    # Preparar respuesta HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=todas_tareas.xlsx'
+    wb.save(response)
+    return response
