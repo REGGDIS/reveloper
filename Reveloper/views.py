@@ -1222,3 +1222,32 @@ def exportar_todas_tareas_excel(request):
     response['Content-Disposition'] = 'attachment; filename=todas_tareas.xlsx'
     wb.save(response)
     return response
+
+
+def exportar_todas_evaluaciones_excel(request):
+    evaluaciones = Evaluacion.objects.all()
+
+    # Crear el archivo Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Todas las Evaluaciones"
+
+    # Añadir encabezados
+    ws.append(["ID", "Título", "Calificación", "Tarea", "Asignado a",
+              "Comentarios", "Fecha de Evaluación", "Proyecto"])
+
+    # Añadir datos de las evaluaciones
+    for evaluacion in evaluaciones:
+        # Convertir datetime a naive (sin zona horaria)
+        fecha_evaluacion = datetime.combine(
+            evaluacion.fecha_evaluacion, datetime.min.time()) if evaluacion.fecha_evaluacion else ''
+        tarea_titulo = evaluacion.tarea.titulo if evaluacion.tarea else 'Sin Tarea Asignada'
+        ws.append([evaluacion.id, evaluacion.titulo, evaluacion.calificacion, tarea_titulo, f"{evaluacion.usuario.first_name} {
+                  evaluacion.usuario.last_name}", evaluacion.comentarios, fecha_evaluacion, evaluacion.proyecto.nombre])
+
+    # Preparar respuesta HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=todas_evaluaciones.xlsx'
+    wb.save(response)
+    return response

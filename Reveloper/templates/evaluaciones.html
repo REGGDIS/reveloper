@@ -11,13 +11,14 @@
         </button>
         <!-- Botón para generar el informe PDF -->
         <a href="{% url 'generate_evaluation_pdf' %}" class="btn btn-primary mr-2 evaluation-btn">Descargar Informe PDF</a>
-
         <!-- Botón para descargar el informe con el gráfico -->
         {% if user.is_superuser %}
-            <a href="{% url 'generar_informe_grafico_pdf_admin' %}" class="btn btn-secondary evaluation-btn">Descargar Informe con Gráfico (Admin)</a>
+            <a href="{% url 'generar_informe_grafico_pdf_admin' %}" class="btn btn-secondary mr-2 evaluation-btn">Descargar Informe con Gráfico (Admin)</a>
         {% else %}
-            <a href="{% url 'generar_informe_grafico_pdf' %}" class="btn btn-secondary evaluation-btn">Descargar Informe con Gráfico</a>
+            <a href="{% url 'generar_informe_grafico_pdf' %}" class="btn btn-secondary mr-2 evaluation-btn">Descargar Informe con Gráfico</a>
         {% endif %}
+        <!-- Botón para exportar todas las evaluaciones a Excel -->
+        <a href="{% url 'exportar_todas_evaluaciones_excel' %}" class="btn btn-info">Exportar a Excel</a>
     </div>
 
     <!-- Modal -->
