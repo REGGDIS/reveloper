@@ -120,6 +120,14 @@
     <form method="GET" action="{% url 'buscar_tareas' %}" class="mb-4">
         <div class="form-row">
             <div class="form-group col-md-3">
+                <label for="fecha_inicio_desde_tarea">Fecha de Inicio Desde:</label>
+                <input type="date" class="form-control" id="fecha_inicio_desde_tarea" name="fecha_inicio_desde_tarea">
+            </div>
+            <div class="form-group col-md-3">
+                <label for="fecha_inicio_hasta_tarea">Fecha de Inicio Hasta:</label>
+                <input type="date" class="form-control" id="fecha_inicio_hasta_tarea" name="fecha_inicio_hasta_tarea">
+            </div>
+            <div class="form-group col-md-3">
                 <label for="tarea_id">ID de la Tarea:</label>
                 <select class="form-control" id="tarea_id" name="tarea_id">
                     <option value="">Seleccione una Tarea</option>
@@ -141,25 +149,27 @@
 
     <!-- Resultados de la búsqueda de tareas -->
     {% if resultados_tareas %}
-        <h2 class="mt-4">Tareas Encontradas:</h2>
-        <ul class="list-group">
-            {% for tarea in resultados_tareas %}
-                <li class="list-group-item">
-                    <strong>Título:</strong> {{ tarea.titulo }}<br>
-                    <strong>Descripción:</strong> {{ tarea.descripcion }}<br>
-                    <strong>Asignado a:</strong> {{ tarea.usuario.first_name }} {{ tarea.usuario.last_name }}<br>
-                    <strong>Fecha de Creación:</strong> {{ tarea.fecha_creacion }}<br>
-                    <strong>Fecha de Vencimiento:</strong> {{ tarea.fecha_vencimiento }}<br>
-                    <strong>Estado:</strong> {{ tarea.estado }}
-                </li>
-            {% endfor %}
-        </ul>
-        <!-- Botón Descargar informe PDF de tareas -->
-        <form method="GET" action="{% url 'generar_informe_pdf_tareas' %}">
-            <input type="hidden" name="tarea_id" value="{{ request.GET.tarea_id }}">
-            <input type="hidden" name="titulo_palabras" value="{{ request.GET.titulo_palabras }}">
-            <button type="submit" class="btn btn-success mt-4 mb-4">Descargar informe PDF</button>
-        </form>
-    {% endif %}
+    <h2 class="mt-4">Tareas Encontradas:</h2>
+    <ul class="list-group">
+        {% for tarea in resultados_tareas %}
+            <li class="list-group-item">
+                <strong>Título:</strong> {{ tarea.titulo }}<br>
+                <strong>Descripción:</strong> {{ tarea.descripcion }}<br>
+                <strong>Asignado a:</strong> {{ tarea.usuario.first_name }} {{ tarea.usuario.last_name }}<br>
+                <strong>Fecha de Creación:</strong> {{ tarea.fecha_creacion }}<br>
+                <strong>Fecha de Vencimiento:</strong> {{ tarea.fecha_vencimiento }}<br>
+                <strong>Estado:</strong> {{ tarea.estado }}
+            </li>
+        {% endfor %}
+    </ul>
+    <!-- Botón Descargar informe PDF de tareas -->
+    <form method="GET" action="{% url 'generar_informe_pdf_tareas' %}">
+        <input type="hidden" name="fecha_inicio_desde_tarea" value="{{ request.GET.fecha_inicio_desde_tarea }}">
+        <input type="hidden" name="fecha_inicio_hasta_tarea" value="{{ request.GET.fecha_inicio_hasta_tarea }}">
+        <input type="hidden" name="tarea_id" value="{{ request.GET.tarea_id }}">
+        <input type="hidden" name="titulo_palabras" value="{{ request.GET.titulo_palabras }}">
+        <button type="submit" class="btn btn-success mt-4 mb-4">Descargar informe PDF</button>
+    </form>
+{% endif %}
 </div>
 {% endblock %}

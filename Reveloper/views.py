@@ -1,4 +1,5 @@
 from io import BytesIO
+from datetime import datetime
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login as auth_login, logout
@@ -292,6 +293,8 @@ def buscar_usuarios(request):
     return render(request, 'busqueda.html', context)
 
 
+@login_required
+@user_passes_test(es_admin)
 def buscar_proyectos(request):
     fecha_inicio_desde = request.GET.get('fecha_inicio_desde')
     fecha_inicio_hasta = request.GET.get('fecha_inicio_hasta')
@@ -301,6 +304,10 @@ def buscar_proyectos(request):
 
     query = Q()
     if fecha_inicio_desde and fecha_inicio_hasta:
+        fecha_inicio_desde = timezone.make_aware(
+            datetime.strptime(fecha_inicio_desde, '%Y-%m-%d'))
+        fecha_inicio_hasta = timezone.make_aware(
+            datetime.strptime(fecha_inicio_hasta, '%Y-%m-%d'))
         query &= Q(fecha_inicio__gte=fecha_inicio_desde) & Q(
             fecha_inicio__lte=fecha_inicio_hasta)
     if proyecto_id:
@@ -327,11 +334,20 @@ def buscar_proyectos(request):
 @login_required
 @user_passes_test(es_admin)
 def buscar_tareas(request):
+    fecha_inicio_desde_tarea = request.GET.get('fecha_inicio_desde_tarea')
+    fecha_inicio_hasta_tarea = request.GET.get('fecha_inicio_hasta_tarea')
     tarea_id = request.GET.get('tarea_id')
     titulo_palabras = request.GET.get('titulo_palabras')
     resultados_tareas = []
 
     query = Q()
+    if fecha_inicio_desde_tarea and fecha_inicio_hasta_tarea:
+        fecha_inicio_desde_tarea = timezone.make_aware(
+            datetime.strptime(fecha_inicio_desde_tarea, '%Y-%m-%d'))
+        fecha_inicio_hasta_tarea = timezone.make_aware(
+            datetime.strptime(fecha_inicio_hasta_tarea, '%Y-%m-%d'))
+        query &= Q(fecha_creacion__gte=fecha_inicio_desde_tarea) & Q(
+            fecha_creacion__lte=fecha_inicio_hasta_tarea)
     if tarea_id:
         query &= Q(id=tarea_id)
     if titulo_palabras:
@@ -340,7 +356,6 @@ def buscar_tareas(request):
     if query:
         resultados_tareas = TareaPorDesarrollar.objects.filter(query)
 
-    # Almacenar los IDs de las tareas encontradas en la sesión
     request.session['resultados_tareas'] = [
         tarea.id for tarea in resultados_tareas]
 
