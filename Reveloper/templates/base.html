@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <!-- Añadir Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"> <!-- Font Awesome -->
     <link rel="shortcut icon" href="{% static 'img/iconos/logo-reveloper-icon.png' %}" type="image/x-icon">
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -15,7 +16,7 @@
         <h3>Reveloper</h3>
         <nav>
             <ul>
-                <li><a href="{% url 'home' %}">Inicio</a></li>
+                <li><a href="{% url 'home' %}" class="nav-icon"><i class="fas fa-home"></i> Inicio</a></li> <!-- Icono de Inicio -->
                 {% if user.is_authenticated and user.is_superuser %}
                     <li><a href="{% url 'usuarios' %}">Usuarios</a></li>
                     <li><a href="{% url 'revisar_tareas' %}" class="revisar-tareas-link">REVISAR TAREAS</a></li>

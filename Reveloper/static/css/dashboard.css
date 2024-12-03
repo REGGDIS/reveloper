@@ -69,6 +69,15 @@ body {
           &.logout-link {
             color: yellow;
           }
+
+          &.nav-icon i {
+            transition: color 0.3s, transform 0.3s;
+          }
+
+          &.nav-icon:hover i {
+            color: #ff5722; /* Cambia al color que prefieras */
+            transform: rotate(20deg); /* Gira ligeramente el icono */
+          }
         }
       }
     }
@@ -266,15 +275,3 @@ body {
   margin: 0;
   width: 100%;
 }
-
-/* Iconos de usuarios*/
-/*.icon-container {
-  position: absolute;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.user-icon {
-  width: 350px;
-}*/
