@@ -18,8 +18,8 @@
                 <li><a href="{% url 'home' %}">Inicio</a></li>
                 {% if user.is_authenticated and user.is_superuser %}
                     <li><a href="{% url 'usuarios' %}">Usuarios</a></li>
-                    <li><a href="{% url 'revisar_tareas' %}">Revisar Tareas</a></li>
-                    <li><a href="{% url 'busqueda' %}">Búsqueda</a></li>
+                    <li><a href="{% url 'revisar_tareas' %}" class="revisar-tareas-link">REVISAR TAREAS</a></li>
+                    <li><a href="{% url 'busqueda' %}" class="busqueda-link">BÚSQUEDA</a></li>
                 {% endif %}
                 <li><a href="{% url 'proyectos' %}">Proyectos</a></li>
                 <li><a href="{% url 'tareas_por_desarrollar' %}">Tareas</a></li>

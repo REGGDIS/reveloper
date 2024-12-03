@@ -58,6 +58,14 @@ body {
           color: white;
           text-decoration: none;
 
+          &.revisar-tareas-link {
+            color: #ff8f8f;
+          }
+
+          &.busqueda-link {
+            color: #94c8ff;
+          }
+
           &.logout-link {
             color: yellow;
           }
