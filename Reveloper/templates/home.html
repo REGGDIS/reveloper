@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container">
     <marquee behavior="scroll" direction="left" scrollamount="10">
-        <h1>Bienvenido al Dashboard, {{ usuario.first_name }} {{ usuario.last_name }}</h1>
+        <h1 id="welcome-message">Bienvenido, {{ usuario.first_name }}</h1>
     </marquee>
 
     <div class="cards">
@@ -32,18 +32,19 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    // Obtener las tareas pendientes del contexto
-    var tareasPendientes = JSON.parse('{{ tareas_pendientes|escapejs }}');
-    console.log(tareasPendientes);  // Verificar en la consola del navegador
+    var now = new Date();
+    var hour = now.getHours();
+    var message = "Bienvenido";
 
-    // Si hay tareas pendientes, mostrar un mensaje pop-up
-    if (tareasPendientes.length > 0) {
-        var mensaje = "Tienes las siguientes tareas pendientes:\n\n";
-        tareasPendientes.forEach(function(tarea, index) {
-            mensaje += (index + 1) + ". " + tarea.titulo + "\n";
-        });
-        alert(mensaje);
+    if (hour < 12) {
+        message = "Buenos días, {{ usuario.first_name }}";
+    } else if (hour < 18) {
+        message = "Buenas tardes, {{ usuario.first_name }}";
+    } else {
+        message = "Buenas noches, {{ usuario.first_name }}";
     }
+
+    document.getElementById('welcome-message').innerText = message;
 });
 </script>
 {% endblock %}
