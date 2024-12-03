@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
-from .views import vista_evaluaciones, generar_informe_grafico_pdf_desarrollador, generar_informe_grafico_pdf_admin, dashboard, buscar_proyectos, busqueda, buscar_tareas, generar_informe_pdf_busqueda, generar_informe_pdf_tareas, buscar_usuarios, generar_informe_pdf_usuarios, exportar_tareas_excel, exportar_proyectos_excel, exportar_usuarios_excel
+from .views import vista_evaluaciones, generar_informe_grafico_pdf_desarrollador, generar_informe_grafico_pdf_admin, dashboard, buscar_proyectos, busqueda, buscar_tareas, generar_informe_pdf_busqueda, generar_informe_pdf_tareas, buscar_usuarios, generar_informe_pdf_usuarios, exportar_tareas_excel, exportar_proyectos_excel, exportar_usuarios_excel, exportar_todos_usuarios_excel
 
 urlpatterns = [
     path('home/', views.home, name='home'),
@@ -47,4 +47,6 @@ urlpatterns = [
          name='exportar_proyectos_excel'),
     path('exportar_usuarios_excel/', exportar_usuarios_excel,
          name='exportar_usuarios_excel'),
+    path('exportar_todos_usuarios_excel/', exportar_todos_usuarios_excel,
+         name='exportar_todos_usuarios_excel'),
 ]

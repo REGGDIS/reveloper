@@ -13,7 +13,9 @@
         <!-- Botón para generar el informe PDF -->
         <a href="{% url 'generate_user_pdf' %}" class="btn btn-primary mr-2">Descargar Informe PDF</a>
         <!-- Botón para ver el dashboard de rendimiento -->
-        <a href="{% url 'dashboard' %}" class="btn btn-success">Ver Dashboard de Rendimiento</a>
+        <a href="{% url 'dashboard' %}" class="btn btn-success mr-2">Ver Dashboard de Rendimiento</a>
+        <!-- Botón para exportar todos los usuarios a Excel -->
+        <a href="{% url 'exportar_todos_usuarios_excel' %}" class="btn btn-info">Exportar a Excel</a>
     </div>
 
     <!-- Modal -->

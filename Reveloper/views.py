@@ -1139,3 +1139,31 @@ def exportar_usuarios_excel(request):
     response['Content-Disposition'] = 'attachment; filename=usuarios.xlsx'
     wb.save(response)
     return response
+
+
+def exportar_todos_usuarios_excel(request):
+    usuarios = Usuario.objects.all()
+
+    # Crear el archivo Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Todos los Usuarios"
+
+    # Añadir encabezados
+    ws.append(["ID", "Username", "Nombre", "Apellido",
+              "Email", "Fecha de Registro"])
+
+    # Añadir datos de los usuarios
+    for usuario in usuarios:
+        # Convertir datetime a naive (sin zona horaria)
+        fecha_registro = usuario.date_joined.replace(
+            tzinfo=None) if usuario.date_joined else ''
+        ws.append([usuario.id, usuario.username, usuario.first_name,
+                  usuario.last_name, usuario.email, fecha_registro])
+
+    # Preparar respuesta HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=todos_usuarios.xlsx'
+    wb.save(response)
+    return response
