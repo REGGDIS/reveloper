@@ -170,6 +170,14 @@
         <input type="hidden" name="titulo_palabras" value="{{ request.GET.titulo_palabras }}">
         <button type="submit" class="btn btn-success mt-4 mb-4">Descargar informe PDF</button>
     </form>
+    <!-- Botón para Exportar a Excel -->
+     <form method="GET" action="{% url 'exportar_tareas_excel' %}">
+        <input type="hidden" name="fecha_inicio_desde_tarea" value="{{ request.GET.fecha_inicio_desde_tarea }}">
+        <input type="hidden" name="fecha_inicio_hasta_tarea" value="{{ request.GET.fecha_inicio_hasta_tarea }}">
+        <input type="hidden" name="tarea_id" value="{{ request.GET.tarea_id }}">
+        <input type="hidden" name="titulo_palabras" value="{{ request.GET.titulo_palabras }}">
+        <button type="submit" class="btn btn-info mt-4 mb-4">Exportar a Excel</button>
+    </form>
 {% endif %}
 </div>
 {% endblock %}

@@ -15,6 +15,7 @@ from .forms import TareaPorDesarrollarForm, EvaluacionForm
 import io
 import json
 import base64
+import openpyxl
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
@@ -823,7 +824,8 @@ def generar_informe_pdf_busqueda(request):
     logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
     title = "Informe de Búsqueda de Proyectos"
     username = f"Usuario: {request.user.username}"
-    subtitle = f"Lista de Proyectos iniciados entre {fecha_inicio_desde} y {fecha_inicio_hasta}:"
+    subtitle = f"Lista de Proyectos iniciados entre {
+        fecha_inicio_desde} y {fecha_inicio_hasta}:"
 
     # Estilos de párrafo
     styleN = styles["BodyText"]
@@ -1000,3 +1002,50 @@ def generar_informe_pdf_usuarios(request):
     doc.build(story)
     buffer.seek(0)
     return HttpResponse(buffer, content_type='application/pdf')
+
+
+def exportar_tareas_excel(request):
+    fecha_inicio_desde_tarea = request.GET.get('fecha_inicio_desde_tarea')
+    fecha_inicio_hasta_tarea = request.GET.get('fecha_inicio_hasta_tarea')
+    tarea_id = request.GET.get('tarea_id')
+    titulo_palabras = request.GET.get('titulo_palabras')
+
+    # Filtrar tareas según los criterios de búsqueda
+    tareas = TareaPorDesarrollar.objects.all()
+    if fecha_inicio_desde_tarea and fecha_inicio_hasta_tarea:
+        fecha_inicio_desde_tarea = timezone.make_aware(
+            datetime.strptime(fecha_inicio_desde_tarea, '%Y-%m-%d'))
+        fecha_inicio_hasta_tarea = timezone.make_aware(
+            datetime.strptime(fecha_inicio_hasta_tarea, '%Y-%m-%d'))
+        tareas = tareas.filter(fecha_creacion__gte=fecha_inicio_desde_tarea,
+                               fecha_creacion__lte=fecha_inicio_hasta_tarea)
+    if tarea_id:
+        tareas = tareas.filter(id=tarea_id)
+    if titulo_palabras:
+        tareas = tareas.filter(titulo__icontains=titulo_palabras)
+
+    # Crear el archivo Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Tareas"
+
+    # Añadir encabezados
+    ws.append(["ID", "Título", "Descripción", "Asignado a",
+              "Fecha de Creación", "Fecha de Vencimiento", "Estado"])
+
+    # Añadir datos de las tareas
+    for tarea in tareas:
+        # Convertir datetime a naive (sin zona horaria)
+        fecha_creacion = datetime.combine(
+            tarea.fecha_creacion, datetime.min.time()) if tarea.fecha_creacion else ''
+        fecha_vencimiento = datetime.combine(
+            tarea.fecha_vencimiento, datetime.min.time()) if tarea.fecha_vencimiento else ''
+        ws.append([tarea.id, tarea.titulo, tarea.descripcion, f"{tarea.usuario.first_name} {tarea.usuario.last_name}",
+                   fecha_creacion, fecha_vencimiento, tarea.estado])
+
+    # Preparar respuesta HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=tareas.xlsx'
+    wb.save(response)
+    return response

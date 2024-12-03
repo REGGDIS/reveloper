@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
-from .views import vista_evaluaciones, generar_informe_grafico_pdf_desarrollador, generar_informe_grafico_pdf_admin, dashboard, buscar_proyectos, busqueda, buscar_tareas, generar_informe_pdf_busqueda, generar_informe_pdf_tareas, buscar_usuarios, generar_informe_pdf_usuarios
+from .views import vista_evaluaciones, generar_informe_grafico_pdf_desarrollador, generar_informe_grafico_pdf_admin, dashboard, buscar_proyectos, busqueda, buscar_tareas, generar_informe_pdf_busqueda, generar_informe_pdf_tareas, buscar_usuarios, generar_informe_pdf_usuarios, exportar_tareas_excel
 
 urlpatterns = [
     path('home/', views.home, name='home'),
@@ -28,23 +28,19 @@ urlpatterns = [
     path('generar_informe_grafico_pdf_admin/', generar_informe_grafico_pdf_admin,
          name='generar_informe_grafico_pdf_admin'),
     path('dashboard/', dashboard, name='dashboard'),
-
-    # Nuevas rutas
     path('tareas/marcar_como_revision/<str:tarea_id>/',
          views.marcar_tarea_en_revision, name='marcar_tarea_en_revision'),
     path('revisar_tareas/', views.revisar_tareas, name='revisar_tareas'),
     path('buscar_proyectos/', buscar_proyectos, name='buscar_proyectos'),
-    # Nueva ruta para buscar tareas
     path('buscar_tareas/', buscar_tareas, name='buscar_tareas'),
-    # Nueva ruta para la sección de búsqueda
     path('busqueda/', busqueda, name='busqueda'),
     path('generar_informe_pdf_busqueda/', generar_informe_pdf_busqueda,
-         # Nueva ruta para generar el informe PDF de búsqueda
          name='generar_informe_pdf_busqueda'),
     path('generar_informe_pdf_tareas/', generar_informe_pdf_tareas,
-         name='generar_informe_pdf_tareas'),  # Nueva ruta para generar el informe PDF de tareas
-    # Nueva ruta para buscar usuarios
+         name='generar_informe_pdf_tareas'),
     path('buscar_usuarios/', buscar_usuarios, name='buscar_usuarios'),
     path('generar_informe_pdf_usuarios/', generar_informe_pdf_usuarios,
-         name='generar_informe_pdf_usuarios')  # Nueva ruta para generar el informe PDF de usuarios
+         name='generar_informe_pdf_usuarios'),
+    path('exportar_tareas_excel/', exportar_tareas_excel,
+         name='exportar_tareas_excel'),
 ]
