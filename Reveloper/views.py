@@ -1049,3 +1049,93 @@ def exportar_tareas_excel(request):
     response['Content-Disposition'] = 'attachment; filename=tareas.xlsx'
     wb.save(response)
     return response
+
+
+def exportar_proyectos_excel(request):
+    fecha_inicio_desde = request.GET.get('fecha_inicio_desde')
+    fecha_inicio_hasta = request.GET.get('fecha_inicio_hasta')
+    proyecto_id = request.GET.get('proyecto_id')
+    titulo_palabras = request.GET.get('titulo_palabras')
+
+    # Filtrar proyectos según los criterios de búsqueda
+    proyectos = Proyecto.objects.all()
+    if fecha_inicio_desde and fecha_inicio_hasta:
+        fecha_inicio_desde = timezone.make_aware(
+            datetime.strptime(fecha_inicio_desde, '%Y-%m-%d'))
+        fecha_inicio_hasta = timezone.make_aware(
+            datetime.strptime(fecha_inicio_hasta, '%Y-%m-%d'))
+        proyectos = proyectos.filter(
+            fecha_inicio__gte=fecha_inicio_desde, fecha_inicio__lte=fecha_inicio_hasta)
+    if proyecto_id:
+        proyectos = proyectos.filter(id=proyecto_id)
+    if titulo_palabras:
+        proyectos = proyectos.filter(nombre__icontains=titulo_palabras)
+
+    # Crear el archivo Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Proyectos"
+
+    # Añadir encabezados
+    ws.append(["ID", "Nombre", "Descripción",
+              "Fecha de Inicio", "Fecha de Fin", "Estado"])
+
+    # Añadir datos de los proyectos
+    for proyecto in proyectos:
+        # Convertir datetime a naive (sin zona horaria)
+        fecha_inicio = datetime.combine(
+            proyecto.fecha_inicio, datetime.min.time()) if proyecto.fecha_inicio else ''
+        fecha_fin = datetime.combine(
+            proyecto.fecha_fin, datetime.min.time()) if proyecto.fecha_fin else ''
+        ws.append([proyecto.id, proyecto.nombre, proyecto.descripcion,
+                  fecha_inicio, fecha_fin, proyecto.estado])
+
+    # Preparar respuesta HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=proyectos.xlsx'
+    wb.save(response)
+    return response
+
+
+def exportar_usuarios_excel(request):
+    nombre_o_apellido = request.GET.get('nombre_o_apellido')
+    fecha_alta_desde = request.GET.get('fecha_alta_desde')
+    fecha_alta_hasta = request.GET.get('fecha_alta_hasta')
+
+    # Filtrar usuarios según los criterios de búsqueda
+    usuarios = Usuario.objects.all()
+    if nombre_o_apellido:
+        usuarios = usuarios.filter(first_name__icontains=nombre_o_apellido) | usuarios.filter(
+            last_name__icontains=nombre_o_apellido)
+    if fecha_alta_desde and fecha_alta_hasta:
+        fecha_alta_desde = timezone.make_aware(
+            datetime.strptime(fecha_alta_desde, '%Y-%m-%d'))
+        fecha_alta_hasta = timezone.make_aware(
+            datetime.strptime(fecha_alta_hasta, '%Y-%m-%d'))
+        usuarios = usuarios.filter(
+            date_joined__gte=fecha_alta_desde, date_joined__lte=fecha_alta_hasta)
+
+    # Crear el archivo Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Usuarios"
+
+    # Añadir encabezados
+    ws.append(["ID", "Username", "Nombre", "Apellido",
+              "Email", "Fecha de Registro"])
+
+    # Añadir datos de los usuarios filtrados
+    for usuario in usuarios:
+        # Convertir datetime a naive (sin zona horaria)
+        fecha_registro = usuario.date_joined.replace(
+            tzinfo=None) if usuario.date_joined else ''
+        ws.append([usuario.id, usuario.username, usuario.first_name,
+                  usuario.last_name, usuario.email, fecha_registro])
+
+    # Preparar respuesta HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=usuarios.xlsx'
+    wb.save(response)
+    return response

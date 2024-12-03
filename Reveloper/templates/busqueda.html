@@ -27,26 +27,33 @@
         </div>
     </form>
 
-    <!-- Resultados de la búsqueda de usuarios -->
     {% if resultados_usuarios %}
-        <h2 class="mt-4">Usuarios Encontrados:</h2>
-        <ul class="list-group">
-            {% for usuario in resultados_usuarios %}
-                <li class="list-group-item">
-                    <strong>Nombre:</strong> {{ usuario.first_name }} {{ usuario.last_name }}<br>
-                    <strong>Email:</strong> {{ usuario.email }}<br>
-                    <strong>Fecha de Alta:</strong> {{ usuario.date_joined }}
-                </li>
-            {% endfor %}
-        </ul>
-        <!-- Botón Descargar informe PDF de usuarios -->
-        <form method="GET" action="{% url 'generar_informe_pdf_usuarios' %}">
-            <input type="hidden" name="nombre_o_apellido" value="{{ request.GET.nombre_o_apellido }}">
-            <input type="hidden" name="fecha_alta_desde" value="{{ request.GET.fecha_alta_desde }}">
-            <input type="hidden" name="fecha_alta_hasta" value="{{ request.GET.fecha_alta_hasta }}">
-            <button type="submit" class="btn btn-success mt-4 mb-4">Descargar informe PDF</button>
-        </form>
-    {% endif %}
+    <h2 class="mt-4">Usuarios Encontrados:</h2>
+    <ul class="list-group">
+        {% for usuario in resultados_usuarios %}
+            <li class="list-group-item">
+                <strong>Nombre:</strong> {{ usuario.first_name }} {{ usuario.last_name }}<br>
+                <strong>Email:</strong> {{ usuario.email }}<br>
+                <strong>Fecha de Alta:</strong> {{ usuario.date_joined }}
+            </li>
+        {% endfor %}
+    </ul>
+    <!-- Botón Descargar informe PDF de usuarios -->
+    <form method="GET" action="{% url 'generar_informe_pdf_usuarios' %}">
+        <input type="hidden" name="nombre_o_apellido" value="{{ request.GET.nombre_o_apellido }}">
+        <input type="hidden" name="fecha_alta_desde" value="{{ request.GET.fecha_alta_desde }}">
+        <input type="hidden" name="fecha_alta_hasta" value="{{ request.GET.fecha_alta_hasta }}">
+        <button type="submit" class="btn btn-success mt-4 mb-4">Descargar informe PDF</button>
+    </form>
+    <!-- Botón para Exportar a Excel -->
+    <form method="GET" action="{% url 'exportar_usuarios_excel' %}">
+        <input type="hidden" name="nombre_o_apellido" value="{{ request.GET.nombre_o_apellido }}">
+        <input type="hidden" name="fecha_alta_desde" value="{{ request.GET.fecha_alta_desde }}">
+        <input type="hidden" name="fecha_alta_hasta" value="{{ request.GET.fecha_alta_hasta }}">
+        <button type="submit" class="btn btn-info mt-4 mb-4">Exportar a Excel</button>
+    </form>
+{% endif %}
+
 
     <h1 class="mb-4">Búsqueda de Proyectos</h1>
     <!-- Formulario de búsqueda de proyectos -->
@@ -112,6 +119,14 @@
             <input type="hidden" name="proyecto_id" value="{{ request.GET.proyecto_id }}">
             <input type="hidden" name="titulo_palabras" value="{{ request.GET.titulo_palabras }}">
             <button type="submit" class="btn btn-success mt-4 mb-4">Descargar informe PDF</button>
+        </form>
+        <!-- Botón para Exportar a Excel -->
+         <form method="GET" action="{% url 'exportar_proyectos_excel' %}">
+            <input type="hidden" name="fecha_inicio_desde" value="{{ request.GET.fecha_inicio_desde }}">
+            <input type="hidden" name="fecha_inicio_hasta" value="{{ request.GET.fecha_inicio_hasta }}">
+            <input type="hidden" name="proyecto_id" value="{{ request.GET.proyecto_id }}">
+            <input type="hidden" name="titulo_palabras" value="{{ request.GET.titulo_palabras }}">
+            <button type="submit" class="btn btn-info mt-4 mb-4">Exportar a Excel</button>
         </form>
     {% endif %}
 
