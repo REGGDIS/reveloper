@@ -5,22 +5,23 @@
 {% block content %}
 <div class="container mt-4 body-dashboard">
     <h1>Dashboard de Rendimiento</h1>
-    <!-- Botón para volver a la lista de usuarios -->
     <a href="{% url 'usuarios' %}" class="btn btn-secondary mb-3">Volver a la Lista de Usuarios</a>
+    
     <div class="mb-4">
         {% for usuario in usuarios %}
             <p>{{ usuario.username }}: {{ usuario.tareas_completadas }}</p>
         {% endfor %}
     </div>
+    
     <canvas id="tareasChart" width="400" height="200"></canvas>
+    <canvas id="tareasPorUsuarioChart" width="400" height="200"></canvas>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // Gráfico de Tareas Completadas
         var ctx = document.getElementById('tareasChart').getContext('2d');
-
-        // Preparar los datos para el gráfico
         var labels = JSON.parse('{{ labels_json|escapejs }}');
         var data = JSON.parse('{{ data_json|escapejs }}');
-
         var tareasChart = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -28,7 +29,7 @@
                 datasets: [{
                     label: 'Tareas Completadas',
                     data: data,
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',  // Color de barra más oscuro
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
                     borderColor: 'rgba(54, 162, 235, 1)',
                     borderWidth: 1
                 }]
@@ -38,33 +39,89 @@
                     y: {
                         beginAtZero: true,
                         ticks: {
-                            color: 'black',  // Color de las etiquetas del eje Y
+                            color: 'black',
                             font: {
-                                size: 14  // Tamaño de fuente más grande para el eje Y
+                                size: 14
                             }
                         },
                         grid: {
-                            color: 'black'  // Color de las líneas del eje Y
+                            color: 'black'
                         }
                     },
                     x: {
                         ticks: {
-                            color: 'black',  // Color de las etiquetas del eje X
+                            color: 'black',
                             font: {
-                                size: 14  // Tamaño de fuente más grande para el eje X
+                                size: 14
                             }
                         },
                         grid: {
-                            color: 'black'  // Color de las líneas del eje X
+                            color: 'black'
                         }
                     }
                 },
                 plugins: {
                     legend: {
                         labels: {
-                            color: 'black',  // Color de las etiquetas de la leyenda
+                            color: 'black',
                             font: {
-                                size: 16  // Tamaño de fuente más grande para la leyenda
+                                size: 16
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de Distribución de Tareas Pendientes por Usuario
+        var tareasUsuarioCtx = document.getElementById('tareasPorUsuarioChart').getContext('2d');
+        var tareasUsuarioLabels = JSON.parse('{{ tareas_usuario_labels_json|escapejs }}');  // Nombres de usuarios
+        var tareasUsuarioData = JSON.parse('{{ tareas_usuario_data_json|escapejs }}');  // Datos de tareas en formato { usuario: { estado: cantidad } }
+        var tareasUsuarioDatasets = [{
+            label: 'Pendiente',
+            data: tareasUsuarioLabels.map(usuario => tareasUsuarioData[usuario].pendiente || 0),
+            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1
+        }];
+        var tareasPorUsuarioChart = new Chart(tareasUsuarioCtx, {
+            type: 'bar',
+            data: {
+                labels: tareasUsuarioLabels,
+                datasets: tareasUsuarioDatasets
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: 'black',
+                            font: {
+                                size: 14
+                            }
+                        },
+                        grid: {
+                            color: 'black'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: 'black',
+                            font: {
+                                size: 14
+                            }
+                        },
+                        grid: {
+                            color: 'black'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'black',
+                            font: {
+                                size: 16
                             }
                         }
                     }

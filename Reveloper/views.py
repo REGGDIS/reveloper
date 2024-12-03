@@ -81,7 +81,7 @@ def print_template_dirs(request):
     print(settings.TEMPLATES[0]['DIRS'])
     return HttpResponse('Template Dirs Printed')
 
-# Vista para generar los datos que se mostrarán en el gráfico
+# Vista para generar los datos que se mostrarán en el dashboard
 
 
 @login_required
@@ -91,10 +91,17 @@ def dashboard(request):
     labels = [usuario.username for usuario in usuarios]
     data = [usuario.tareas_completadas for usuario in usuarios]
 
+    # Datos para el gráfico de distribución de tareas pendientes por usuario
+    tareas_usuario_data = {usuario.username: {
+        'pendiente': TareaPorDesarrollar.objects.filter(usuario=usuario, estado='pendiente').count()
+    } for usuario in usuarios}
+
     context = {
         'usuarios': usuarios,
         'labels_json': json.dumps(labels),
-        'data_json': json.dumps(data)
+        'data_json': json.dumps(data),
+        'tareas_usuario_labels_json': json.dumps(labels),
+        'tareas_usuario_data_json': json.dumps(tareas_usuario_data)
     }
     return render(request, 'admin/dashboard.html', context)
 
