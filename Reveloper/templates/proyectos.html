@@ -10,7 +10,9 @@
             Mostrar Lista de Proyectos
         </button>
         <!-- Botón para generar el informe PDF -->
-        <a href="{% url 'generate_pdf' %}" class="btn btn-primary">Descargar Informe PDF</a>
+        <a href="{% url 'generate_pdf' %}" class="btn btn-primary mr-2">Descargar Informe PDF</a>
+        <!-- Botón para exportar todos los proyectos a Excel -->
+        <a href="{% url 'exportar_todos_proyectos_excel' %}" class="btn btn-info">Exportar a Excel</a>
     </div>
 
     <!-- Modal -->

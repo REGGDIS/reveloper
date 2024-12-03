@@ -117,7 +117,6 @@ def proyectos(request):
     for proyecto in proyectos:
         proyecto.tareas = TareaPorDesarrollar.objects.filter(proyecto=proyecto)
 
-    # Definir context fuera del bucle for
     context = {
         'proyectos': proyectos
     }
@@ -407,7 +406,6 @@ def generate_pdf(request):
     # Añadir logotipo y títulos
     story.append(Paragraph(
         f'<img src="{logo_path}" width="100" height="50" valign="middle"/>', styleN))
-    # Aumentar el espaciado entre el logo y el título
     story.append(Spacer(1, 20))
     story.append(Paragraph(title, styleH))
     story.append(Spacer(1, 12))
@@ -419,9 +417,8 @@ def generate_pdf(request):
     # Obtener datos del contexto
     projects = Proyecto.objects.all()
     for project in projects:
-        # Aplicar subrayado con etiquetas HTML
-        story.append(Paragraph(f"< u > ID: {project.id}, Nombre: {
-                     project.nombre} < /u >", styleID))
+        story.append(Paragraph(f"ID: {project.id}, Nombre: {
+                     project.nombre}", styleID))
         story.append(Spacer(1, 10))
 
         # Ajustar texto de la descripción
@@ -448,11 +445,9 @@ def generate_pdf(request):
             story.append(Spacer(1, 10))
 
         story.append(Spacer(1, 12))
-        # Añadir una línea horizontal de margen a margen para separar proyectos
         story.append(HRFlowable(width="100%", thickness=1,
                      color=colors.grey, spaceBefore=1, spaceAfter=24))
 
-    # Cerrar y guardar el PDF
     doc.build(story)
     buffer.seek(0)
     return HttpResponse(buffer, content_type='application/pdf')
@@ -1165,5 +1160,35 @@ def exportar_todos_usuarios_excel(request):
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename=todos_usuarios.xlsx'
+    wb.save(response)
+    return response
+
+
+def exportar_todos_proyectos_excel(request):
+    proyectos = Proyecto.objects.all()
+
+    # Crear el archivo Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Todos los Proyectos"
+
+    # Añadir encabezados
+    ws.append(["ID", "Nombre", "Descripción",
+              "Fecha de Inicio", "Fecha de Fin", "Estado"])
+
+    # Añadir datos de los proyectos
+    for proyecto in proyectos:
+        # Convertir datetime a naive (sin zona horaria)
+        fecha_inicio = datetime.combine(
+            proyecto.fecha_inicio, datetime.min.time()) if proyecto.fecha_inicio else ''
+        fecha_fin = datetime.combine(
+            proyecto.fecha_fin, datetime.min.time()) if proyecto.fecha_fin else ''
+        ws.append([proyecto.id, proyecto.nombre, proyecto.descripcion,
+                  fecha_inicio, fecha_fin, proyecto.estado])
+
+    # Preparar respuesta HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=todos_proyectos.xlsx'
     wb.save(response)
     return response
