@@ -113,7 +113,15 @@ def dashboard(request):
 @user_passes_test(es_admin)
 def usuarios(request):
     usuarios = Usuario.objects.all()
-    return render(request, 'usuarios.html', {'usuarios': usuarios})
+    for usuario in usuarios:
+        usuario.tareas_asignadas = TareaPorDesarrollar.objects.filter(
+            usuario=usuario)
+
+    context = {
+        'usuarios': usuarios
+    }
+    return render(request, 'usuarios.html', context)
+
 
 # Vista para la página de proyectos, accesible solo para usuarios autenticados
 
