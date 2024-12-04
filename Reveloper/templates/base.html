@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <!-- Añadir Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"> <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="shortcut icon" href="{% static 'img/iconos/logo-reveloper-icon.png' %}" type="image/x-icon">
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -16,20 +16,16 @@
         <h3>Reveloper</h3>
         <nav>
             <ul>
-                <li><a href="{% url 'home' %}" class="nav-icon"><i class="fas fa-home"></i> Inicio</a></li> <!-- Icono de Inicio -->
+                <li><a href="{% url 'home' %}" class="nav-icon"><i class="fas fa-home"></i> Inicio</a></li> 
                 {% if user.is_authenticated and user.is_superuser %}
                     <li><a href="{% url 'usuarios' %}">Usuarios</a></li>
                     <li><a href="{% url 'revisar_tareas' %}" class="revisar-tareas-link">REVISAR TAREAS</a></li>
                     <li><a href="{% url 'busqueda' %}" class="busqueda-link">BÚSQUEDA</a></li>
                 {% endif %}
-                <li><a href="{% url 'proyectos' %}">Proyectos</a></li>
-                <li><a href="{% url 'tareas_por_desarrollar' %}">Tareas</a></li>
-                <li>
-                    <a href="{% url 'evaluaciones' %}" class="evaluaciones-link">
-                        <i class="fas fa-check-circle" style="color: #ffd700; animation: pulse 2s infinite;"></i> Evaluaciones
-                    </a>
-                </li>
-                 <li><a href="{% url 'password_change' %}">Cambiar Contraseña</a></li>
+                <li><a href="{% url 'proyectos' %}" class="proyectos-link"><i class="fas fa-star gold-star"></i> Proyectos</a></li>
+                <li><a href="{% url 'tareas_por_desarrollar' %}" class="tareas-link"><i class="fas fa-list-check gold-list-check"></i> Tareas</a></li>
+                <li><a href="{% url 'evaluaciones' %}" class="evaluaciones-link"><i class="fas fa-check-circle"></i> Evaluaciones</a></li>
+                <li><a href="{% url 'password_change' %}">Cambiar Contraseña</a></li>
                 <li><a href="{% url 'logout' %}" class="logout-link">Cerrar Sesión</a></li>
             </ul>
         </nav>

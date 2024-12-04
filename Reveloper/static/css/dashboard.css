@@ -32,8 +32,18 @@ body {
 }
 
 .gold-check {
-  color: #ffd700; /* Color amarillo oro */
-  animation: pulse 0.5s infinite; /* Aplicar la animación más rápida */
+  color: rgb(253, 203, 138); /* Color amarillo oro */
+  animation: pulse 0.5s infinite;
+}
+
+.gold-star {
+  color: #94c8ff; /* Color azul claro */
+  animation: pulse 0.5s infinite;
+}
+
+.gold-list-check {
+  color: #ff7676; /* Color rosado */
+  animation: pulse 0.5s infinite;
 }
 
 /* Estilos para el encabezado */
@@ -93,8 +103,18 @@ body {
           }
 
           &.evaluaciones-link i {
-            color: #ffd700;
-            animation: pulse 0.5s infinite; /* Animación más rápida */
+            color: rgb(253, 203, 138);
+            animation: pulse 0.5s infinite;
+          }
+
+          &.proyectos-link i {
+            color: #94c8ff;
+            animation: pulse 0.5s infinite;
+          }
+
+          &.tareas-link i {
+            color: #ff7676;
+            animation: pulse 0.5s infinite;
           }
         }
       }
