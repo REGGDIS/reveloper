@@ -1,12 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
     <title>Reveloper Login</title>
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/loading.css' %}">
     <link rel="shortcut icon" href="{% static 'img/iconos/logo-reveloper-icon.png' %}" type="image/x-icon">
 </head>
 <body class="login">
+    <!-- Pantalla de carga con video -->
+    <div class="loading-container" id="loading-screen">
+        <video autoplay muted playsinline>
+            <source src="{% static 'videos/animacion.mp4' %}" type="video/mp4">
+        </video>
+    </div>
+
     <img src="{% static 'img/logos/logo-reveloper.png' %}" alt="Reveloper" width="200">
     <div class="container">
         <h2>Login</h2>
@@ -41,6 +50,17 @@
                 toggleIcon.textContent = "👁️";
             }
         }
+        // Script para ocultar la pantalla de carga después del video
+        document.addEventListener('DOMContentLoaded', function() {
+            var video = document.querySelector('.loading-container video');
+            video.onended = function() {
+                document.getElementById('loading-screen').style.display = 'none';
+            };
+            // Ocultar la pantalla de carga después de un tiempo fijo (fallback)
+            setTimeout(function() {
+                document.getElementById('loading-screen').style.display = 'none';
+            }, 10000); // 10 segundos
+        });
     </script>
 </body>
 </html>
