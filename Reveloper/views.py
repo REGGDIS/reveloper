@@ -1174,16 +1174,26 @@ def exportar_todos_usuarios_excel(request):
     ws.title = "Todos los Usuarios"
 
     # Añadir encabezados
-    ws.append(["ID", "Username", "Nombre", "Apellido",
-              "Email", "Fecha de Registro"])
+    ws.append(["ID Usuario", "Username", "Nombre", "Apellido", "Email", "Fecha de Registro",
+              "ID Tarea", "Título Tarea", "Estado Tarea", "Fecha de Creación", "Fecha de Vencimiento"])
 
-    # Añadir datos de los usuarios
+    # Añadir datos de los usuarios y tareas asignadas
     for usuario in usuarios:
-        # Convertir datetime a naive (sin zona horaria)
-        fecha_registro = usuario.date_joined.replace(
-            tzinfo=None) if usuario.date_joined else ''
-        ws.append([usuario.id, usuario.username, usuario.first_name,
-                  usuario.last_name, usuario.email, fecha_registro])
+        fecha_registro = usuario.date_joined.replace(tzinfo=None) if usuario.date_joined and hasattr(
+            usuario.date_joined, 'tzinfo') else usuario.date_joined
+        tareas_asignadas = TareaPorDesarrollar.objects.filter(usuario=usuario)
+
+        if tareas_asignadas:
+            for tarea in tareas_asignadas:
+                fecha_creacion = tarea.fecha_creacion.replace(tzinfo=None) if tarea.fecha_creacion and hasattr(
+                    tarea.fecha_creacion, 'tzinfo') else tarea.fecha_creacion
+                fecha_vencimiento = tarea.fecha_vencimiento.replace(tzinfo=None) if tarea.fecha_vencimiento and hasattr(
+                    tarea.fecha_vencimiento, 'tzinfo') else tarea.fecha_vencimiento
+                ws.append([usuario.id, usuario.username, usuario.first_name, usuario.last_name, usuario.email,
+                          fecha_registro, tarea.id, tarea.titulo, tarea.estado, fecha_creacion, fecha_vencimiento])
+        else:
+            ws.append([usuario.id, usuario.username, usuario.first_name,
+                      usuario.last_name, usuario.email, fecha_registro, '', '', '', '', ''])
 
     # Preparar respuesta HTTP
     response = HttpResponse(
