@@ -24,8 +24,12 @@
                 {% endif %}
                 <li><a href="{% url 'proyectos' %}">Proyectos</a></li>
                 <li><a href="{% url 'tareas_por_desarrollar' %}">Tareas</a></li>
-                <li><a href="{% url 'evaluaciones' %}">Evaluaciones</a></li>
-                <li><a href="{% url 'password_change' %}">Cambiar Contraseña</a></li>
+                <li>
+                    <a href="{% url 'evaluaciones' %}" class="evaluaciones-link">
+                        <i class="fas fa-check-circle" style="color: #ffd700; animation: pulse 2s infinite;"></i> Evaluaciones
+                    </a>
+                </li>
+                 <li><a href="{% url 'password_change' %}">Cambiar Contraseña</a></li>
                 <li><a href="{% url 'logout' %}" class="logout-link">Cerrar Sesión</a></li>
             </ul>
         </nav>

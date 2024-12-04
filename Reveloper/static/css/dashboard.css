@@ -1,26 +1,39 @@
 /* Estilos generales */
 body {
   font-family: Arial, sans-serif;
-  background: linear-gradient(
-    to bottom,
-    #f0f0f0 40%,
-    #a9a9a9 100%
-  ) !important; /* Degradado de gris claro a gris oscuro */
+  background: linear-gradient(to bottom, #f0f0f0 40%, #a9a9a9 100%) !important;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  color: #ffffff; /* Asegurar que el texto sea legible */
+  color: #ffffff;
 }
 
 /* Estilo específico para la página de rendimiento */
 .body-dashboard {
-  background: #ffffff !important; /* Fondo blanco */
-  color: #000000; /* Asegurar que el texto sea legible en fondo blanco */
-  position: relative; /* Para manejar la superposición */
-  top: -24px; /* Ajusta este valor según la altura de tu header */
-  padding-top: 10px; /* Añadir espacio para el contenido */
-  z-index: 1; /* Asegurar que esté detrás del header */
+  background: #ffffff !important;
+  color: #000000;
+  position: relative;
+  top: -24px;
+  padding-top: 10px;
+  z-index: 1;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.gold-check {
+  color: #ffd700; /* Color amarillo oro */
+  animation: pulse 0.5s infinite; /* Aplicar la animación más rápida */
 }
 
 /* Estilos para el encabezado */
@@ -75,8 +88,13 @@ body {
           }
 
           &.nav-icon:hover i {
-            color: #ff5722; /* Cambia al color que prefieras */
-            transform: rotate(20deg); /* Gira ligeramente el icono */
+            color: #ff5722;
+            transform: rotate(20deg);
+          }
+
+          &.evaluaciones-link i {
+            color: #ffd700;
+            animation: pulse 0.5s infinite; /* Animación más rápida */
           }
         }
       }
