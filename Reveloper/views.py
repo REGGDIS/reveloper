@@ -671,10 +671,24 @@ def generate_user_pdf(request):
     for usuario in usuarios:
         story.append(Paragraph(f"Nombre: {usuario.first_name} {
                      usuario.last_name}", styleUserName))
+        story.append(Paragraph(f"Username: {usuario.username}", styleN))
         story.append(Paragraph(f"Email: {usuario.email}", styleN))
         story.append(Paragraph(f"Fecha de Registro: {
                      usuario.date_joined}", styleN))
-        story.append(Spacer(1, 10))
+
+        # Añadir tareas asignadas
+        tareas_asignadas = TareaPorDesarrollar.objects.filter(usuario=usuario)
+        if tareas_asignadas:
+            story.append(Spacer(1, 10))
+            story.append(Paragraph("Tareas Asignadas:", styleUserName))
+            for tarea in tareas_asignadas:
+                story.append(Paragraph(f"- Tarea: {tarea.titulo}", styleN))
+                story.append(Paragraph(f"  Estado: {tarea.estado}", styleN))
+                story.append(Paragraph(f"  Fecha de Creación: {
+                             tarea.fecha_creacion}", styleN))
+                story.append(Paragraph(f"  Fecha de Vencimiento: {
+                             tarea.fecha_vencimiento}", styleN))
+                story.append(Spacer(1, 5))
 
         # Añadir una línea horizontal de margen a margen para separar usuarios
         story.append(HRFlowable(width="100%", thickness=1,
