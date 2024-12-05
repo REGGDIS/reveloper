@@ -1,4 +1,3 @@
-/* Estilos generales */
 body {
   font-family: Arial, sans-serif;
   background: linear-gradient(to bottom, #f0f0f0 40%, #a9a9a9 100%) !important;
@@ -32,17 +31,17 @@ body {
 }
 
 .gold-check {
-  color: rgb(253, 203, 138); /* Color amarillo oro */
+  color: rgb(253, 203, 138);
   animation: pulse 0.5s infinite;
 }
 
 .gold-star {
-  color: #94c8ff; /* Color azul claro */
+  color: #94c8ff;
   animation: pulse 0.5s infinite;
 }
 
 .gold-list-check {
-  color: #ff7676; /* Color rosado */
+  color: #ff7676;
   animation: pulse 0.5s infinite;
 }
 
@@ -310,7 +309,6 @@ body {
   width: 100%;
 }
 
-/* Estilos para las tablas */
 .table {
   width: 100%;
   max-width: 100%;
@@ -321,7 +319,356 @@ body {
 
 .table th,
 .table td {
-  padding: 0.75rem;
+  padding: 0.75rem; /* Estilos generales */
+  body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(
+      to bottom,
+      #f0f0f0 40%,
+      #a9a9a9 100%
+    ) !important;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: #ffffff;
+  }
+
+  /* Estilo específico para la página de rendimiento */
+  .body-dashboard {
+    background: #ffffff !important;
+    color: #000000;
+    position: relative;
+    top: -24px;
+    padding-top: 10px;
+    z-index: 1;
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .gold-check {
+    color: rgb(253, 203, 138); /* Color amarillo oro */
+    animation: pulse 0.5s infinite;
+  }
+
+  .gold-star {
+    color: #94c8ff; /* Color azul claro */
+    animation: pulse 0.5s infinite;
+  }
+
+  .gold-list-check {
+    color: #ff7676; /* Color rosado */
+    animation: pulse 0.5s infinite;
+  }
+
+  /* Estilos para el encabezado */
+  .header {
+    z-index: 5;
+    background-color: #343a40;
+    color: white;
+    padding: 5px 0;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+
+    img {
+      margin-left: 20px;
+    }
+
+    h3 {
+      margin-left: 10px;
+    }
+
+    nav {
+      margin-left: auto;
+      margin-right: 20px;
+
+      ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+
+        li {
+          margin-right: 30px;
+
+          a {
+            color: white;
+            text-decoration: none;
+
+            &.revisar-tareas-link {
+              color: #ff8f8f;
+            }
+
+            &.logout-link {
+              color: yellow;
+            }
+
+            &.nav-icon i {
+              transition: color 0.3s, transform 0.3s;
+            }
+
+            &.nav-icon:hover i {
+              color: #ff5722;
+              transform: rotate(20deg);
+            }
+
+            &.evaluaciones-link i {
+              color: rgb(253, 203, 138);
+              animation: pulse 0.5s infinite;
+            }
+
+            &.proyectos-link i {
+              color: #94c8ff;
+              animation: pulse 0.5s infinite;
+            }
+
+            &.tareas-link i {
+              color: #ff7676;
+              animation: pulse 0.5s infinite;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* Estilos para las tarjetas */
+  .cards {
+    display: flex;
+    justify-content: center;
+    margin: 50px 0;
+
+    .card {
+      padding: 20px;
+      text-align: center;
+      border-radius: 8px;
+      width: 30%;
+      margin: 0 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      text-decoration: none;
+      color: white;
+
+      &:hover {
+        text-decoration: none;
+
+        h2,
+        p {
+          color: white;
+        }
+      }
+    }
+
+    .card-proyectos {
+      background-color: #317fd2 !important;
+
+      &:hover {
+        background-color: #1258a3 !important;
+      }
+    }
+
+    .card-tareas {
+      background-color: #ff7676 !important;
+      color: rgb(45, 44, 44);
+
+      &:hover {
+        background-color: #df4b4b !important;
+      }
+    }
+
+    .card-evaluaciones {
+      background-color: rgb(253, 203, 138) !important;
+      color: #ff5722;
+
+      &:hover {
+        background-color: rgb(245, 183, 101) !important;
+      }
+    }
+  }
+
+  /* Estilos para el contenedor de título */
+  .container {
+    h1 {
+      margin-top: 50px;
+      font-size: 30px;
+    }
+
+    ul,
+    .user-list,
+    .project-list {
+      list-style-type: none;
+      padding: 0;
+      text-align: center;
+    }
+
+    .admin-link {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+  }
+
+  /* Estilos para los elementos de usuario y proyecto */
+  .user-item,
+  .project-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+
+    span {
+      flex: 1;
+      margin-right: 10px;
+      margin-bottom: 5px;
+    }
+
+    &.user-item {
+      background: #138496;
+      color: white;
+      border: 2px solid #ddd;
+    }
+
+    &.project-item {
+      background: #317fd2;
+      color: white;
+      border: 1px solid #ddd;
+    }
+  }
+
+  /* Estilos para las tareas */
+  .task-container,
+  .evaluation-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 50px;
+
+    .task,
+    .evaluation-card {
+      flex: 1 1 calc(33% - 20px);
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s;
+
+      &:hover {
+        transform: scale(1.02);
+      }
+
+      h2 {
+        margin-top: 0;
+      }
+
+      p {
+        margin: 0.5em 0;
+      }
+    }
+
+    .task {
+      background: #ed9393;
+    }
+
+    .evaluation-card {
+      background: rgb(251, 221, 181);
+
+      .calificacion {
+        font-size: 1.5em;
+        color: #ff5722;
+      }
+    }
+  }
+
+  .task-item {
+    background-color: #ed9393;
+    color: black;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+  }
+
+  .mt-5 {
+    margin-top: 3rem;
+  }
+
+  /* Botones informes PDF*/
+  .task-btn {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    display: inline-block;
+  }
+
+  .evaluation-btn {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    display: inline-block;
+  }
+
+  .pdf-button {
+    margin-bottom: 20px;
+    display: inline-block;
+  }
+
+  .user-btn {
+    margin-bottom: 20px;
+    display: inline-block;
+  }
+
+  .modal-bottom .modal-dialog {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    margin: 0;
+    width: 100%;
+  }
+
+  /* Estilos para las tablas */
+  .table {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 1rem;
+    background-color: transparent;
+    border-collapse: collapse;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.75rem;
+    vertical-align: top;
+    border-top: 1px solid #dee2e6;
+  }
+
+  .table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid #dee2e6;
+  }
+
+  .table tbody + tbody {
+    border-top: 2px solid #dee2e6;
+  }
+
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  .table-bordered th,
+  .table-bordered td {
+    border: 1px solid #dee2e6;
+  }
+
   vertical-align: top;
   border-top: 1px solid #dee2e6;
 }
@@ -337,9 +684,4 @@ body {
 
 .table-striped tbody tr:nth-of-type(odd) {
   background-color: rgba(0, 0, 0, 0.05);
-}
-
-.table-bordered th,
-.table-bordered td {
-  border: 1px solid #dee2e6;
 }
