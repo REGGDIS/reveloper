@@ -100,29 +100,56 @@
 
     <!-- Resultados de la búsqueda de proyectos -->
     {% if resultados %}
-        <h2 class="mt-4">Proyectos Encontrados:</h2>
-        <ul class="list-group">
+    <h2 class="mt-4">Proyectos Encontrados:</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Fecha de Inicio</th>
+                <th>Fecha de Fin</th>
+            </tr>
+        </thead>
+        <tbody>
             {% for proyecto in resultados %}
-                <li class="list-group-item">
-                    <strong>Nombre:</strong> {{ proyecto.nombre }}<br>
-                    <strong>Descripción:</strong> {{ proyecto.descripcion }}<br>
-                    <strong>Fecha de Inicio:</strong> {{ proyecto.fecha_inicio }}<br>
-                    <strong>Fecha de Fin:</strong> {{ proyecto.fecha_fin }}
-                    <!-- Mostrar Tareas -->
-                    <ul class="task-list mt-2">
-                        {% for tarea in proyecto.tareas %}
-                            <li class="task-item">
-                                <span><strong>Tarea:</strong> {{ tarea.titulo }}</span><br>
-                                <span><strong>Asignado a:</strong> {{ tarea.usuario.first_name }} {{ tarea.usuario.last_name }}</span><br>
-                                <span><strong>Estado:</strong> {{ tarea.estado }}</span><br>
-                                <span><strong>Fecha de Creación:</strong> {{ tarea.fecha_creacion }}</span><br>
-                                <span><strong>Fecha de Vencimiento:</strong> {{ tarea.fecha_vencimiento }}</span>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </li>
+                <tr>
+                    <td>{{ proyecto.nombre }}</td>
+                    <td>{{ proyecto.descripcion }}</td>
+                    <td>{{ proyecto.fecha_inicio }}</td>
+                    <td>{{ proyecto.fecha_fin }}</td>
+                </tr>
+                <!-- Mostrar Tareas -->
+                <tr>
+                    <td colspan="4">
+                        <h5>Tareas:</h5>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Tarea</th>
+                                    <th>Asignado a</th>
+                                    <th>Estado</th>
+                                    <th>Fecha de Creación</th>
+                                    <th>Fecha de Vencimiento</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tarea in proyecto.tareas %}
+                                    <tr>
+                                        <td>{{ tarea.titulo }}</td>
+                                        <td>{{ tarea.usuario.first_name }} {{ tarea.usuario.last_name }}</td>
+                                        <td>{{ tarea.estado }}</td>
+                                        <td>{{ tarea.fecha_creacion }}</td>
+                                        <td>{{ tarea.fecha_vencimiento }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
             {% endfor %}
-        </ul>
+        </tbody>
+    </table>
+    
         <!-- Botón Descargar informe PDF de proyectos -->
         <form method="GET" action="{% url 'generar_informe_pdf_busqueda' %}">
             <input type="hidden" name="fecha_inicio_desde" value="{{ request.GET.fecha_inicio_desde }}">
