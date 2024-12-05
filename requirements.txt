@@ -1,39 +1,52 @@
-# Framework principal
+asgiref==3.8.1
+attrs==24.2.0
+Brotli==1.1.0
+certifi==2024.8.30
+cffi==1.17.1
+chardet==5.2.0
+charset-normalizer==3.4.0
+contourpy==1.3.1
+cssselect2==0.7.0
+cycler==0.12.1
 Django==5.1.3
-
-# Dependencias relacionadas con Django y administración
-django-jazzmin==3.0.1   # Tema para el admin de Django
-sqlparse==0.5.1         # Analizador SQL, requerido por Django
-asgiref==3.8.1          # Implementación de ASGI para Django
-tzdata==2024.2          # Datos de zonas horarias
-
-# Conector para MySQL
+django-jazzmin==3.0.1
+et_xmlfile==2.0.0
+fonttools==4.55.0
+h11==0.14.0
+idna==3.10
+kiwisolver==1.4.7
+matplotlib==3.9.2
 mysqlclient==2.2.5
-
-# Soporte para imágenes
-pillow==10.4.0          # Procesamiento de imágenes (cargar, editar, guardar)
-
-# Generación de PDF y documentos
-reportlab==4.2.5        # Generación avanzada de PDFs
-pyphen==0.15.0          # División silábica para texto (útil en reportes)
-pydyf==0.11.0           # Generación de contenido PDF
-
-# CSS y HTML
-cssselect2==0.7.0       # Selección CSS en documentos XML/HTML
-tinycss2==1.4.0         # Analizador de hojas de estilo CSS
-tinyhtml5==2.0.0        # Generación simplificada de HTML5
-webencodings==0.5.1     # Codificaciones usadas en documentos HTML/CSS
-
-# Compresión y optimización
-Brotli==1.1.0           # Algoritmo de compresión Brotli
-zopfli==0.2.3.post1     # Algoritmo de compresión Zopfli (útil para optimizar recursos estáticos)
-
-# Tipografías
-fonttools==4.55.0       # Procesamiento avanzado de fuentes
-
-# Manejo de archivos binarios y seguridad
-cffi==1.17.1            # Interfaz para llamadas a bibliotecas C
-pycparser==2.22         # Analizador para cffi
-
-# Red y codificaciones
-chardet==5.2.0          # Detección de codificaciones de texto
+numpy==2.1.3
+openpyxl==3.1.5
+outcome==1.3.0.post0
+packaging==24.2
+pandas==2.2.3
+pillow==10.4.0
+pycparser==2.22
+pydyf==0.11.0
+pyparsing==3.2.0
+pyphen==0.15.0
+PySocks==1.7.1
+python-dateutil==2.9.0.post0
+python-dotenv==1.0.1
+pytz==2024.2
+reportlab==4.2.5
+requests==2.32.3
+selenium==4.27.1
+six==1.16.0
+sniffio==1.3.1
+sortedcontainers==2.4.0
+sqlparse==0.5.1
+tinycss2==1.4.0
+tinyhtml5==2.0.0
+trio==0.27.0
+trio-websocket==0.11.1
+typing_extensions==4.12.2
+tzdata==2024.2
+urllib3==2.2.3
+webdriver-manager==4.0.2
+webencodings==0.5.1
+websocket-client==1.8.0
+wsproto==1.2.0
+zopfli==0.2.3.post1
