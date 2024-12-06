@@ -319,7 +319,7 @@ body {
 
 .table th,
 .table td {
-  padding: 0.75rem; /* Estilos generales */
+  padding: 0.75rem;
   body {
     font-family: Arial, sans-serif;
     background: linear-gradient(
@@ -357,17 +357,17 @@ body {
   }
 
   .gold-check {
-    color: rgb(253, 203, 138); /* Color amarillo oro */
+    color: rgb(253, 203, 138);
     animation: pulse 0.5s infinite;
   }
 
   .gold-star {
-    color: #94c8ff; /* Color azul claro */
+    color: #94c8ff;
     animation: pulse 0.5s infinite;
   }
 
   .gold-list-check {
-    color: #ff7676; /* Color rosado */
+    color: #ff7676;
     animation: pulse 0.5s infinite;
   }
 

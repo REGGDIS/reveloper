@@ -8,7 +8,7 @@ class CustomUserAdmin(BaseUserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     list_display = ('username', 'nombre', 'apellido', 'email',
-                    'tareas_completadas')  # Añadido 'tareas_completadas'
+                    'tareas_completadas')
     add_fieldsets = (
         (None, {
             'classes': ('wide',),

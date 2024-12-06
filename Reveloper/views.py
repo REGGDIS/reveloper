@@ -939,7 +939,6 @@ def generar_informe_pdf_tareas(request):
     story = []
 
     # Título del documento
-    # Asegúrate de que la ruta al logotipo sea correcta
     logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
     title = "Informe de Búsqueda de Tareas"
     subtitle = "Lista de Tareas encontradas:"
@@ -993,7 +992,6 @@ def generar_informe_pdf_usuarios(request):
     story = []
 
     # Título del documento
-    # Asegúrate de que la ruta al logotipo sea correcta
     logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
     title = "Informe de Búsqueda de Usuarios"
     subtitle = "Lista de Usuarios encontrados:"

@@ -45,7 +45,7 @@ body.login {
 
 h2 {
   color: white;
-  margin-bottom: 20px; /* Añadir margen inferior al título */
+  margin-bottom: 20px;
 }
 
 form {
@@ -54,7 +54,7 @@ form {
   align-items: center;
 }
 
-/* Añadir márgenes inferiores a los elementos del formulario */
+/* Márgenes inferiores de los elementos del formulario */
 form .form-group {
   margin-bottom: 20px;
 }
@@ -101,7 +101,7 @@ body.login:before {
 
 .password-wrapper {
   position: relative;
-  width: 280px; /* Ancho fijo */
+  width: 280px;
 }
 
 .password-wrapper input[type="password"] {
@@ -118,16 +118,16 @@ body.login:before {
 }
 
 .alert {
-  padding: 10px; /* Añadir padding al recuadro */
+  padding: 10px;
   margin-bottom: 20px;
   border: 1px solid transparent;
   border-radius: 4px;
-  font-size: 14px; /* Ajustar la tipografía del mensaje */
+  font-size: 14px;
 }
 
 .alert-danger {
-  color: white; /* Color del texto en blanco */
-  background-color: red; /* Fondo en rojo */
+  color: white;
+  background-color: red;
   border-color: darkred;
 }
 

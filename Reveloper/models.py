@@ -14,7 +14,7 @@ class Usuario(AbstractUser):
     nombre = models.CharField(max_length=255)
     apellido = models.CharField(max_length=255)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    tareas_completadas = models.IntegerField(default=0)  # Nuevo campo
+    tareas_completadas = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.username}"
@@ -48,7 +48,7 @@ class TareaPorDesarrollar(models.Model):
         ('pendiente', 'Pendiente'),
         ('en progreso', 'En Progreso'),
         ('completada', 'Completada'),
-        ('en revision', 'En Revisión')  # Añadir nuevo estado
+        ('en revision', 'En Revisión')
     ])
 
     def __str__(self):
@@ -93,10 +93,10 @@ def transfer_to_completadas(sender, instance, **kwargs):
 
 class Evaluacion(models.Model):
     titulo = models.CharField(
-        max_length=200, default="Título Predeterminado")  # Valor predeterminado
+        max_length=200, default="Título Predeterminado")
     comentarios = models.TextField(default="Comentario pendiente")
     fecha_evaluacion = models.DateTimeField(
-        default=timezone.now)  # Valor predeterminado
+        default=timezone.now)
     proyecto = models.ForeignKey('Proyecto', on_delete=models.CASCADE)
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
