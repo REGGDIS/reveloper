@@ -1,0 +1,10 @@
+"""Configuración usada solo al ejecutar pruebas (SQLite en memoria)."""
+
+from .settings import *  # noqa: F403
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
+    }
+}

@@ -10,8 +10,6 @@ urlpatterns = [
     path('evaluaciones/', views.evaluaciones, name='evaluaciones'),
     path('tareas_por_desarrollar/', views.tareas_por_desarrollar,
          name='tareas_por_desarrollar'),
-    path('print-template-dirs/', views.print_template_dirs,
-         name='print_template_dirs'),
     path('logout/', views.logout_view, name='logout'),
     path('login/', auth_views.LoginView.as_view(), name='login'),
     path('crear_tarea/', views.crear_tarea, name='crear_tarea'),

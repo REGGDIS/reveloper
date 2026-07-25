@@ -74,13 +74,6 @@ def home(request):
     return render(request, 'home.html', context)
 
 
-# Vista para imprimir las carpetas de plantillas configuradas
-
-
-def print_template_dirs(request):
-    print(settings.TEMPLATES[0]['DIRS'])
-    return HttpResponse('Template Dirs Printed')
-
 # Vista para generar los datos que se mostrarán en el dashboard
 
 
@@ -383,6 +376,7 @@ def buscar_tareas(request):
 
 
 @login_required
+@user_passes_test(es_admin)
 def generate_pdf(request):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter)
@@ -628,11 +622,8 @@ def generate_evaluation_pdf(request):
 
 
 @login_required
+@user_passes_test(es_admin)
 def generate_user_pdf(request):
-    # Esta vista sólo debe ser accesible para administradores
-    if not request.user.is_superuser:
-        return HttpResponse("No tienes permiso para acceder a esta página.", status=403)
-
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter)
     styles = getSampleStyleSheet()
@@ -748,6 +739,8 @@ def generar_grafico_evaluaciones(request, desarrollador):
     return graph
 
 
+@login_required
+@user_passes_test(es_admin)
 def generar_informe_grafico_pdf_admin(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="informe_grafico_evaluaciones.pdf"'
@@ -791,6 +784,7 @@ def generar_informe_grafico_pdf_admin(request):
     return response
 
 
+@login_required
 def generar_informe_grafico_pdf_desarrollador(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="informe_grafico_evaluaciones.pdf"'
@@ -1026,6 +1020,8 @@ def generar_informe_pdf_usuarios(request):
     return HttpResponse(buffer, content_type='application/pdf')
 
 
+@login_required
+@user_passes_test(es_admin)
 def exportar_tareas_excel(request):
     fecha_inicio_desde_tarea = request.GET.get('fecha_inicio_desde_tarea')
     fecha_inicio_hasta_tarea = request.GET.get('fecha_inicio_hasta_tarea')
@@ -1073,6 +1069,8 @@ def exportar_tareas_excel(request):
     return response
 
 
+@login_required
+@user_passes_test(es_admin)
 def exportar_proyectos_excel(request):
     fecha_inicio_desde = request.GET.get('fecha_inicio_desde')
     fecha_inicio_hasta = request.GET.get('fecha_inicio_hasta')
@@ -1120,6 +1118,8 @@ def exportar_proyectos_excel(request):
     return response
 
 
+@login_required
+@user_passes_test(es_admin)
 def exportar_usuarios_excel(request):
     nombre_o_apellido = request.GET.get('nombre_o_apellido')
     fecha_alta_desde = request.GET.get('fecha_alta_desde')
@@ -1163,6 +1163,8 @@ def exportar_usuarios_excel(request):
     return response
 
 
+@login_required
+@user_passes_test(es_admin)
 def exportar_todos_usuarios_excel(request):
     usuarios = Usuario.objects.all()
 
@@ -1201,6 +1203,8 @@ def exportar_todos_usuarios_excel(request):
     return response
 
 
+@login_required
+@user_passes_test(es_admin)
 def exportar_todos_proyectos_excel(request):
     proyectos = Proyecto.objects.all()
 
@@ -1231,6 +1235,8 @@ def exportar_todos_proyectos_excel(request):
     return response
 
 
+@login_required
+@user_passes_test(es_admin)
 def exportar_todas_tareas_excel(request):
     tareas = TareaPorDesarrollar.objects.all()
 
@@ -1261,6 +1267,8 @@ def exportar_todas_tareas_excel(request):
     return response
 
 
+@login_required
+@user_passes_test(es_admin)
 def exportar_todas_evaluaciones_excel(request):
     evaluaciones = Evaluacion.objects.all()
 
