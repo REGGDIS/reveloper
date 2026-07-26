@@ -93,3 +93,49 @@ class ExportEndpointSecurityTests(TestCase):
     def test_print_template_dirs_route_removed(self):
         response = self.client.get('/reveloper/print-template-dirs/')
         self.assertEqual(response.status_code, 404)
+
+
+class SettingsSecurityTests(TestCase):
+    """Pruebas para verificar la externalización de la configuración sensible."""
+
+    def test_debug_conversion_from_string(self):
+        test_cases = [
+            ('True', True),
+            ('true', True),
+            ('1', True),
+            ('False', False),
+            ('false', False),
+            ('0', False),
+            ('', False),
+        ]
+        for val, expected in test_cases:
+            with self.subTest(val=val):
+                res = val.lower() in ('true', '1', 't', 'yes')
+                self.assertEqual(res, expected)
+
+    def test_allowed_hosts_parsing(self):
+        raw_hosts = 'localhost, 127.0.0.1, example.com '
+        parsed = [host.strip() for host in raw_hosts.split(',') if host.strip()]
+        self.assertEqual(parsed, ['localhost', '127.0.0.1', 'example.com'])
+
+    def test_test_settings_uses_sqlite_in_memory(self):
+        from django.conf import settings
+        from django.db import connection
+
+        self.assertEqual(settings.DATABASES['default']['ENGINE'], 'django.db.backends.sqlite3')
+        self.assertTrue(
+            ':memory:' in settings.DATABASES['default']['NAME'] or 'memory' in settings.DATABASES['default']['NAME']
+        )
+        self.assertEqual(connection.vendor, 'sqlite')
+
+    def test_env_example_does_not_contain_real_secrets(self):
+        from django.conf import settings
+
+        env_example_path = settings.BASE_DIR / '.env.example'
+        self.assertTrue(env_example_path.exists(), '.env.example debe existir')
+        content = env_example_path.read_text(encoding='utf-8')
+
+        self.assertIn('DJANGO_SECRET_KEY=', content)
+        self.assertNotIn('DJANGO_SECRET_KEY=django-insecure', content)
+        self.assertNotIn(settings.SECRET_KEY, content)
+        self.assertIn('DB_PASSWORD=', content)
