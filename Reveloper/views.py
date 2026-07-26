@@ -234,13 +234,12 @@ def crear_tarea(request):
     if request.method == 'POST':
         form = TareaPorDesarrollarForm(request.POST)
         if form.is_valid():
-            tarea = form.save(commit=False)
-            tarea.usuario = request.user  # Asignar el usuario autenticado
-            tarea.save()  # Guardar la tarea con el usuario asignado
+            form.save()
             return redirect('proyectos')
     else:
         form = TareaPorDesarrollarForm()
     return render(request, 'crear_tarea.html', {'form': form})
+
 
 
 @login_required
@@ -251,11 +250,11 @@ def editar_tarea(request, tarea_id):
         form = TareaPorDesarrollarForm(request.POST, instance=tarea)
         if form.is_valid():
             form.save()
-            # Redirige a la lista de proyectos o donde prefieras
             return redirect('proyectos')
-        else:
-            form = TareaPorDesarrollarForm(instance=tarea)
-        return render(request, 'editar_tarea.html', {'form': form})
+    else:
+        form = TareaPorDesarrollarForm(instance=tarea)
+    return render(request, 'editar_tarea.html', {'form': form, 'tarea': tarea})
+
 
 
 # Vista para la búsqueda

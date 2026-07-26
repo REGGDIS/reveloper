@@ -2,10 +2,11 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractUser
-from datetime import timedelta
+from datetime import timedelta, datetime
 from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
 
 # Creación de Modelos
 
@@ -79,16 +80,30 @@ class TareasCompletadas(models.Model):
 @receiver(post_save, sender=TareaPorDesarrollar)
 def transfer_to_completadas(sender, instance, **kwargs):
     if instance.estado == "completada":
-        TareasCompletadas.objects.create(
+        fecha_entrega = instance.fecha_vencimiento
+        if fecha_entrega:
+            if not isinstance(fecha_entrega, datetime):
+                fecha_entrega = datetime.combine(fecha_entrega, datetime.min.time())
+            if timezone.is_naive(fecha_entrega):
+                fecha_entrega = timezone.make_aware(fecha_entrega)
+
+        tc, created = TareasCompletadas.objects.get_or_create(
             tarea_original_id=instance.id,
-            titulo=instance.titulo,
-            fecha_entrega=instance.fecha_vencimiento,
-            estado=instance.estado,
-            usuario=instance.usuario,
-            comentario="Tarea completada y transferida automáticamente."
+            defaults={
+                'titulo': instance.titulo,
+                'fecha_entrega': fecha_entrega,
+                'estado': instance.estado,
+                'usuario': instance.usuario,
+                'comentario': "Tarea completada y transferida automáticamente."
+            }
         )
-        instance.usuario.tareas_completadas += 1
-        instance.usuario.save()
+        if created:
+            if instance.usuario:
+                Usuario.objects.filter(pk=instance.usuario.pk).update(
+                    tareas_completadas=models.F('tareas_completadas') + 1
+                )
+
+
 
 
 class Evaluacion(models.Model):

@@ -139,3 +139,273 @@ class SettingsSecurityTests(TestCase):
         self.assertNotIn('DJANGO_SECRET_KEY=django-insecure', content)
         self.assertNotIn(settings.SECRET_KEY, content)
         self.assertIn('DB_PASSWORD=', content)
+
+
+class TaskLifecycleTests(TestCase):
+    """Pruebas automatizadas para el ciclo de vida de tareas (Hito 4)."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from datetime import date
+        from .models import Proyecto, TareaPorDesarrollar, TareasCompletadas
+
+        cls.admin = Usuario.objects.create_superuser(
+            username='admin_lifecycle',
+            email='admin_lifecycle@test.local',
+            password='test-pass-123',
+            nombre='Admin',
+            apellido='Lifecycle',
+        )
+        cls.developer = Usuario.objects.create_user(
+            username='dev_lifecycle',
+            email='dev_lifecycle@test.local',
+            password='test-pass-123',
+            nombre='Dev',
+            apellido='Lifecycle',
+        )
+        cls.staff_user = Usuario.objects.create_user(
+            username='staff_lifecycle',
+            email='staff_lifecycle@test.local',
+            password='test-pass-123',
+            nombre='Staff',
+            apellido='Lifecycle',
+            is_staff=True,
+        )
+        cls.inactive_user = Usuario.objects.create_user(
+            username='inactive_lifecycle',
+            email='inactive_lifecycle@test.local',
+            password='test-pass-123',
+            nombre='Inactive',
+            apellido='Lifecycle',
+            is_active=False,
+        )
+        cls.proyecto = Proyecto.objects.create(
+            id='PROY-001',
+            nombre='Proyecto Prueba',
+            descripcion='Descripción del proyecto',
+            fecha_inicio=date.today(),
+            fecha_fin=date.today(),
+            estado='activo',
+        )
+        cls.tarea_text_id = 'TASK-TEXT-1001'
+        cls.tarea = TareaPorDesarrollar.objects.create(
+            id=cls.tarea_text_id,
+            usuario=cls.developer,
+            proyecto=cls.proyecto,
+            titulo='Tarea Texto Inicial',
+            descripcion='Descripción inicial',
+            fecha_vencimiento=date.today(),
+            estado='pendiente',
+        )
+
+
+    def setUp(self):
+        self.client = Client()
+
+    def _login(self, user):
+        self.assertTrue(
+            self.client.login(username=user.username, password='test-pass-123')
+        )
+
+    def test_editar_tarea_accepts_string_id(self):
+        self._login(self.admin)
+        url = reverse('editar_tarea', kwargs={'tarea_id': self.tarea_text_id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_anonymous_user_cannot_edit_task(self):
+        url = reverse('editar_tarea', kwargs={'tarea_id': self.tarea_text_id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response.url)
+
+    def test_developer_cannot_edit_task(self):
+        self._login(self.developer)
+        url = reverse('editar_tarea', kwargs={'tarea_id': self.tarea_text_id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response.url)
+
+    def test_admin_can_open_edit_task_get(self):
+        self._login(self.admin)
+        url = reverse('editar_tarea', kwargs={'tarea_id': self.tarea_text_id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'editar_tarea.html')
+
+    def test_valid_post_modifies_task(self):
+        from datetime import date
+        self._login(self.admin)
+        url = reverse('editar_tarea', kwargs={'tarea_id': self.tarea_text_id})
+        post_data = {
+            'titulo': 'Tarea Texto Modificada',
+            'descripcion': 'Descripción modificada',
+            'fecha_vencimiento': str(date.today()),
+            'estado': 'en progreso',
+            'proyecto': self.proyecto.id,
+            'usuario': self.developer.id,
+        }
+        response = self.client.post(url, post_data)
+        self.assertEqual(response.status_code, 302)
+        self.tarea.refresh_from_db()
+        self.assertEqual(self.tarea.titulo, 'Tarea Texto Modificada')
+        self.assertEqual(self.tarea.estado, 'en progreso')
+
+    def test_invalid_post_shows_errors_and_does_not_save(self):
+        from datetime import date
+        self._login(self.admin)
+        url = reverse('editar_tarea', kwargs={'tarea_id': self.tarea_text_id})
+        post_data = {
+            'titulo': '',
+            'descripcion': 'Sin título',
+            'fecha_vencimiento': str(date.today()),
+            'estado': 'pendiente',
+            'proyecto': self.proyecto.id,
+            'usuario': self.developer.id,
+        }
+        response = self.client.post(url, post_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('titulo', response.context['form'].errors)
+        self.tarea.refresh_from_db()
+        self.assertNotEqual(self.tarea.descripcion, 'Sin título')
+
+    def test_crear_tarea_assigns_to_selected_developer(self):
+        from datetime import date
+        from .models import TareaPorDesarrollar
+        self._login(self.admin)
+        url = reverse('crear_tarea')
+        post_data = {
+            'id': 'TASK-NEW-200',
+            'titulo': 'Tarea para desarrollador',
+            'descripcion': 'Detalle tarea',
+            'fecha_vencimiento': str(date.today()),
+            'estado': 'pendiente',
+            'proyecto': self.proyecto.id,
+            'usuario': self.developer.id,
+        }
+        response = self.client.post(url, post_data)
+        self.assertEqual(response.status_code, 302)
+        nueva_tarea = TareaPorDesarrollar.objects.filter(titulo='Tarea para desarrollador').first()
+        self.assertIsNotNone(nueva_tarea)
+        self.assertEqual(nueva_tarea.usuario, self.developer)
+
+    def test_completing_task_creates_exactly_one_tareas_completadas(self):
+        from datetime import date
+        from .models import TareaPorDesarrollar, TareasCompletadas
+        tarea_to_complete = TareaPorDesarrollar.objects.create(
+            id='TASK-COMPLETABLE-1',
+            usuario=self.developer,
+            proyecto=self.proyecto,
+            titulo='Tarea a completar',
+            fecha_vencimiento=date.today(),
+            estado='pendiente',
+        )
+        self.assertEqual(TareasCompletadas.objects.filter(tarea_original_id=tarea_to_complete.id).count(), 0)
+
+        tarea_to_complete.estado = 'completada'
+        tarea_to_complete.save()
+
+        count = TareasCompletadas.objects.filter(tarea_original_id=tarea_to_complete.id).count()
+        self.assertEqual(count, 1)
+
+    def test_completing_task_increments_tareas_completadas_counter_once(self):
+        from datetime import date
+        from .models import TareaPorDesarrollar
+        initial_counter = Usuario.objects.get(pk=self.developer.pk).tareas_completadas
+        tarea_to_complete = TareaPorDesarrollar.objects.create(
+            id='TASK-COMPLETABLE-2',
+            usuario=self.developer,
+            proyecto=self.proyecto,
+            titulo='Tarea contador',
+            fecha_vencimiento=date.today(),
+            estado='pendiente',
+        )
+
+        tarea_to_complete.estado = 'completada'
+        tarea_to_complete.save()
+
+        updated_counter = Usuario.objects.get(pk=self.developer.pk).tareas_completadas
+        self.assertEqual(updated_counter, initial_counter + 1)
+
+    def test_resaving_completed_task_does_not_duplicate_history_or_counter(self):
+        from datetime import date
+        from .models import TareaPorDesarrollar, TareasCompletadas
+        tarea_completed = TareaPorDesarrollar.objects.create(
+            id='TASK-COMPLETABLE-3',
+            usuario=self.developer,
+            proyecto=self.proyecto,
+            titulo='Tarea a resguardar',
+            fecha_vencimiento=date.today(),
+            estado='pendiente',
+        )
+        tarea_completed.estado = 'completada'
+        tarea_completed.save()
+
+        history_count_before = TareasCompletadas.objects.filter(tarea_original_id=tarea_completed.id).count()
+        counter_before = Usuario.objects.get(pk=self.developer.pk).tareas_completadas
+
+        tarea_completed.descripcion = 'Descripción actualizada post completado'
+        tarea_completed.save()
+
+        history_count_after = TareasCompletadas.objects.filter(tarea_original_id=tarea_completed.id).count()
+        counter_after = Usuario.objects.get(pk=self.developer.pk).tareas_completadas
+
+        self.assertEqual(history_count_after, history_count_before)
+        self.assertEqual(counter_after, counter_before)
+
+    def test_superuser_not_in_user_form_queryset(self):
+        from .forms import TareaPorDesarrollarForm
+        form = TareaPorDesarrollarForm()
+        self.assertNotIn(self.admin, form.fields['usuario'].queryset)
+
+    def test_staff_user_not_in_user_form_queryset(self):
+        from .forms import TareaPorDesarrollarForm
+        form = TareaPorDesarrollarForm()
+        self.assertNotIn(self.staff_user, form.fields['usuario'].queryset)
+
+    def test_active_normal_user_in_user_form_queryset(self):
+        from .forms import TareaPorDesarrollarForm
+        form = TareaPorDesarrollarForm()
+        self.assertIn(self.developer, form.fields['usuario'].queryset)
+
+    def test_inactive_user_not_in_user_form_queryset(self):
+        from .forms import TareaPorDesarrollarForm
+        form = TareaPorDesarrollarForm()
+        self.assertNotIn(self.inactive_user, form.fields['usuario'].queryset)
+
+    def test_post_without_user_does_not_create_task(self):
+        from datetime import date
+        from .models import TareaPorDesarrollar
+        self._login(self.admin)
+        url = reverse('crear_tarea')
+        post_data = {
+            'id': 'TASK-NO-USER',
+            'titulo': 'Tarea sin usuario',
+            'descripcion': 'Detalle',
+            'fecha_vencimiento': str(date.today()),
+            'estado': 'pendiente',
+            'proyecto': self.proyecto.id,
+        }
+        response = self.client.post(url, post_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('usuario', response.context['form'].errors)
+        self.assertFalse(TareaPorDesarrollar.objects.filter(id='TASK-NO-USER').exists())
+
+    def test_post_assigning_staff_user_does_not_create_task(self):
+        from datetime import date
+        from .models import TareaPorDesarrollar
+        self._login(self.admin)
+        url = reverse('crear_tarea')
+        post_data = {
+            'id': 'TASK-STAFF-USER',
+            'titulo': 'Tarea para staff',
+            'descripcion': 'Detalle',
+            'fecha_vencimiento': str(date.today()),
+            'estado': 'pendiente',
+            'proyecto': self.proyecto.id,
+            'usuario': self.staff_user.id,
+        }
+        response = self.client.post(url, post_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('usuario', response.context['form'].errors)
+        self.assertFalse(TareaPorDesarrollar.objects.filter(id='TASK-STAFF-USER').exists())

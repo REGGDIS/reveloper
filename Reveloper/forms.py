@@ -7,7 +7,18 @@ class TareaPorDesarrollarForm(forms.ModelForm):
     class Meta:
         model = TareaPorDesarrollar
         fields = ['titulo', 'descripcion',
-                  'fecha_vencimiento', 'estado', 'proyecto']
+                  'fecha_vencimiento', 'estado', 'proyecto', 'usuario']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'usuario' in self.fields:
+            self.fields['usuario'].queryset = Usuario.objects.filter(
+                is_active=True,
+                is_superuser=False,
+                is_staff=False,
+            )
+
+
 
 
 class CustomUserCreationForm(UserCreationForm):

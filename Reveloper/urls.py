@@ -13,7 +13,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('login/', auth_views.LoginView.as_view(), name='login'),
     path('crear_tarea/', views.crear_tarea, name='crear_tarea'),
-    path('editar_tarea/<int:tarea_id>/',
+    path('editar_tarea/<str:tarea_id>/',
          views.editar_tarea, name='editar_tarea'),
     path('generate_pdf/', views.generate_pdf, name='generate_pdf'),
     path('generate_task_pdf/', views.generate_task_pdf, name='generate_task_pdf'),
