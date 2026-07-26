@@ -75,3 +75,9 @@ Para ejecutar las pruebas en un entorno aislado con SQLite en memoria:
 ```bash
 python manage.py test Reveloper --settings=ProyectEspecial.test_settings
 ```
+
+## Gestión de Archivos Generados y Respaldos
+
+- **Dependencias Frontend (`node_modules`)**: El directorio `node_modules` no se versiona en el repositorio Git. Las dependencias frontend se restauran o instalan localmente mediante `npm install` o `npm ci`.
+- **Respaldos de Base de Datos**: Los respaldos reales de base de datos no se almacenan en Git. La base de datos local o de desarrollo se prepara mediante las migraciones de Django (`python manage.py migrate`).
+- **Almacenamiento Seguro de Respaldos**: Los respaldos de base de datos deben guardarse siempre fuera del repositorio y protegerse adecuadamente conforme a las políticas de seguridad.
