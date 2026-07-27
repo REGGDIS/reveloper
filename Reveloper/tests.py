@@ -409,3 +409,171 @@ class TaskLifecycleTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('usuario', response.context['form'].errors)
         self.assertFalse(TareaPorDesarrollar.objects.filter(id='TASK-STAFF-USER').exists())
+
+
+class EvaluationFlowTests(TestCase):
+    """Pruebas para el Hito 5: unificar y corregir el flujo de evaluaciones."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from datetime import date
+        from django.utils import timezone
+        from .models import Proyecto, Evaluacion
+
+        cls.admin = Usuario.objects.create_superuser(
+            username='admin_eval',
+            email='admin_eval@test.local',
+            password='test-pass-123',
+            nombre='Admin',
+            apellido='Eval',
+        )
+        cls.developer = Usuario.objects.create_user(
+            username='dev_eval',
+            email='dev_eval@test.local',
+            password='test-pass-123',
+            nombre='Dev',
+            apellido='Eval',
+        )
+        cls.other_developer = Usuario.objects.create_user(
+            username='other_dev_eval',
+            email='other_dev_eval@test.local',
+            password='test-pass-123',
+            nombre='Other',
+            apellido='Eval',
+        )
+        cls.proyecto = Proyecto.objects.create(
+            id='PROY-EVAL-001',
+            nombre='Proyecto Evaluaciones',
+            descripcion='Para pruebas de evaluaciones',
+            fecha_inicio=date.today(),
+            fecha_fin=date.today(),
+            estado='activo',
+        )
+        cls.evaluacion = Evaluacion.objects.create(
+            titulo='Evaluación de prueba',
+            comentarios='Comentario de prueba',
+            fecha_evaluacion=timezone.now(),
+            proyecto=cls.proyecto,
+            usuario=cls.developer,
+            calificacion=80,
+        )
+        cls.other_evaluacion = Evaluacion.objects.create(
+            titulo='Evaluación de other_developer',
+            comentarios='Comentario other',
+            fecha_evaluacion=timezone.now(),
+            proyecto=cls.proyecto,
+            usuario=cls.other_developer,
+            calificacion=70,
+        )
+
+    def setUp(self):
+        self.client = Client()
+
+    def _login(self, user):
+        self.assertTrue(
+            self.client.login(username=user.username, password='test-pass-123')
+        )
+
+    # T1 — Existe exactamente una entrada en urlpatterns con name='evaluaciones'
+    def test_single_evaluaciones_route_exists(self):
+        from Reveloper.urls import urlpatterns
+        matches = [p for p in urlpatterns if getattr(p, 'name', None) == 'evaluaciones']
+        self.assertEqual(
+            len(matches), 1,
+            f"Se esperaba exactamente 1 ruta con name='evaluaciones', se encontraron {len(matches)}",
+        )
+
+    # T2 — La URL principal resuelve a la vista `evaluaciones`
+    def test_evaluaciones_url_resolves_to_correct_view(self):
+        from django.urls import resolve
+        match = resolve('/reveloper/evaluaciones/')
+        self.assertEqual(match.func.__name__, 'evaluaciones')
+
+    # T3 — Un usuario anónimo es redirigido al login
+    def test_anonymous_user_redirected_to_login(self):
+        response = self.client.get(reverse('evaluaciones'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response.url)
+
+    # T4 — El administrador ve ambas evaluaciones (global)
+    def test_admin_sees_all_evaluaciones(self):
+        self._login(self.admin)
+        response = self.client.get(reverse('evaluaciones'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'evaluaciones.html')
+        qs = response.context['evaluaciones']
+        self.assertIn(self.evaluacion, qs)
+        self.assertIn(self.other_evaluacion, qs)
+
+    # T5 — developer ve su propia evaluación y no la de other_developer
+    def test_developer_sees_only_own_evaluaciones(self):
+        self._login(self.developer)
+        response = self.client.get(reverse('evaluaciones'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'evaluaciones.html')
+        qs = response.context['evaluaciones']
+        self.assertIn(self.evaluacion, qs)
+        self.assertNotIn(self.other_evaluacion, qs)
+
+    # T6 — No existe ruta parametrizada de evaluaciones por ID que exponga datos ajenos
+    def test_no_parametrized_evaluaciones_route(self):
+        from django.urls import NoReverseMatch
+        try:
+            reverse('evaluaciones', kwargs={'user_id': self.other_developer.pk})
+            self.fail('No debe existir ruta evaluaciones parametrizada por ID de usuario')
+        except NoReverseMatch:
+            pass  # Correcto: la ruta no existe parametrizada
+
+    # T7 — other_developer ve únicamente su propia evaluación
+    def test_other_developer_sees_only_own_evaluaciones(self):
+        self._login(self.other_developer)
+        response = self.client.get(reverse('evaluaciones'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'evaluaciones.html')
+        qs = response.context['evaluaciones']
+        self.assertIn(self.other_evaluacion, qs)
+        self.assertNotIn(self.evaluacion, qs)
+
+    # T8 — developer no puede ver evaluaciones de other_developer (aislamiento)
+    def test_developer_cannot_see_other_developer_evaluaciones(self):
+        self._login(self.developer)
+        response = self.client.get(reverse('evaluaciones'))
+        self.assertEqual(response.status_code, 200)
+        qs = response.context['evaluaciones']
+        ids_visible = list(qs.values_list('usuario_id', flat=True))
+        for uid in ids_visible:
+            self.assertEqual(uid, self.developer.pk,
+                             'developer no debe ver evaluaciones de otro usuario')
+
+    # T9 — generar_grafico_evaluaciones recibe un desarrollador válido (no un request)
+    def test_generar_grafico_evaluaciones_requires_desarrollador_arg(self):
+        import inspect
+        from .views import generar_grafico_evaluaciones
+        sig = inspect.signature(generar_grafico_evaluaciones)
+        params = list(sig.parameters.keys())
+        self.assertIn('desarrollador', params,
+                      'generar_grafico_evaluaciones debe aceptar el parámetro desarrollador')
+        self.assertEqual(params[0], 'request')
+        self.assertEqual(params[1], 'desarrollador')
+
+    # T10 — No queda ninguna llamada con firma incorrecta (sin desarrollador)
+    def test_no_incompatible_calls_to_graph_function(self):
+        """Verifica que no existe ninguna llamada a generar_grafico_evaluaciones(request)
+        sin el argumento desarrollador en views.py."""
+        import re
+        import os
+        views_path = os.path.join(os.path.dirname(__file__), 'views.py')
+        with open(views_path, encoding='utf-8') as f:
+            source = f.read()
+        bad_calls = re.findall(
+            r'generar_grafico_evaluaciones\s*\(\s*request\s*\)',
+            source
+        )
+        self.assertEqual(bad_calls, [],
+                         f'Llamadas incompatibles encontradas: {bad_calls}')
+
+    # T11 — El nombre vista_evaluaciones no existe en el sistema de rutas
+    def test_vista_evaluaciones_route_does_not_exist(self):
+        from django.urls import NoReverseMatch
+        with self.assertRaises(NoReverseMatch):
+            reverse('vista_evaluaciones')

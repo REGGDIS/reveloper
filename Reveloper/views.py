@@ -690,19 +690,7 @@ def generate_user_pdf(request):
     return HttpResponse(buffer, content_type='application/pdf')
 
 
-@login_required
-def vista_evaluaciones(request):
-    if request.user.is_superuser:  # Si es administrador, muestra todas las evaluaciones
-        evaluaciones = Evaluacion.objects.all()
-    else:  # Si es usuario normal, muestra solo sus evaluaciones
-        evaluaciones = Evaluacion.objects.filter(usuario=request.user)
 
-    graph = generar_grafico_evaluaciones(request)
-    context = {
-        'evaluaciones': evaluaciones,
-        'graph': graph
-    }
-    return render(request, 'evaluaciones.html', context)
 
 
 def generar_grafico_evaluaciones(request, desarrollador):
