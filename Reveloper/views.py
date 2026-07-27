@@ -38,6 +38,35 @@ matplotlib.use('Agg')
 def es_admin(user):
     return user.is_superuser
 
+
+def _filtrar_usuarios(
+    queryset,
+    termino='',
+    fecha_alta_desde='',
+    fecha_alta_hasta=''
+):
+    termino = (termino or '').strip()
+
+    if termino:
+        queryset = queryset.filter(
+            Q(nombre__icontains=termino)
+            | Q(apellido__icontains=termino)
+            | Q(username__icontains=termino)
+            | Q(email__icontains=termino)
+        )
+
+    if fecha_alta_desde:
+        queryset = queryset.filter(
+            fecha_creacion__date__gte=fecha_alta_desde
+        )
+
+    if fecha_alta_hasta:
+        queryset = queryset.filter(
+            fecha_creacion__date__lte=fecha_alta_hasta
+        )
+
+    return queryset
+
 # Vista para el inicio de sesión personalizado
 
 
@@ -273,28 +302,21 @@ def busqueda(request):
 @login_required
 @user_passes_test(es_admin)
 def buscar_usuarios(request):
-    nombre_o_apellido = request.GET.get('nombre_o_apellido', '')
+    termino = request.GET.get('nombre_o_apellido', '')
     fecha_alta_desde = request.GET.get('fecha_alta_desde', '')
     fecha_alta_hasta = request.GET.get('fecha_alta_hasta', '')
-    resultados_usuarios = []
 
-    query = Q()
-    if nombre_o_apellido:
-        query &= Q(first_name__icontains=nombre_o_apellido) | Q(
-            last_name__icontains=nombre_o_apellido)
-    if fecha_alta_desde and fecha_alta_hasta:
-        query &= Q(date_joined__gte=fecha_alta_desde) & Q(
-            date_joined__lte=fecha_alta_hasta)
-
-    if query:
-        resultados_usuarios = Usuario.objects.filter(query)
-
-    request.session['resultados_usuarios'] = [
-        usuario.id for usuario in resultados_usuarios]
+    resultados_usuarios = _filtrar_usuarios(
+        Usuario.objects.all(),
+        termino,
+        fecha_alta_desde,
+        fecha_alta_hasta,
+    )
 
     context = {
         'resultados_usuarios': resultados_usuarios,
-        'usuarios': Usuario.objects.all()
+        'usuarios': Usuario.objects.all(),
+        'busqueda_usuarios_realizada': True,
     }
 
     return render(request, 'busqueda.html', context)
@@ -961,11 +983,16 @@ def generar_informe_pdf_tareas(request):
 @login_required
 @user_passes_test(es_admin)
 def generar_informe_pdf_usuarios(request):
-    nombre_o_apellido = request.GET.get('nombre_o_apellido', '')
+    termino = request.GET.get('nombre_o_apellido', '')
     fecha_alta_desde = request.GET.get('fecha_alta_desde', '')
     fecha_alta_hasta = request.GET.get('fecha_alta_hasta', '')
-    resultados_usuarios = request.session.get('resultados_usuarios', [])
-    usuarios = Usuario.objects.filter(id__in=resultados_usuarios)
+
+    usuarios = _filtrar_usuarios(
+        Usuario.objects.all(),
+        termino,
+        fecha_alta_desde,
+        fecha_alta_hasta,
+    )
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter)
@@ -994,10 +1021,10 @@ def generar_informe_pdf_usuarios(request):
     for usuario in usuarios:
         story.append(Paragraph(f"ID: {usuario.id}", styleN))
         story.append(
-            Paragraph(f"Nombre: {usuario.first_name} {usuario.last_name}", styleN))
+            Paragraph(f"Nombre: {usuario.nombre} {usuario.apellido}", styleN))
         story.append(Paragraph(f"Email: {usuario.email}", styleN))
         story.append(
-            Paragraph(f"Fecha de Alta: {usuario.date_joined}", styleN))
+            Paragraph(f"Fecha de Alta: {usuario.fecha_creacion}", styleN))
         story.append(Spacer(1, 12))
         story.append(HRFlowable(width="100%", thickness=1,
                      color=colors.grey, spaceBefore=1, spaceAfter=24))
@@ -1108,22 +1135,16 @@ def exportar_proyectos_excel(request):
 @login_required
 @user_passes_test(es_admin)
 def exportar_usuarios_excel(request):
-    nombre_o_apellido = request.GET.get('nombre_o_apellido')
-    fecha_alta_desde = request.GET.get('fecha_alta_desde')
-    fecha_alta_hasta = request.GET.get('fecha_alta_hasta')
+    termino = request.GET.get('nombre_o_apellido', '')
+    fecha_alta_desde = request.GET.get('fecha_alta_desde', '')
+    fecha_alta_hasta = request.GET.get('fecha_alta_hasta', '')
 
-    # Filtrar usuarios según los criterios de búsqueda
-    usuarios = Usuario.objects.all()
-    if nombre_o_apellido:
-        usuarios = usuarios.filter(first_name__icontains=nombre_o_apellido) | usuarios.filter(
-            last_name__icontains=nombre_o_apellido)
-    if fecha_alta_desde and fecha_alta_hasta:
-        fecha_alta_desde = timezone.make_aware(
-            datetime.strptime(fecha_alta_desde, '%Y-%m-%d'))
-        fecha_alta_hasta = timezone.make_aware(
-            datetime.strptime(fecha_alta_hasta, '%Y-%m-%d'))
-        usuarios = usuarios.filter(
-            date_joined__gte=fecha_alta_desde, date_joined__lte=fecha_alta_hasta)
+    usuarios = _filtrar_usuarios(
+        Usuario.objects.all(),
+        termino,
+        fecha_alta_desde,
+        fecha_alta_hasta,
+    )
 
     # Crear el archivo Excel
     wb = openpyxl.Workbook()
@@ -1137,10 +1158,18 @@ def exportar_usuarios_excel(request):
     # Añadir datos de los usuarios filtrados
     for usuario in usuarios:
         # Convertir datetime a naive (sin zona horaria)
-        fecha_registro = usuario.date_joined.replace(
-            tzinfo=None) if usuario.date_joined else ''
-        ws.append([usuario.id, usuario.username, usuario.first_name,
-                  usuario.last_name, usuario.email, fecha_registro])
+        fecha_registro = usuario.fecha_creacion.replace(
+            tzinfo=None
+        ) if usuario.fecha_creacion else ''
+
+        ws.append([
+            usuario.id,
+            usuario.username,
+            usuario.nombre,
+            usuario.apellido,
+            usuario.email,
+            fecha_registro,
+        ])
 
     # Preparar respuesta HTTP
     response = HttpResponse(
