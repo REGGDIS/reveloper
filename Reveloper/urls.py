@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
-from .views import vista_evaluaciones, generar_informe_grafico_pdf_desarrollador, generar_informe_grafico_pdf_admin, dashboard, buscar_proyectos, busqueda, buscar_tareas, generar_informe_pdf_busqueda, generar_informe_pdf_tareas, buscar_usuarios, generar_informe_pdf_usuarios, exportar_tareas_excel, exportar_proyectos_excel, exportar_usuarios_excel, exportar_todos_usuarios_excel, exportar_todos_proyectos_excel, exportar_todas_tareas_excel, exportar_todas_evaluaciones_excel
+from .views import generar_informe_grafico_pdf_desarrollador, generar_informe_grafico_pdf_admin, dashboard, buscar_proyectos, busqueda, buscar_tareas, generar_informe_pdf_busqueda, generar_informe_pdf_tareas, buscar_usuarios, generar_informe_pdf_usuarios, exportar_tareas_excel, exportar_proyectos_excel, exportar_usuarios_excel, exportar_todos_usuarios_excel, exportar_todos_proyectos_excel, exportar_todas_tareas_excel, exportar_todas_evaluaciones_excel
 
 urlpatterns = [
     path('home/', views.home, name='home'),
@@ -20,7 +20,6 @@ urlpatterns = [
     path('generate_evaluation_pdf/', views.generate_evaluation_pdf,
          name='generate_evaluation_pdf'),
     path('generate_user_pdf/', views.generate_user_pdf, name='generate_user_pdf'),
-    path('evaluaciones/', vista_evaluaciones, name='vista_evaluaciones'),
     path('generar_informe_grafico_pdf/', generar_informe_grafico_pdf_desarrollador,
          name='generar_informe_grafico_pdf'),
     path('generar_informe_grafico_pdf_admin/', generar_informe_grafico_pdf_admin,
