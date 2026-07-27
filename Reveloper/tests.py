@@ -577,3 +577,191 @@ class EvaluationFlowTests(TestCase):
         from django.urls import NoReverseMatch
         with self.assertRaises(NoReverseMatch):
             reverse('vista_evaluaciones')
+
+
+class UserSearchFilterTests(TestCase):
+    """Pruebas del Hito 6: búsqueda y exportación filtrada de usuarios."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = Usuario.objects.create_superuser(
+            username='admin_search',
+            email='admin_search@test.local',
+            password='test-pass-123',
+            nombre='Administrador',
+            apellido='Principal',
+        )
+        cls.developer = Usuario.objects.create_user(
+            username='roberto_dev',
+            email='roberto.gonzalez@test.local',
+            password='test-pass-123',
+            nombre='Roberto',
+            apellido='González',
+        )
+        cls.other_developer = Usuario.objects.create_user(
+            username='maria_code',
+            email='maria.soto@test.local',
+            password='test-pass-123',
+            nombre='María',
+            apellido='Soto',
+        )
+
+    def setUp(self):
+        self.client = Client()
+
+    def _login(self, user):
+        self.assertTrue(
+            self.client.login(
+                username=user.username,
+                password='test-pass-123',
+            )
+        )
+
+    def _search(self, term):
+        self._login(self.admin)
+        return self.client.get(
+            reverse('buscar_usuarios'),
+            {'nombre_o_apellido': term},
+        )
+
+    def test_anonymous_user_is_redirected_to_login(self):
+        response = self.client.get(reverse('buscar_usuarios'))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response.url)
+
+    def test_developer_cannot_access_global_user_search(self):
+        self._login(self.developer)
+
+        response = self.client.get(reverse('buscar_usuarios'))
+
+        self.assertEqual(response.status_code, 302)
+
+    def test_admin_can_access_global_user_search(self):
+        self._login(self.admin)
+
+        response = self.client.get(reverse('buscar_usuarios'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'busqueda.html')
+
+    def test_search_by_nombre(self):
+        response = self._search('Roberto')
+        usuarios = response.context['resultados_usuarios']
+
+        self.assertIn(self.developer, usuarios)
+        self.assertNotIn(self.other_developer, usuarios)
+
+    def test_search_by_apellido(self):
+        response = self._search('Soto')
+        usuarios = response.context['resultados_usuarios']
+
+        self.assertIn(self.other_developer, usuarios)
+        self.assertNotIn(self.developer, usuarios)
+
+    def test_search_by_username(self):
+        response = self._search('roberto_dev')
+        usuarios = response.context['resultados_usuarios']
+
+        self.assertIn(self.developer, usuarios)
+        self.assertNotIn(self.other_developer, usuarios)
+
+    def test_search_by_email(self):
+        response = self._search('maria.soto@test.local')
+        usuarios = response.context['resultados_usuarios']
+
+        self.assertIn(self.other_developer, usuarios)
+        self.assertNotIn(self.developer, usuarios)
+
+    def test_search_is_partial(self):
+        response = self._search('bert')
+        usuarios = response.context['resultados_usuarios']
+
+        self.assertIn(self.developer, usuarios)
+
+    def test_search_is_case_insensitive(self):
+        response = self._search('rObErTo')
+        usuarios = response.context['resultados_usuarios']
+
+        self.assertIn(self.developer, usuarios)
+
+    def test_empty_term_returns_all_users_without_error(self):
+        response = self._search('')
+        usuarios = response.context['resultados_usuarios']
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.admin, usuarios)
+        self.assertIn(self.developer, usuarios)
+        self.assertIn(self.other_developer, usuarios)
+
+    def test_whitespace_term_returns_all_users_without_error(self):
+        response = self._search('   ')
+        usuarios = response.context['resultados_usuarios']
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(usuarios.count(), Usuario.objects.count())
+
+    def test_search_without_matches_returns_empty_queryset(self):
+        response = self._search('usuario-inexistente')
+        usuarios = response.context['resultados_usuarios']
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(usuarios.exists())
+        self.assertContains(
+            response,
+            'No se encontraron usuarios con los criterios ingresados.',
+        )
+
+    def test_search_preserves_filter_value_in_template(self):
+        response = self._search('Roberto')
+
+        self.assertContains(
+            response,
+            'value="Roberto"',
+            html=False,
+        )
+
+    def test_excel_uses_real_user_fields_and_filter(self):
+        from io import BytesIO
+        import openpyxl
+
+        self._login(self.admin)
+
+        response = self.client.get(
+            reverse('exportar_usuarios_excel'),
+            {'nombre_o_apellido': 'Roberto'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['Content-Type'],
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+
+        workbook = openpyxl.load_workbook(
+            filename=BytesIO(response.content)
+        )
+        worksheet = workbook.active
+        rows = list(worksheet.iter_rows(values_only=True))
+
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[1][1], self.developer.username)
+        self.assertEqual(rows[1][2], self.developer.nombre)
+        self.assertEqual(rows[1][3], self.developer.apellido)
+        self.assertEqual(rows[1][4], self.developer.email)
+
+    def test_pdf_and_excel_reuse_shared_filter(self):
+        import inspect
+        from .views import (
+            buscar_usuarios,
+            generar_informe_pdf_usuarios,
+            exportar_usuarios_excel,
+        )
+
+        for view in (
+            buscar_usuarios,
+            generar_informe_pdf_usuarios,
+            exportar_usuarios_excel,
+        ):
+            source = inspect.getsource(view)
+            self.assertIn('_filtrar_usuarios(', source)
