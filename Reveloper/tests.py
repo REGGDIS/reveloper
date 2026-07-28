@@ -580,6 +580,213 @@ class EvaluationFlowTests(TestCase):
             reverse('vista_evaluaciones')
 
 
+class ProjectTaskDateFilterTests(TestCase):
+    """Pruebas del Hito 9: filtros seguros de proyectos y tareas."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from datetime import date, datetime
+        from django.utils import timezone
+        from .models import Proyecto, TareaPorDesarrollar
+
+        cls.admin = Usuario.objects.create_superuser(
+            username='admin_date_filters',
+            email='admin_date_filters@test.local',
+            password='test-pass-123',
+            nombre='Admin',
+            apellido='Filtros',
+        )
+        cls.developer = Usuario.objects.create_user(
+            username='developer_date_filters',
+            email='developer_date_filters@test.local',
+            password='test-pass-123',
+            nombre='Developer',
+            apellido='Filtros',
+        )
+
+        cls.proyecto_enero = Proyecto.objects.create(
+            id='PROY-DATE-001',
+            nombre='Proyecto Enero',
+            descripcion='Proyecto de enero',
+            fecha_inicio=date(2026, 1, 10),
+            fecha_fin=date(2026, 1, 31),
+            estado='activo',
+        )
+        cls.proyecto_febrero = Proyecto.objects.create(
+            id='PROY-DATE-002',
+            nombre='Proyecto Febrero',
+            descripcion='Proyecto de febrero',
+            fecha_inicio=date(2026, 2, 10),
+            fecha_fin=date(2026, 2, 28),
+            estado='activo',
+        )
+
+        cls.tarea_enero = TareaPorDesarrollar.objects.create(
+            id='TASK-DATE-001',
+            usuario=cls.developer,
+            proyecto=cls.proyecto_enero,
+            titulo='Tarea Enero',
+            descripcion='Tarea de enero',
+            fecha_vencimiento=date(2026, 1, 31),
+            estado='pendiente',
+        )
+        cls.tarea_febrero = TareaPorDesarrollar.objects.create(
+            id='TASK-DATE-002',
+            usuario=cls.developer,
+            proyecto=cls.proyecto_febrero,
+            titulo='Tarea Febrero',
+            descripcion='Tarea de febrero',
+            fecha_vencimiento=date(2026, 2, 28),
+            estado='pendiente',
+        )
+
+        TareaPorDesarrollar.objects.filter(
+            pk=cls.tarea_enero.pk
+        ).update(
+            fecha_creacion=timezone.make_aware(
+                datetime(2026, 1, 15, 10, 0)
+            )
+        )
+        TareaPorDesarrollar.objects.filter(
+            pk=cls.tarea_febrero.pk
+        ).update(
+            fecha_creacion=timezone.make_aware(
+                datetime(2026, 2, 15, 10, 0)
+            )
+        )
+
+        cls.tarea_enero.refresh_from_db()
+        cls.tarea_febrero.refresh_from_db()
+
+    def setUp(self):
+        self.client = Client()
+        self.assertTrue(
+            self.client.login(
+                username=self.admin.username,
+                password='test-pass-123',
+            )
+        )
+
+    def test_project_start_date_filters_results(self):
+        response = self.client.get(
+            reverse('buscar_proyectos'),
+            {'fecha_inicio_desde': '2026-02-01'},
+        )
+        resultados = response.context['resultados']
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.proyecto_febrero, resultados)
+        self.assertNotIn(self.proyecto_enero, resultados)
+
+    def test_project_end_date_filters_results(self):
+        response = self.client.get(
+            reverse('buscar_proyectos'),
+            {'fecha_inicio_hasta': '2026-01-31'},
+        )
+        resultados = response.context['resultados']
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.proyecto_enero, resultados)
+        self.assertNotIn(self.proyecto_febrero, resultados)
+
+    def test_invalid_project_date_returns_empty_without_error(self):
+        response = self.client.get(
+            reverse('buscar_proyectos'),
+            {'fecha_inicio_desde': '2026-02-31'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            response.context['resultados'].exists()
+        )
+
+    def test_task_start_date_filters_results(self):
+        response = self.client.get(
+            reverse('buscar_tareas'),
+            {'fecha_inicio_desde_tarea': '2026-02-01'},
+        )
+        resultados = response.context['resultados_tareas']
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.tarea_febrero, resultados)
+        self.assertNotIn(self.tarea_enero, resultados)
+
+    def test_task_end_date_filters_results(self):
+        response = self.client.get(
+            reverse('buscar_tareas'),
+            {'fecha_inicio_hasta_tarea': '2026-01-31'},
+        )
+        resultados = response.context['resultados_tareas']
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.tarea_enero, resultados)
+        self.assertNotIn(self.tarea_febrero, resultados)
+
+    def test_invalid_task_date_returns_empty_without_error(self):
+        response = self.client.get(
+            reverse('buscar_tareas'),
+            {'fecha_inicio_desde_tarea': 'fecha-invalida'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            response.context['resultados_tareas'].exists()
+        )
+
+    def test_project_excel_accepts_invalid_dates(self):
+        response = self.client.get(
+            reverse('exportar_proyectos_excel'),
+            {
+                'fecha_inicio_desde': '2026-02-31',
+                'fecha_inicio_hasta': 'fecha-invalida',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['Content-Type'],
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+
+    def test_task_excel_accepts_invalid_dates(self):
+        response = self.client.get(
+            reverse('exportar_tareas_excel'),
+            {
+                'fecha_inicio_desde_tarea': '2026-02-31',
+                'fecha_inicio_hasta_tarea': 'fecha-invalida',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['Content-Type'],
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+
+    def test_searches_and_exports_reuse_shared_filters(self):
+        import inspect
+        from .views import (
+            buscar_proyectos,
+            buscar_tareas,
+            exportar_proyectos_excel,
+            exportar_tareas_excel,
+        )
+
+        expected_helpers = (
+            (buscar_proyectos, '_filtrar_proyectos('),
+            (exportar_proyectos_excel, '_filtrar_proyectos('),
+            (buscar_tareas, '_filtrar_tareas('),
+            (exportar_tareas_excel, '_filtrar_tareas('),
+        )
+
+        for view, helper_name in expected_helpers:
+            with self.subTest(view=view.__name__):
+                self.assertIn(
+                    helper_name,
+                    inspect.getsource(view),
+                )
+
+
 class UserSearchFilterTests(TestCase):
     """Pruebas del Hito 6: búsqueda y exportación filtrada de usuarios."""
 
