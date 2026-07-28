@@ -1,3 +1,4 @@
+from reportlab.lib import colors
 from django.test import TestCase, Client
 from django.urls import reverse
 
@@ -605,6 +606,28 @@ class UserSearchFilterTests(TestCase):
             nombre='María',
             apellido='Soto',
         )
+        from datetime import datetime
+        from django.utils import timezone
+
+        Usuario.objects.filter(pk=cls.admin.pk).update(
+            fecha_creacion=timezone.make_aware(
+                datetime(2026, 1, 5, 10, 0)
+            )
+        )
+        Usuario.objects.filter(pk=cls.developer.pk).update(
+            fecha_creacion=timezone.make_aware(
+                datetime(2026, 1, 15, 10, 0)
+            )
+        )
+        Usuario.objects.filter(pk=cls.other_developer.pk).update(
+            fecha_creacion=timezone.make_aware(
+                datetime(2026, 2, 10, 10, 0)
+            )
+        )
+
+        cls.admin.refresh_from_db()
+        cls.developer.refresh_from_db()
+        cls.other_developer.refresh_from_db()
 
     def setUp(self):
         self.client = Client()
@@ -749,6 +772,109 @@ class UserSearchFilterTests(TestCase):
         self.assertEqual(rows[1][2], self.developer.nombre)
         self.assertEqual(rows[1][3], self.developer.apellido)
         self.assertEqual(rows[1][4], self.developer.email)
+
+    def test_valid_start_date_filters_users(self):
+        self._login(self.admin)
+
+        response = self.client.get(
+            reverse('buscar_usuarios'),
+            {'fecha_alta_desde': '2026-02-01'},
+        )
+        usuarios = response.context['resultados_usuarios']
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.other_developer, usuarios)
+        self.assertNotIn(self.admin, usuarios)
+        self.assertNotIn(self.developer, usuarios)
+
+    def test_valid_end_date_filters_users(self):
+        self._login(self.admin)
+
+        response = self.client.get(
+            reverse('buscar_usuarios'),
+            {'fecha_alta_hasta': '2026-01-31'},
+        )
+        usuarios = response.context['resultados_usuarios']
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.admin, usuarios)
+        self.assertIn(self.developer, usuarios)
+        self.assertNotIn(self.other_developer, usuarios)
+
+    def test_invalid_date_text_is_ignored(self):
+        self._login(self.admin)
+
+        response = self.client.get(
+            reverse('buscar_usuarios'),
+            {'fecha_alta_desde': 'fecha-invalida'},
+        )
+        usuarios = response.context['resultados_usuarios']
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            usuarios.count(),
+            Usuario.objects.count(),
+        )
+
+    def test_impossible_date_is_ignored(self):
+        self._login(self.admin)
+
+        response = self.client.get(
+            reverse('buscar_usuarios'),
+            {'fecha_alta_desde': '2026-02-31'},
+        )
+        usuarios = response.context['resultados_usuarios']
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            usuarios.count(),
+            Usuario.objects.count(),
+        )
+
+    def test_valid_date_is_applied_when_other_date_is_invalid(self):
+        self._login(self.admin)
+
+        response = self.client.get(
+            reverse('buscar_usuarios'),
+            {
+                'fecha_alta_desde': '2026-02-01',
+                'fecha_alta_hasta': 'fecha-invalida',
+            },
+        )
+        usuarios = response.context['resultados_usuarios']
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.other_developer, usuarios)
+        self.assertNotIn(self.admin, usuarios)
+        self.assertNotIn(self.developer, usuarios)
+
+    def test_invalid_dates_do_not_break_pdf_or_excel(self):
+        self._login(self.admin)
+
+        parameters = {
+            'fecha_alta_desde': '2026-02-31',
+            'fecha_alta_hasta': 'fecha-invalida',
+        }
+
+        pdf_response = self.client.get(
+            reverse('generar_informe_pdf_usuarios'),
+            parameters,
+        )
+        excel_response = self.client.get(
+            reverse('exportar_usuarios_excel'),
+            parameters,
+        )
+
+        self.assertEqual(pdf_response.status_code, 200)
+        self.assertEqual(
+            pdf_response['Content-Type'],
+            'application/pdf',
+        )
+        self.assertEqual(excel_response.status_code, 200)
+        self.assertEqual(
+            excel_response['Content-Type'],
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
 
     def test_pdf_and_excel_reuse_shared_filter(self):
         import inspect

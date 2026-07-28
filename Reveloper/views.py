@@ -6,6 +6,7 @@ from django.contrib.auth import login as auth_login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from django.utils.html import strip_tags
 from django.http import HttpResponse
 from django.conf import settings
@@ -39,6 +40,16 @@ def es_admin(user):
     return user.is_superuser
 
 
+def _parsear_fecha_filtro(valor):
+    if not valor:
+        return None
+
+    try:
+        return parse_date(valor)
+    except ValueError:
+        return None
+
+
 def _filtrar_usuarios(
     queryset,
     termino='',
@@ -46,6 +57,8 @@ def _filtrar_usuarios(
     fecha_alta_hasta=''
 ):
     termino = (termino or '').strip()
+    fecha_desde = _parsear_fecha_filtro(fecha_alta_desde)
+    fecha_hasta = _parsear_fecha_filtro(fecha_alta_hasta)
 
     if termino:
         queryset = queryset.filter(
@@ -55,14 +68,14 @@ def _filtrar_usuarios(
             | Q(email__icontains=termino)
         )
 
-    if fecha_alta_desde:
+    if fecha_desde:
         queryset = queryset.filter(
-            fecha_creacion__date__gte=fecha_alta_desde
+            fecha_creacion__date__gte=fecha_desde
         )
 
-    if fecha_alta_hasta:
+    if fecha_hasta:
         queryset = queryset.filter(
-            fecha_creacion__date__lte=fecha_alta_hasta
+            fecha_creacion__date__lte=fecha_hasta
         )
 
     return queryset
