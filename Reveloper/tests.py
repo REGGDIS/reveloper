@@ -354,6 +354,103 @@ class TaskLifecycleTests(TestCase):
         self.assertEqual(history_count_after, history_count_before)
         self.assertEqual(counter_after, counter_before)
 
+    def test_pending_task_does_not_create_completed_history(self):
+        from datetime import date
+        from .models import TareaPorDesarrollar, TareasCompletadas
+
+        tarea = TareaPorDesarrollar.objects.create(
+            id='TASK-PENDING-NO-HISTORY',
+            usuario=self.developer,
+            proyecto=self.proyecto,
+            titulo='Tarea pendiente sin historial',
+            fecha_vencimiento=date.today(),
+            estado='pendiente',
+        )
+
+        self.assertFalse(
+            TareasCompletadas.objects.filter(
+                tarea_original_id=tarea.id
+            ).exists()
+        )
+
+    def test_completed_history_preserves_basic_task_data(self):
+        from datetime import date
+        from django.utils import timezone
+        from .models import TareaPorDesarrollar, TareasCompletadas
+
+        fecha_vencimiento = date.today()
+        tarea = TareaPorDesarrollar.objects.create(
+            id='TASK-HISTORY-DATA',
+            usuario=self.developer,
+            proyecto=self.proyecto,
+            titulo='Tarea con datos históricos',
+            fecha_vencimiento=fecha_vencimiento,
+            estado='pendiente',
+        )
+
+        tarea.estado = 'completada'
+        tarea.save()
+
+        historial = TareasCompletadas.objects.get(
+            tarea_original_id=tarea.id
+        )
+
+        self.assertEqual(historial.titulo, tarea.titulo)
+        self.assertEqual(historial.estado, 'completada')
+        self.assertEqual(historial.usuario, self.developer)
+        self.assertEqual(
+            timezone.localdate(historial.fecha_entrega),
+            fecha_vencimiento,
+        )
+
+    def test_changing_completed_task_to_another_state_does_not_increment_again(
+        self
+    ):
+        from datetime import date
+        from .models import TareaPorDesarrollar, TareasCompletadas
+
+        tarea = TareaPorDesarrollar.objects.create(
+            id='TASK-COMPLETED-REVERTED',
+            usuario=self.developer,
+            proyecto=self.proyecto,
+            titulo='Tarea completada y revertida',
+            fecha_vencimiento=date.today(),
+            estado='pendiente',
+        )
+
+        initial_counter = Usuario.objects.get(
+            pk=self.developer.pk
+        ).tareas_completadas
+
+        tarea.estado = 'completada'
+        tarea.save()
+
+        counter_after_completion = Usuario.objects.get(
+            pk=self.developer.pk
+        ).tareas_completadas
+
+        tarea.estado = 'en revision'
+        tarea.save()
+
+        final_counter = Usuario.objects.get(
+            pk=self.developer.pk
+        ).tareas_completadas
+
+        self.assertEqual(
+            counter_after_completion,
+            initial_counter + 1,
+        )
+        self.assertEqual(
+            final_counter,
+            counter_after_completion,
+        )
+        self.assertEqual(
+            TareasCompletadas.objects.filter(
+                tarea_original_id=tarea.id
+            ).count(),
+            1,
+        )
+
     def test_superuser_not_in_user_form_queryset(self):
         from .forms import TareaPorDesarrollarForm
         form = TareaPorDesarrollarForm()
