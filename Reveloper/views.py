@@ -1,40 +1,54 @@
-from io import BytesIO
-from datetime import datetime
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import login as auth_login, logout
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.models import User
-from django.utils import timezone
-from django.utils.html import strip_tags
-from django.http import HttpResponse
-from django.conf import settings
-from .models import TareaPorDesarrollar, Proyecto, Usuario, Evaluacion, EvaluacionConfig
-from .forms import TareaPorDesarrollarForm, EvaluacionForm
+import base64
 import io
 import json
-import base64
-import openpyxl
-from reportlab.lib.units import inch
-from reportlab.lib import colors
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Image, HRFlowable
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from .filters import (
-    _parsear_fecha_filtro,
-    _filtrar_usuarios,
-    _filtrar_proyectos,
-    _filtrar_tareas,
-)
-from matplotlib.colors import ListedColormap
-import matplotlib.pyplot as plt
 import os
 import tempfile
+from datetime import datetime
+from io import BytesIO
+
 import matplotlib
+
 matplotlib.use('Agg')
+
+import matplotlib.pyplot as plt
+import openpyxl
+from matplotlib.colors import ListedColormap
+
+from django.contrib.auth import login as auth_login, logout
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.forms import AuthenticationForm
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.utils.html import strip_tags
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import inch
+from reportlab.pdfgen import canvas
+from reportlab.platypus import (
+    HRFlowable,
+    Image,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+)
+
+from .filters import (
+    _filtrar_proyectos,
+    _filtrar_tareas,
+    _filtrar_usuarios,
+    _parsear_fecha_filtro,
+)
+from .forms import EvaluacionForm, TareaPorDesarrollarForm
+from .models import (
+    Evaluacion,
+    EvaluacionConfig,
+    Proyecto,
+    TareaPorDesarrollar,
+    Usuario,
+)
 
 
 # Función de Verificación para Administradores
@@ -42,6 +56,16 @@ matplotlib.use('Agg')
 
 def es_admin(user):
     return user.is_superuser
+
+
+def _valor_excel_sin_zona_horaria(valor):
+    if not valor:
+        return ''
+
+    if isinstance(valor, datetime):
+        return valor.replace(tzinfo=None)
+
+    return datetime.combine(valor, datetime.min.time())
 
 
 # Vista para el inicio de sesión personalizado
@@ -129,7 +153,9 @@ def usuarios(request):
 def proyectos(request):
     proyectos = Proyecto.objects.all()
     for proyecto in proyectos:
-        proyecto.tareas = TareaPorDesarrollar.objects.filter(proyecto=proyecto)
+        proyecto.tareas = TareaPorDesarrollar.objects.select_related('usuario').filter(
+            proyecto=proyecto
+        )
 
     context = {
         'proyectos': proyectos
@@ -247,7 +273,6 @@ def crear_tarea(request):
     return render(request, 'crear_tarea.html', {'form': form})
 
 
-
 @login_required
 @user_passes_test(es_admin)
 def editar_tarea(request, tarea_id):
@@ -260,7 +285,6 @@ def editar_tarea(request, tarea_id):
     else:
         form = TareaPorDesarrollarForm(instance=tarea)
     return render(request, 'editar_tarea.html', {'form': form, 'tarea': tarea})
-
 
 
 # Vista para la búsqueda
@@ -331,7 +355,6 @@ def buscar_proyectos(request):
         )
 
 
-
     context = {
         'resultados': resultados,
         'proyectos': Proyecto.objects.all(),
@@ -361,7 +384,7 @@ def buscar_tareas(request):
 
     if hay_criterios:
         resultados_tareas = _filtrar_tareas(
-            TareaPorDesarrollar.objects.all(),
+            TareaPorDesarrollar.objects.select_related('usuario', 'proyecto'),
             fecha_inicio_desde_tarea,
             fecha_inicio_hasta_tarea,
             tarea_id,
@@ -369,7 +392,6 @@ def buscar_tareas(request):
         )
     else:
         resultados_tareas = TareaPorDesarrollar.objects.none()
-
 
 
     context = {
@@ -510,10 +532,14 @@ def generate_task_pdf(request):
 
     # Verificar si el usuario es administrador
     if request.user.is_superuser:
-        tareas = TareaPorDesarrollar.objects.all()
+        tareas = TareaPorDesarrollar.objects.select_related(
+            'proyecto', 'usuario'
+        )
         subtitle = "Lista de Todas las Tareas:"
     else:
-        tareas = TareaPorDesarrollar.objects.filter(usuario=request.user)
+        tareas = TareaPorDesarrollar.objects.select_related(
+            'proyecto', 'usuario'
+        ).filter(usuario=request.user)
         subtitle = "Lista de Tareas Asignadas:"
 
     story.append(Paragraph(subtitle, styleN))
@@ -589,10 +615,14 @@ def generate_evaluation_pdf(request):
 
     # Verificar si el usuario es administrador
     if request.user.is_superuser:
-        evaluaciones = Evaluacion.objects.all()
+        evaluaciones = Evaluacion.objects.select_related(
+            'proyecto', 'usuario', 'tarea'
+        )
         subtitle = "Lista de Todas las Evaluaciones:"
     else:
-        evaluaciones = Evaluacion.objects.filter(usuario=request.user)
+        evaluaciones = Evaluacion.objects.select_related(
+            'proyecto', 'usuario', 'tarea'
+        ).filter(usuario=request.user)
         subtitle = "Lista de Evaluaciones Asignadas:"
 
     story.append(Paragraph(subtitle, styleN))
@@ -694,9 +724,6 @@ def generate_user_pdf(request):
     doc.build(story)
     buffer.seek(0)
     return HttpResponse(buffer, content_type='application/pdf')
-
-
-
 
 
 def generar_grafico_evaluaciones(request, desarrollador):
@@ -817,8 +844,6 @@ def generar_informe_grafico_pdf_desarrollador(request):
 @login_required
 @user_passes_test(es_admin)
 def generar_informe_pdf_busqueda(request):
-    from django.utils.html import strip_tags
-
     fecha_inicio_desde = request.GET.get('fecha_inicio_desde', '')
     fecha_inicio_hasta = request.GET.get('fecha_inicio_hasta', '')
     proyecto_id = request.GET.get('proyecto_id', '')
@@ -904,7 +929,9 @@ def generar_informe_pdf_busqueda(request):
         story.append(Spacer(1, 10))
 
         # Añadir tareas al PDF
-        tareas = TareaPorDesarrollar.objects.filter(proyecto=proyecto)
+        tareas = TareaPorDesarrollar.objects.select_related('usuario').filter(
+            proyecto=proyecto
+        )
         for tarea in tareas:
             story.append(Paragraph(f"Tarea: {tarea.titulo}", styleTaskTitle))
             story.append(Paragraph(
@@ -949,7 +976,7 @@ def generar_informe_pdf_tareas(request):
 
     if hay_criterios:
         tareas = _filtrar_tareas(
-            TareaPorDesarrollar.objects.all(),
+            TareaPorDesarrollar.objects.select_related('usuario', 'proyecto'),
             fecha_inicio_desde_tarea,
             fecha_inicio_hasta_tarea,
             tarea_id,
@@ -1085,10 +1112,12 @@ def exportar_tareas_excel(request):
     # Añadir datos de las tareas
     for tarea in tareas:
         # Convertir datetime a naive (sin zona horaria)
-        fecha_creacion = datetime.combine(
-            tarea.fecha_creacion, datetime.min.time()) if tarea.fecha_creacion else ''
-        fecha_vencimiento = datetime.combine(
-            tarea.fecha_vencimiento, datetime.min.time()) if tarea.fecha_vencimiento else ''
+        fecha_creacion = _valor_excel_sin_zona_horaria(
+            tarea.fecha_creacion
+        )
+        fecha_vencimiento = _valor_excel_sin_zona_horaria(
+            tarea.fecha_vencimiento
+        )
         ws.append([tarea.id, tarea.titulo, tarea.descripcion, f"{tarea.usuario.nombre} {tarea.usuario.apellido}",
                    fecha_creacion, fecha_vencimiento, tarea.estado])
 
@@ -1129,10 +1158,12 @@ def exportar_proyectos_excel(request):
     # Añadir datos de los proyectos
     for proyecto in proyectos:
         # Convertir datetime a naive (sin zona horaria)
-        fecha_inicio = datetime.combine(
-            proyecto.fecha_inicio, datetime.min.time()) if proyecto.fecha_inicio else ''
-        fecha_fin = datetime.combine(
-            proyecto.fecha_fin, datetime.min.time()) if proyecto.fecha_fin else ''
+        fecha_inicio = _valor_excel_sin_zona_horaria(
+            proyecto.fecha_inicio
+        )
+        fecha_fin = _valor_excel_sin_zona_horaria(
+            proyecto.fecha_fin
+        )
         ws.append([proyecto.id, proyecto.nombre, proyecto.descripcion,
                   fecha_inicio, fecha_fin, proyecto.estado])
 
@@ -1170,9 +1201,9 @@ def exportar_usuarios_excel(request):
     # Añadir datos de los usuarios filtrados
     for usuario in usuarios:
         # Convertir datetime a naive (sin zona horaria)
-        fecha_registro = usuario.fecha_creacion.replace(
-            tzinfo=None
-        ) if usuario.fecha_creacion else ''
+        fecha_registro = _valor_excel_sin_zona_horaria(
+            usuario.fecha_creacion
+        )
 
         ws.append([
             usuario.id,
@@ -1248,10 +1279,12 @@ def exportar_todos_proyectos_excel(request):
     # Añadir datos de los proyectos
     for proyecto in proyectos:
         # Convertir datetime a naive (sin zona horaria)
-        fecha_inicio = datetime.combine(
-            proyecto.fecha_inicio, datetime.min.time()) if proyecto.fecha_inicio else ''
-        fecha_fin = datetime.combine(
-            proyecto.fecha_fin, datetime.min.time()) if proyecto.fecha_fin else ''
+        fecha_inicio = _valor_excel_sin_zona_horaria(
+            proyecto.fecha_inicio
+        )
+        fecha_fin = _valor_excel_sin_zona_horaria(
+            proyecto.fecha_fin
+        )
         ws.append([proyecto.id, proyecto.nombre, proyecto.descripcion,
                   fecha_inicio, fecha_fin, proyecto.estado])
 
@@ -1266,7 +1299,9 @@ def exportar_todos_proyectos_excel(request):
 @login_required
 @user_passes_test(es_admin)
 def exportar_todas_tareas_excel(request):
-    tareas = TareaPorDesarrollar.objects.all()
+    tareas = TareaPorDesarrollar.objects.select_related(
+        'usuario', 'proyecto'
+    )
 
     # Crear el archivo Excel
     wb = openpyxl.Workbook()
@@ -1280,10 +1315,12 @@ def exportar_todas_tareas_excel(request):
     # Añadir datos de las tareas
     for tarea in tareas:
         # Convertir datetime a naive (sin zona horaria)
-        fecha_creacion = datetime.combine(
-            tarea.fecha_creacion, datetime.min.time()) if tarea.fecha_creacion else ''
-        fecha_vencimiento = datetime.combine(
-            tarea.fecha_vencimiento, datetime.min.time()) if tarea.fecha_vencimiento else ''
+        fecha_creacion = _valor_excel_sin_zona_horaria(
+            tarea.fecha_creacion
+        )
+        fecha_vencimiento = _valor_excel_sin_zona_horaria(
+            tarea.fecha_vencimiento
+        )
         ws.append([tarea.id, tarea.titulo, tarea.descripcion, tarea.estado, fecha_creacion, fecha_vencimiento,
                   tarea.proyecto.nombre, f"{tarea.usuario.nombre} {tarea.usuario.apellido}"])
 
@@ -1298,7 +1335,9 @@ def exportar_todas_tareas_excel(request):
 @login_required
 @user_passes_test(es_admin)
 def exportar_todas_evaluaciones_excel(request):
-    evaluaciones = Evaluacion.objects.all()
+    evaluaciones = Evaluacion.objects.select_related(
+        'usuario', 'proyecto', 'tarea'
+    )
 
     # Crear el archivo Excel
     wb = openpyxl.Workbook()
@@ -1312,8 +1351,9 @@ def exportar_todas_evaluaciones_excel(request):
     # Añadir datos de las evaluaciones
     for evaluacion in evaluaciones:
         # Convertir datetime a naive (sin zona horaria)
-        fecha_evaluacion = datetime.combine(
-            evaluacion.fecha_evaluacion, datetime.min.time()) if evaluacion.fecha_evaluacion else ''
+        fecha_evaluacion = _valor_excel_sin_zona_horaria(
+            evaluacion.fecha_evaluacion
+        )
         tarea_titulo = evaluacion.tarea.titulo if evaluacion.tarea else 'Sin Tarea Asignada'
         ws.append([evaluacion.id, evaluacion.titulo, evaluacion.calificacion, tarea_titulo, f"{evaluacion.usuario.nombre} {
                   evaluacion.usuario.apellido}", evaluacion.comentarios, fecha_evaluacion, evaluacion.proyecto.nombre])
