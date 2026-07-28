@@ -6,11 +6,9 @@ from django.contrib.auth import login as auth_login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.utils import timezone
-from django.utils.dateparse import parse_date
 from django.utils.html import strip_tags
 from django.http import HttpResponse
 from django.conf import settings
-from django.db.models import Q
 from .models import TareaPorDesarrollar, Proyecto, Usuario, Evaluacion, EvaluacionConfig
 from .forms import TareaPorDesarrollarForm, EvaluacionForm
 import io
@@ -25,6 +23,12 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Image, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from .filters import (
+    _parsear_fecha_filtro,
+    _filtrar_usuarios,
+    _filtrar_proyectos,
+    _filtrar_tareas,
+)
 from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 import os
@@ -38,109 +42,6 @@ matplotlib.use('Agg')
 
 def es_admin(user):
     return user.is_superuser
-
-
-def _parsear_fecha_filtro(valor):
-    if not valor:
-        return None
-
-    try:
-        return parse_date(valor)
-    except ValueError:
-        return None
-
-
-def _filtrar_usuarios(
-    queryset,
-    termino='',
-    fecha_alta_desde='',
-    fecha_alta_hasta=''
-):
-    termino = (termino or '').strip()
-    fecha_desde = _parsear_fecha_filtro(fecha_alta_desde)
-    fecha_hasta = _parsear_fecha_filtro(fecha_alta_hasta)
-
-    if termino:
-        queryset = queryset.filter(
-            Q(nombre__icontains=termino)
-            | Q(apellido__icontains=termino)
-            | Q(username__icontains=termino)
-            | Q(email__icontains=termino)
-        )
-
-    if fecha_desde:
-        queryset = queryset.filter(
-            fecha_creacion__date__gte=fecha_desde
-        )
-
-    if fecha_hasta:
-        queryset = queryset.filter(
-            fecha_creacion__date__lte=fecha_hasta
-        )
-
-    return queryset
-
-
-def _filtrar_proyectos(
-    queryset,
-    fecha_inicio_desde='',
-    fecha_inicio_hasta='',
-    proyecto_id='',
-    titulo_palabras=''
-):
-    fecha_desde = _parsear_fecha_filtro(fecha_inicio_desde)
-    fecha_hasta = _parsear_fecha_filtro(fecha_inicio_hasta)
-
-    if fecha_desde:
-        queryset = queryset.filter(
-            fecha_inicio__gte=fecha_desde
-        )
-
-    if fecha_hasta:
-        queryset = queryset.filter(
-            fecha_inicio__lte=fecha_hasta
-        )
-
-    if proyecto_id:
-        queryset = queryset.filter(id=proyecto_id)
-
-    if titulo_palabras:
-        queryset = queryset.filter(
-            nombre__icontains=titulo_palabras
-        )
-
-    return queryset
-
-
-def _filtrar_tareas(
-    queryset,
-    fecha_inicio_desde='',
-    fecha_inicio_hasta='',
-    tarea_id='',
-    titulo_palabras=''
-):
-    fecha_desde = _parsear_fecha_filtro(fecha_inicio_desde)
-    fecha_hasta = _parsear_fecha_filtro(fecha_inicio_hasta)
-
-    if fecha_desde:
-        queryset = queryset.filter(
-            fecha_creacion__date__gte=fecha_desde
-        )
-
-    if fecha_hasta:
-        queryset = queryset.filter(
-            fecha_creacion__date__lte=fecha_hasta
-        )
-
-    if tarea_id:
-        queryset = queryset.filter(id=tarea_id)
-
-    if titulo_palabras:
-        queryset = queryset.filter(
-            titulo__icontains=titulo_palabras
-        )
-
-    return queryset
 
 
 # Vista para el inicio de sesión personalizado

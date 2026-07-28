@@ -580,6 +580,56 @@ class EvaluationFlowTests(TestCase):
             reverse('vista_evaluaciones')
 
 
+class SearchFilterModuleTests(TestCase):
+    """Pruebas estructurales del módulo compartido de filtros."""
+
+    def test_filter_helpers_live_in_filters_module(self):
+        from .filters import (
+            _parsear_fecha_filtro,
+            _filtrar_usuarios,
+            _filtrar_proyectos,
+            _filtrar_tareas,
+        )
+
+        helpers = (
+            _parsear_fecha_filtro,
+            _filtrar_usuarios,
+            _filtrar_proyectos,
+            _filtrar_tareas,
+        )
+
+        for helper in helpers:
+            with self.subTest(helper=helper.__name__):
+                self.assertEqual(
+                    helper.__module__,
+                    'Reveloper.filters',
+                )
+
+    def test_views_import_filter_helpers(self):
+        from pathlib import Path
+
+        views_path = Path(__file__).resolve().parent / 'views.py'
+        source = views_path.read_text(encoding='utf-8')
+
+        self.assertIn('from .filters import (', source)
+        self.assertNotIn(
+            'def _parsear_fecha_filtro',
+            source,
+        )
+        self.assertNotIn(
+            'def _filtrar_usuarios',
+            source,
+        )
+        self.assertNotIn(
+            'def _filtrar_proyectos',
+            source,
+        )
+        self.assertNotIn(
+            'def _filtrar_tareas',
+            source,
+        )
+
+
 class ProjectTaskDateFilterTests(TestCase):
     """Pruebas del Hito 9: filtros seguros de proyectos y tareas."""
 
