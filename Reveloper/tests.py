@@ -786,6 +786,61 @@ class ProjectTaskDateFilterTests(TestCase):
                     inspect.getsource(view),
                 )
 
+    def test_project_pdf_works_without_previous_search(self):
+        response = self.client.get(
+            reverse('generar_informe_pdf_busqueda'),
+            {'fecha_inicio_desde': '2026-02-01'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['Content-Type'],
+            'application/pdf',
+        )
+
+    def test_task_pdf_works_without_previous_search(self):
+        response = self.client.get(
+            reverse('generar_informe_pdf_tareas'),
+            {'fecha_inicio_desde_tarea': '2026-02-01'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['Content-Type'],
+            'application/pdf',
+        )
+
+    def test_project_pdf_reuses_shared_filter(self):
+        import inspect
+        from .views import generar_informe_pdf_busqueda
+
+        source = inspect.getsource(
+            generar_informe_pdf_busqueda
+        )
+
+        self.assertIn('_filtrar_proyectos(', source)
+        self.assertNotIn('request.session', source)
+
+    def test_task_pdf_reuses_shared_filter(self):
+        import inspect
+        from .views import generar_informe_pdf_tareas
+
+        source = inspect.getsource(
+            generar_informe_pdf_tareas
+        )
+
+        self.assertIn('_filtrar_tareas(', source)
+        self.assertNotIn('request.session', source)
+
+    def test_project_and_task_searches_do_not_store_results_in_session(self):
+        import inspect
+        from .views import buscar_proyectos, buscar_tareas
+
+        for view in (buscar_proyectos, buscar_tareas):
+            with self.subTest(view=view.__name__):
+                source = inspect.getsource(view)
+                self.assertNotIn('request.session', source)
+
 
 class UserSearchFilterTests(TestCase):
     """Pruebas del Hito 6: búsqueda y exportación filtrada de usuarios."""

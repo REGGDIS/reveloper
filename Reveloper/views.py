@@ -429,9 +429,7 @@ def buscar_proyectos(request):
             proyecto=proyecto
         )
 
-    request.session['resultados'] = [
-        proyecto.id for proyecto in resultados
-    ]
+
 
     context = {
         'resultados': resultados,
@@ -471,9 +469,7 @@ def buscar_tareas(request):
     else:
         resultados_tareas = TareaPorDesarrollar.objects.none()
 
-    request.session['resultados_tareas'] = [
-        tarea.id for tarea in resultados_tareas
-    ]
+
 
     context = {
         'resultados_tareas': resultados_tareas,
@@ -926,8 +922,24 @@ def generar_informe_pdf_busqueda(request):
     fecha_inicio_hasta = request.GET.get('fecha_inicio_hasta', '')
     proyecto_id = request.GET.get('proyecto_id', '')
     titulo_palabras = request.GET.get('titulo_palabras', '')
-    resultados_ids = request.session.get('resultados', [])
-    resultados = Proyecto.objects.filter(id__in=resultados_ids)
+
+    hay_criterios = (
+        _parsear_fecha_filtro(fecha_inicio_desde)
+        or _parsear_fecha_filtro(fecha_inicio_hasta)
+        or proyecto_id
+        or titulo_palabras
+    )
+
+    if hay_criterios:
+        resultados = _filtrar_proyectos(
+            Proyecto.objects.all(),
+            fecha_inicio_desde,
+            fecha_inicio_hasta,
+            proyecto_id,
+            titulo_palabras,
+        )
+    else:
+        resultados = Proyecto.objects.none()
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter)
@@ -1016,12 +1028,34 @@ def generar_informe_pdf_busqueda(request):
 @login_required
 @user_passes_test(es_admin)
 def generar_informe_pdf_tareas(request):
+    fecha_inicio_desde_tarea = request.GET.get(
+        'fecha_inicio_desde_tarea',
+        '',
+    )
+    fecha_inicio_hasta_tarea = request.GET.get(
+        'fecha_inicio_hasta_tarea',
+        '',
+    )
     tarea_id = request.GET.get('tarea_id', '')
     titulo_palabras = request.GET.get('titulo_palabras', '')
-    resultados_tareas = request.session.get('resultados_tareas', [])
 
-    # Asegurarse de que la consulta esté utilizando los IDs de las tareas
-    tareas = TareaPorDesarrollar.objects.filter(id__in=resultados_tareas)
+    hay_criterios = (
+        _parsear_fecha_filtro(fecha_inicio_desde_tarea)
+        or _parsear_fecha_filtro(fecha_inicio_hasta_tarea)
+        or tarea_id
+        or titulo_palabras
+    )
+
+    if hay_criterios:
+        tareas = _filtrar_tareas(
+            TareaPorDesarrollar.objects.all(),
+            fecha_inicio_desde_tarea,
+            fecha_inicio_hasta_tarea,
+            tarea_id,
+            titulo_palabras,
+        )
+    else:
+        tareas = TareaPorDesarrollar.objects.none()
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter)
