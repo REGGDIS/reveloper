@@ -32,7 +32,7 @@
                     <ul class="user-list">
                         {% for usuario in usuarios %}
                             <li class="user-item">
-                                <span><strong>Nombre:</strong> {{ usuario.first_name }} {{ usuario.last_name }}</span>
+                                <span><strong>Nombre:</strong> {{ usuario.nombre }} {{ usuario.apellido }}</span>
                                 <span><strong>Username:</strong> {{ usuario.username }}</span>
                                 <span><strong>Email:</strong> {{ usuario.email }}</span>
                                 <span><strong>Fecha de Registro:</strong> {{ usuario.date_joined }}</span>

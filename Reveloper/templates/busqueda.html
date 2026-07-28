@@ -166,7 +166,7 @@
                                 {% for tarea in proyecto.tareas %}
                                     <tr>
                                         <td>{{ tarea.titulo }}</td>
-                                        <td>{{ tarea.usuario.first_name }} {{ tarea.usuario.last_name }}</td>
+                                        <td>{{ tarea.usuario.nombre }} {{ tarea.usuario.apellido }}</td>
                                         <td>{{ tarea.estado }}</td>
                                         <td>{{ tarea.fecha_creacion }}</td>
                                         <td>{{ tarea.fecha_vencimiento }}</td>
@@ -249,7 +249,7 @@
                 <tr>
                     <td>{{ tarea.titulo }}</td>
                     <td>{{ tarea.descripcion }}</td>
-                    <td>{{ tarea.usuario.first_name }} {{ tarea.usuario.last_name }}</td>
+                    <td>{{ tarea.usuario.nombre }} {{ tarea.usuario.apellido }}</td>
                     <td>{{ tarea.fecha_creacion }}</td>
                     <td>{{ tarea.fecha_vencimiento }}</td>
                     <td>{{ tarea.estado }}</td>

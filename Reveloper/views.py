@@ -465,8 +465,8 @@ def generate_pdf(request):
             proyecto=project).select_related('usuario')
         for tarea in tareas:
             story.append(Paragraph(f"Tarea: {tarea.titulo}", styleTaskTitle))
-            story.append(Paragraph(f"Asignado a: {tarea.usuario.first_name} {
-                         tarea.usuario.last_name}", styleAssignedTo))
+            story.append(Paragraph(f"Asignado a: {tarea.usuario.nombre} {
+                         tarea.usuario.apellido}", styleAssignedTo))
             story.append(Paragraph(f"Estado: {tarea.estado}", styleN))
             story.append(Paragraph(f"Fecha de Creación: {
                          tarea.fecha_creacion}", styleN))
@@ -544,8 +544,8 @@ def generate_task_pdf(request):
         story.append(Paragraph(f"Fecha de Vencimiento: {
                      tarea.fecha_vencimiento}", styleN))
         story.append(Paragraph(f"Proyecto: {tarea.proyecto.nombre}", styleN))
-        story.append(Paragraph(f"Asignado a: {tarea.usuario.first_name} {
-                     tarea.usuario.last_name}", styleAssignedTo))
+        story.append(Paragraph(f"Asignado a: {tarea.usuario.nombre} {
+                     tarea.usuario.apellido}", styleAssignedTo))
         story.append(Spacer(1, 10))
 
         # Añadir una línea horizontal de margen a margen para separar tareas
@@ -624,8 +624,8 @@ def generate_evaluation_pdf(request):
                 Paragraph(f"Tarea: {evaluacion.tarea.titulo}", styleN))
         else:
             story.append(Paragraph("Tarea: Sin Tarea Asignada", styleN))
-        story.append(Paragraph(f"Asignado a: {evaluacion.usuario.first_name} {
-                     evaluacion.usuario.last_name}", styleAssignedTo))
+        story.append(Paragraph(f"Asignado a: {evaluacion.usuario.nombre} {
+                     evaluacion.usuario.apellido}", styleAssignedTo))
         story.append(Paragraph(f"Fecha de Evaluación: {
                      evaluacion.fecha_evaluacion}", styleN))
         story.append(
@@ -681,8 +681,8 @@ def generate_user_pdf(request):
 
     usuarios = Usuario.objects.all()
     for usuario in usuarios:
-        story.append(Paragraph(f"Nombre: {usuario.first_name} {
-                     usuario.last_name}", styleUserName))
+        story.append(Paragraph(f"Nombre: {usuario.nombre} {
+                     usuario.apellido}", styleUserName))
         story.append(Paragraph(f"Username: {usuario.username}", styleN))
         story.append(Paragraph(f"Email: {usuario.email}", styleN))
         story.append(Paragraph(f"Fecha de Registro: {
@@ -908,7 +908,7 @@ def generar_informe_pdf_busqueda(request):
         for tarea in tareas:
             story.append(Paragraph(f"Tarea: {tarea.titulo}", styleTaskTitle))
             story.append(Paragraph(
-                f"Asignado a: {tarea.usuario.first_name} {tarea.usuario.last_name}", styleAssignedTo))
+                f"Asignado a: {tarea.usuario.nombre} {tarea.usuario.apellido}", styleAssignedTo))
             story.append(Paragraph(f"Estado: {tarea.estado}", styleN))
             story.append(
                 Paragraph(f"Fecha de Creación: {tarea.fecha_creacion}", styleN))
@@ -965,7 +965,7 @@ def generar_informe_pdf_tareas(request):
         story.append(Paragraph(f"Título: {tarea.titulo}", styleN))
         story.append(Paragraph(f"Descripción: {tarea.descripcion}", styleN))
         story.append(Paragraph(
-            f"Asignado a: {tarea.usuario.first_name} {tarea.usuario.last_name}", styleN))
+            f"Asignado a: {tarea.usuario.nombre} {tarea.usuario.apellido}", styleN))
         story.append(
             Paragraph(f"Fecha de Creación: {tarea.fecha_creacion}", styleN))
         story.append(
@@ -1072,7 +1072,7 @@ def exportar_tareas_excel(request):
             tarea.fecha_creacion, datetime.min.time()) if tarea.fecha_creacion else ''
         fecha_vencimiento = datetime.combine(
             tarea.fecha_vencimiento, datetime.min.time()) if tarea.fecha_vencimiento else ''
-        ws.append([tarea.id, tarea.titulo, tarea.descripcion, f"{tarea.usuario.first_name} {tarea.usuario.last_name}",
+        ws.append([tarea.id, tarea.titulo, tarea.descripcion, f"{tarea.usuario.nombre} {tarea.usuario.apellido}",
                    fecha_creacion, fecha_vencimiento, tarea.estado])
 
     # Preparar respuesta HTTP
@@ -1205,11 +1205,11 @@ def exportar_todos_usuarios_excel(request):
                     tarea.fecha_creacion, 'tzinfo') else tarea.fecha_creacion
                 fecha_vencimiento = tarea.fecha_vencimiento.replace(tzinfo=None) if tarea.fecha_vencimiento and hasattr(
                     tarea.fecha_vencimiento, 'tzinfo') else tarea.fecha_vencimiento
-                ws.append([usuario.id, usuario.username, usuario.first_name, usuario.last_name, usuario.email,
+                ws.append([usuario.id, usuario.username, usuario.nombre, usuario.apellido, usuario.email,
                           fecha_registro, tarea.id, tarea.titulo, tarea.estado, fecha_creacion, fecha_vencimiento])
         else:
-            ws.append([usuario.id, usuario.username, usuario.first_name,
-                      usuario.last_name, usuario.email, fecha_registro, '', '', '', '', ''])
+            ws.append([usuario.id, usuario.username, usuario.nombre,
+                      usuario.apellido, usuario.email, fecha_registro, '', '', '', '', ''])
 
     # Preparar respuesta HTTP
     response = HttpResponse(
@@ -1273,7 +1273,7 @@ def exportar_todas_tareas_excel(request):
         fecha_vencimiento = datetime.combine(
             tarea.fecha_vencimiento, datetime.min.time()) if tarea.fecha_vencimiento else ''
         ws.append([tarea.id, tarea.titulo, tarea.descripcion, tarea.estado, fecha_creacion, fecha_vencimiento,
-                  tarea.proyecto.nombre, f"{tarea.usuario.first_name} {tarea.usuario.last_name}"])
+                  tarea.proyecto.nombre, f"{tarea.usuario.nombre} {tarea.usuario.apellido}"])
 
     # Preparar respuesta HTTP
     response = HttpResponse(
@@ -1303,8 +1303,8 @@ def exportar_todas_evaluaciones_excel(request):
         fecha_evaluacion = datetime.combine(
             evaluacion.fecha_evaluacion, datetime.min.time()) if evaluacion.fecha_evaluacion else ''
         tarea_titulo = evaluacion.tarea.titulo if evaluacion.tarea else 'Sin Tarea Asignada'
-        ws.append([evaluacion.id, evaluacion.titulo, evaluacion.calificacion, tarea_titulo, f"{evaluacion.usuario.first_name} {
-                  evaluacion.usuario.last_name}", evaluacion.comentarios, fecha_evaluacion, evaluacion.proyecto.nombre])
+        ws.append([evaluacion.id, evaluacion.titulo, evaluacion.calificacion, tarea_titulo, f"{evaluacion.usuario.nombre} {
+                  evaluacion.usuario.apellido}", evaluacion.comentarios, fecha_evaluacion, evaluacion.proyecto.nombre])
 
     # Preparar respuesta HTTP
     response = HttpResponse(
