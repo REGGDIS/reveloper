@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container">
     <marquee behavior="scroll" direction="left" scrollamount="10">
-        <h1 id="welcome-message">Bienvenido, {{ usuario.first_name }}</h1>
+        <h1 id="welcome-message">Bienvenido, {{ usuario.nombre }}</h1>
     </marquee>
 
     <div class="cards">
@@ -37,11 +37,11 @@ document.addEventListener("DOMContentLoaded", function() {
     var message = "Bienvenido";
 
     if (hour < 12) {
-        message = "Buenos días, {{ usuario.first_name }}";
+        message = "Buenos días, {{ usuario.nombre }}";
     } else if (hour < 18) {
-        message = "Buenas tardes, {{ usuario.first_name }}";
+        message = "Buenas tardes, {{ usuario.nombre }}";
     } else {
-        message = "Buenas noches, {{ usuario.first_name }}";
+        message = "Buenas noches, {{ usuario.nombre }}";
     }
 
     document.getElementById('welcome-message').innerText = message;

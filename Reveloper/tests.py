@@ -765,3 +765,123 @@ class UserSearchFilterTests(TestCase):
         ):
             source = inspect.getsource(view)
             self.assertIn('_filtrar_usuarios(', source)
+
+
+class UserDisplayNameTests(TestCase):
+    """Pruebas del Hito 7: uso coherente de nombre y apellido."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = Usuario.objects.create_superuser(
+            username='admin_names',
+            email='admin_names@test.local',
+            password='test-pass-123',
+            nombre='Nombre Administrador',
+            apellido='Apellido Administrador',
+            first_name='LegacyAdmin',
+            last_name='LegacySurname',
+        )
+        cls.developer = Usuario.objects.create_user(
+            username='developer_names',
+            email='developer_names@test.local',
+            password='test-pass-123',
+            nombre='Roberto',
+            apellido='González',
+            first_name='LegacyName',
+            last_name='LegacyLastName',
+        )
+
+    def setUp(self):
+        self.client = Client()
+
+    def _login(self, user):
+        self.assertTrue(
+            self.client.login(
+                username=user.username,
+                password='test-pass-123',
+            )
+        )
+
+    def test_views_and_templates_do_not_use_legacy_name_fields(self):
+        from pathlib import Path
+
+        app_path = Path(__file__).resolve().parent
+        files = [
+            app_path / 'views.py',
+            app_path / 'templates' / 'busqueda.html',
+            app_path / 'templates' / 'evaluaciones.html',
+            app_path / 'templates' / 'home.html',
+            app_path / 'templates' / 'proyectos.html',
+            app_path / 'templates' / 'revisar_tareas.html',
+            app_path / 'templates' / 'tareas.html',
+            app_path / 'templates' / 'usuarios.html',
+        ]
+
+        for file_path in files:
+            source = file_path.read_text(encoding='utf-8')
+
+            self.assertNotIn(
+                'first_name',
+                source,
+                f'{file_path.name} todavía usa first_name',
+            )
+            self.assertNotIn(
+                'last_name',
+                source,
+                f'{file_path.name} todavía usa last_name',
+            )
+
+    def test_home_displays_custom_nombre(self):
+        self._login(self.developer)
+
+        response = self.client.get(reverse('home'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.developer.nombre)
+        self.assertNotContains(response, self.developer.first_name)
+
+    def test_users_page_displays_custom_name_and_surname(self):
+        self._login(self.admin)
+
+        response = self.client.get(reverse('usuarios'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            f'{self.developer.nombre} {self.developer.apellido}',
+        )
+        self.assertNotContains(
+            response,
+            f'{self.developer.first_name} {self.developer.last_name}',
+        )
+
+    def test_global_users_excel_uses_custom_name_fields(self):
+        from io import BytesIO
+        import openpyxl
+
+        self._login(self.admin)
+
+        response = self.client.get(
+            reverse('exportar_todos_usuarios_excel')
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        workbook = openpyxl.load_workbook(
+            filename=BytesIO(response.content)
+        )
+        worksheet = workbook.active
+        rows = list(worksheet.iter_rows(values_only=True))
+
+        developer_rows = [
+            row for row in rows
+            if row[1] == self.developer.username
+        ]
+
+        self.assertEqual(len(developer_rows), 1)
+
+        row = developer_rows[0]
+        self.assertEqual(row[2], self.developer.nombre)
+        self.assertEqual(row[3], self.developer.apellido)
+        self.assertNotEqual(row[2], self.developer.first_name)
+        self.assertNotEqual(row[3], self.developer.last_name)
