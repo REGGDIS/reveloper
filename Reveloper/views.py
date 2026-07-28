@@ -80,6 +80,69 @@ def _filtrar_usuarios(
 
     return queryset
 
+
+def _filtrar_proyectos(
+    queryset,
+    fecha_inicio_desde='',
+    fecha_inicio_hasta='',
+    proyecto_id='',
+    titulo_palabras=''
+):
+    fecha_desde = _parsear_fecha_filtro(fecha_inicio_desde)
+    fecha_hasta = _parsear_fecha_filtro(fecha_inicio_hasta)
+
+    if fecha_desde:
+        queryset = queryset.filter(
+            fecha_inicio__gte=fecha_desde
+        )
+
+    if fecha_hasta:
+        queryset = queryset.filter(
+            fecha_inicio__lte=fecha_hasta
+        )
+
+    if proyecto_id:
+        queryset = queryset.filter(id=proyecto_id)
+
+    if titulo_palabras:
+        queryset = queryset.filter(
+            nombre__icontains=titulo_palabras
+        )
+
+    return queryset
+
+
+def _filtrar_tareas(
+    queryset,
+    fecha_inicio_desde='',
+    fecha_inicio_hasta='',
+    tarea_id='',
+    titulo_palabras=''
+):
+    fecha_desde = _parsear_fecha_filtro(fecha_inicio_desde)
+    fecha_hasta = _parsear_fecha_filtro(fecha_inicio_hasta)
+
+    if fecha_desde:
+        queryset = queryset.filter(
+            fecha_creacion__date__gte=fecha_desde
+        )
+
+    if fecha_hasta:
+        queryset = queryset.filter(
+            fecha_creacion__date__lte=fecha_hasta
+        )
+
+    if tarea_id:
+        queryset = queryset.filter(id=tarea_id)
+
+    if titulo_palabras:
+        queryset = queryset.filter(
+            titulo__icontains=titulo_palabras
+        )
+
+    return queryset
+
+
 # Vista para el inicio de sesión personalizado
 
 
@@ -342,32 +405,37 @@ def buscar_proyectos(request):
     fecha_inicio_hasta = request.GET.get('fecha_inicio_hasta')
     proyecto_id = request.GET.get('proyecto_id')
     titulo_palabras = request.GET.get('titulo_palabras')
-    resultados = []
 
-    query = Q()
-    if fecha_inicio_desde and fecha_inicio_hasta:
-        fecha_inicio_desde = timezone.make_aware(
-            datetime.strptime(fecha_inicio_desde, '%Y-%m-%d'))
-        fecha_inicio_hasta = timezone.make_aware(
-            datetime.strptime(fecha_inicio_hasta, '%Y-%m-%d'))
-        query &= Q(fecha_inicio__gte=fecha_inicio_desde) & Q(
-            fecha_inicio__lte=fecha_inicio_hasta)
-    if proyecto_id:
-        query &= Q(id=proyecto_id)
-    if titulo_palabras:
-        query &= Q(nombre__icontains=titulo_palabras)
+    hay_criterios = (
+        _parsear_fecha_filtro(fecha_inicio_desde)
+        or _parsear_fecha_filtro(fecha_inicio_hasta)
+        or proyecto_id
+        or titulo_palabras
+    )
 
-    if query:
-        resultados = Proyecto.objects.filter(query)
-        for proyecto in resultados:
-            proyecto.tareas = TareaPorDesarrollar.objects.filter(
-                proyecto=proyecto)
+    if hay_criterios:
+        resultados = _filtrar_proyectos(
+            Proyecto.objects.all(),
+            fecha_inicio_desde,
+            fecha_inicio_hasta,
+            proyecto_id,
+            titulo_palabras,
+        )
+    else:
+        resultados = Proyecto.objects.none()
 
-    request.session['resultados'] = [proyecto.id for proyecto in resultados]
+    for proyecto in resultados:
+        proyecto.tareas = TareaPorDesarrollar.objects.filter(
+            proyecto=proyecto
+        )
+
+    request.session['resultados'] = [
+        proyecto.id for proyecto in resultados
+    ]
 
     context = {
         'resultados': resultados,
-        'proyectos': Proyecto.objects.all()
+        'proyectos': Proyecto.objects.all(),
     }
 
     return render(request, 'busqueda.html', context)
@@ -376,34 +444,40 @@ def buscar_proyectos(request):
 @login_required
 @user_passes_test(es_admin)
 def buscar_tareas(request):
-    fecha_inicio_desde_tarea = request.GET.get('fecha_inicio_desde_tarea')
-    fecha_inicio_hasta_tarea = request.GET.get('fecha_inicio_hasta_tarea')
+    fecha_inicio_desde_tarea = request.GET.get(
+        'fecha_inicio_desde_tarea'
+    )
+    fecha_inicio_hasta_tarea = request.GET.get(
+        'fecha_inicio_hasta_tarea'
+    )
     tarea_id = request.GET.get('tarea_id')
     titulo_palabras = request.GET.get('titulo_palabras')
-    resultados_tareas = []
 
-    query = Q()
-    if fecha_inicio_desde_tarea and fecha_inicio_hasta_tarea:
-        fecha_inicio_desde_tarea = timezone.make_aware(
-            datetime.strptime(fecha_inicio_desde_tarea, '%Y-%m-%d'))
-        fecha_inicio_hasta_tarea = timezone.make_aware(
-            datetime.strptime(fecha_inicio_hasta_tarea, '%Y-%m-%d'))
-        query &= Q(fecha_creacion__gte=fecha_inicio_desde_tarea) & Q(
-            fecha_creacion__lte=fecha_inicio_hasta_tarea)
-    if tarea_id:
-        query &= Q(id=tarea_id)
-    if titulo_palabras:
-        query &= Q(titulo__icontains=titulo_palabras)
+    hay_criterios = (
+        _parsear_fecha_filtro(fecha_inicio_desde_tarea)
+        or _parsear_fecha_filtro(fecha_inicio_hasta_tarea)
+        or tarea_id
+        or titulo_palabras
+    )
 
-    if query:
-        resultados_tareas = TareaPorDesarrollar.objects.filter(query)
+    if hay_criterios:
+        resultados_tareas = _filtrar_tareas(
+            TareaPorDesarrollar.objects.all(),
+            fecha_inicio_desde_tarea,
+            fecha_inicio_hasta_tarea,
+            tarea_id,
+            titulo_palabras,
+        )
+    else:
+        resultados_tareas = TareaPorDesarrollar.objects.none()
 
     request.session['resultados_tareas'] = [
-        tarea.id for tarea in resultados_tareas]
+        tarea.id for tarea in resultados_tareas
+    ]
 
     context = {
         'resultados_tareas': resultados_tareas,
-        'tareas': TareaPorDesarrollar.objects.all()
+        'tareas': TareaPorDesarrollar.objects.all(),
     }
 
     return render(request, 'busqueda.html', context)
@@ -1056,18 +1130,13 @@ def exportar_tareas_excel(request):
     titulo_palabras = request.GET.get('titulo_palabras')
 
     # Filtrar tareas según los criterios de búsqueda
-    tareas = TareaPorDesarrollar.objects.all()
-    if fecha_inicio_desde_tarea and fecha_inicio_hasta_tarea:
-        fecha_inicio_desde_tarea = timezone.make_aware(
-            datetime.strptime(fecha_inicio_desde_tarea, '%Y-%m-%d'))
-        fecha_inicio_hasta_tarea = timezone.make_aware(
-            datetime.strptime(fecha_inicio_hasta_tarea, '%Y-%m-%d'))
-        tareas = tareas.filter(fecha_creacion__gte=fecha_inicio_desde_tarea,
-                               fecha_creacion__lte=fecha_inicio_hasta_tarea)
-    if tarea_id:
-        tareas = tareas.filter(id=tarea_id)
-    if titulo_palabras:
-        tareas = tareas.filter(titulo__icontains=titulo_palabras)
+    tareas = _filtrar_tareas(
+        TareaPorDesarrollar.objects.all(),
+        fecha_inicio_desde_tarea,
+        fecha_inicio_hasta_tarea,
+        tarea_id,
+        titulo_palabras,
+    )
 
     # Crear el archivo Excel
     wb = openpyxl.Workbook()
@@ -1105,18 +1174,13 @@ def exportar_proyectos_excel(request):
     titulo_palabras = request.GET.get('titulo_palabras')
 
     # Filtrar proyectos según los criterios de búsqueda
-    proyectos = Proyecto.objects.all()
-    if fecha_inicio_desde and fecha_inicio_hasta:
-        fecha_inicio_desde = timezone.make_aware(
-            datetime.strptime(fecha_inicio_desde, '%Y-%m-%d'))
-        fecha_inicio_hasta = timezone.make_aware(
-            datetime.strptime(fecha_inicio_hasta, '%Y-%m-%d'))
-        proyectos = proyectos.filter(
-            fecha_inicio__gte=fecha_inicio_desde, fecha_inicio__lte=fecha_inicio_hasta)
-    if proyecto_id:
-        proyectos = proyectos.filter(id=proyecto_id)
-    if titulo_palabras:
-        proyectos = proyectos.filter(nombre__icontains=titulo_palabras)
+    proyectos = _filtrar_proyectos(
+        Proyecto.objects.all(),
+        fecha_inicio_desde,
+        fecha_inicio_hasta,
+        proyecto_id,
+        titulo_palabras,
+    )
 
     # Crear el archivo Excel
     wb = openpyxl.Workbook()
