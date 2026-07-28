@@ -1,30 +1,40 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+
 from .models import TareaPorDesarrollar, Usuario
 
 
 class TareaPorDesarrollarForm(forms.ModelForm):
     class Meta:
         model = TareaPorDesarrollar
-        fields = ['titulo', 'descripcion',
-                  'fecha_vencimiento', 'estado', 'proyecto', 'usuario']
+        fields = [
+            'titulo',
+            'descripcion',
+            'fecha_vencimiento',
+            'estado',
+            'proyecto',
+            'usuario',
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if 'usuario' in self.fields:
-            self.fields['usuario'].queryset = Usuario.objects.filter(
-                is_active=True,
-                is_superuser=False,
-                is_staff=False,
-            )
 
-
+        self.fields['usuario'].queryset = Usuario.objects.filter(
+            is_active=True,
+            is_superuser=False,
+            is_staff=False,
+        )
 
 
 class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = Usuario
-        fields = ('username', 'email')
+        fields = (
+            'username',
+            'email',
+            'nombre',
+            'apellido',
+        )
 
 
 class CustomUserChangeForm(UserChangeForm):
@@ -35,10 +45,22 @@ class CustomUserChangeForm(UserChangeForm):
 
 class EvaluacionForm(forms.Form):
     tiempo_entrega = forms.DecimalField(
-        max_digits=4, decimal_places=1, label="Tiempo de Entrega")
+        max_digits=4,
+        decimal_places=1,
+        label='Tiempo de Entrega',
+    )
     complejidad_tarea = forms.DecimalField(
-        max_digits=4, decimal_places=1, label="Complejidad de la Tarea")
+        max_digits=4,
+        decimal_places=1,
+        label='Complejidad de la Tarea',
+    )
     cumplimiento_requerimientos = forms.DecimalField(
-        max_digits=4, decimal_places=1, label="Cumplimiento de Requerimientos")
+        max_digits=4,
+        decimal_places=1,
+        label='Cumplimiento de Requerimientos',
+    )
     calidad_codigo = forms.DecimalField(
-        max_digits=4, decimal_places=1, label="Calidad del Código")
+        max_digits=4,
+        decimal_places=1,
+        label='Calidad del Código',
+    )

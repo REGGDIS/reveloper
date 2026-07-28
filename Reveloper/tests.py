@@ -141,6 +141,68 @@ class SettingsSecurityTests(TestCase):
         self.assertNotIn(settings.SECRET_KEY, content)
         self.assertIn('DB_PASSWORD=', content)
 
+class UserCreationFormTests(TestCase):
+    """Pruebas del formulario personalizado de creación de usuarios."""
+
+    def test_creation_form_includes_custom_name_fields(self):
+        from .forms import CustomUserCreationForm
+
+        form = CustomUserCreationForm()
+
+        self.assertIn('nombre', form.fields)
+        self.assertIn('apellido', form.fields)
+
+    def test_custom_name_fields_are_required(self):
+        from .forms import CustomUserCreationForm
+
+        form = CustomUserCreationForm()
+
+        self.assertTrue(form.fields['nombre'].required)
+        self.assertTrue(form.fields['apellido'].required)
+
+    def test_form_without_custom_name_fields_is_invalid(self):
+        from .forms import CustomUserCreationForm
+
+        form = CustomUserCreationForm(
+            data={
+                'username': 'usuario_sin_nombre',
+                'email': 'sin.nombre@test.local',
+                'password1': 'test-pass-123',
+                'password2': 'test-pass-123',
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('nombre', form.errors)
+        self.assertIn('apellido', form.errors)
+
+    def test_valid_form_saves_custom_name_fields(self):
+        from .forms import CustomUserCreationForm
+
+        form = CustomUserCreationForm(
+            data={
+                'username': 'usuario_formulario',
+                'email': 'usuario.formulario@test.local',
+                'nombre': 'Roberto',
+                'apellido': 'González',
+                'password1': 'test-pass-123',
+                'password2': 'test-pass-123',
+            }
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+
+        usuario = form.save()
+
+        self.assertEqual(usuario.nombre, 'Roberto')
+        self.assertEqual(usuario.apellido, 'González')
+        self.assertEqual(
+            usuario.email,
+            'usuario.formulario@test.local',
+        )
+        self.assertTrue(
+            usuario.check_password('test-pass-123')
+        )
 
 class TaskLifecycleTests(TestCase):
     """Pruebas automatizadas para el ciclo de vida de tareas (Hito 4)."""
