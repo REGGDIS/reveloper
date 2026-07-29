@@ -561,9 +561,7 @@ class TaskLifecycleTests(TestCase):
             fecha_vencimiento,
         )
 
-    def test_changing_completed_task_to_another_state_does_not_increment_again(
-        self
-    ):
+    def test_changing_completed_task_to_another_state_does_not_increment_again(self):
         from datetime import date
         from .models import TareaPorDesarrollar, TareasCompletadas
 
@@ -665,6 +663,88 @@ class TaskLifecycleTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('usuario', response.context['form'].errors)
         self.assertFalse(TareaPorDesarrollar.objects.filter(id='TASK-STAFF-USER').exists())
+
+    def test_get_cannot_change_task_state(self):
+        self._login(self.developer)
+        url = reverse(
+            'marcar_tarea_en_revision',
+            kwargs={'tarea_id': self.tarea.id},
+        )
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 405)
+        self.tarea.refresh_from_db()
+        self.assertEqual(self.tarea.estado, 'pendiente')
+
+    def test_post_changes_pending_task_to_in_progress(self):
+        self._login(self.developer)
+        url = reverse(
+            'marcar_tarea_en_revision',
+            kwargs={'tarea_id': self.tarea.id},
+        )
+
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response,
+            reverse('tareas_por_desarrollar'),
+        )
+        self.tarea.refresh_from_db()
+        self.assertEqual(self.tarea.estado, 'en progreso')
+
+    def test_post_changes_in_progress_task_to_in_review(self):
+        self.tarea.estado = 'en progreso'
+        self.tarea.save(update_fields=['estado'])
+
+        self._login(self.developer)
+        url = reverse(
+            'marcar_tarea_en_revision',
+            kwargs={'tarea_id': self.tarea.id},
+        )
+
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.tarea.refresh_from_db()
+        self.assertEqual(self.tarea.estado, 'en revision')
+
+    def test_other_developer_cannot_change_task_state(self):
+        other_developer = Usuario.objects.create_user(
+            username='other_task_developer',
+            email='other.task@test.local',
+            password='test-pass-123',
+            nombre='Other',
+            apellido='Developer',
+        )
+        self._login(other_developer)
+
+        url = reverse(
+            'marcar_tarea_en_revision',
+            kwargs={'tarea_id': self.tarea.id},
+        )
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.tarea.refresh_from_db()
+        self.assertEqual(self.tarea.estado, 'pendiente')
+
+    def test_completed_task_state_is_not_changed(self):
+        self.tarea.estado = 'completada'
+        self.tarea.save(update_fields=['estado'])
+
+        self._login(self.developer)
+        url = reverse(
+            'marcar_tarea_en_revision',
+            kwargs={'tarea_id': self.tarea.id},
+        )
+
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.tarea.refresh_from_db()
+        self.assertEqual(self.tarea.estado, 'completada')
 
 
 class EvaluationFlowTests(TestCase):
