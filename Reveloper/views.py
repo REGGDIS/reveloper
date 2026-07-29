@@ -21,6 +21,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.html import strip_tags
+from django.views.decorators.http import require_POST
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -195,14 +196,23 @@ def tareas_por_desarrollar(request):
 
 
 @login_required
+@require_POST
 def marcar_tarea_en_revision(request, tarea_id):
-    tarea = get_object_or_404(TareaPorDesarrollar, id=tarea_id)
-    if tarea.usuario == request.user:
-        if tarea.estado == 'pendiente':
-            tarea.estado = 'en progreso'
-        elif tarea.estado == 'en progreso':
-            tarea.estado = 'en revision'
-        tarea.save()
+    tarea = get_object_or_404(
+        TareaPorDesarrollar,
+        id=tarea_id,
+    )
+
+    if tarea.usuario != request.user:
+        return redirect('tareas_por_desarrollar')
+
+    if tarea.estado == 'pendiente':
+        tarea.estado = 'en progreso'
+        tarea.save(update_fields=['estado'])
+    elif tarea.estado == 'en progreso':
+        tarea.estado = 'en revision'
+        tarea.save(update_fields=['estado'])
+
     return redirect('tareas_por_desarrollar')
 
 
