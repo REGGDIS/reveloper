@@ -204,6 +204,102 @@ class UserCreationFormTests(TestCase):
             usuario.check_password('test-pass-123')
         )
 
+class CustomUserAdminTests(TestCase):
+    """Pruebas de integración del usuario personalizado con Django Admin."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = Usuario.objects.create_superuser(
+            username='admin_user_admin',
+            email='admin.user@test.local',
+            password='test-pass-123',
+            nombre='Admin',
+            apellido='Usuarios',
+        )
+
+    def setUp(self):
+        self.client = Client()
+        self.assertTrue(
+            self.client.login(
+                username=self.admin.username,
+                password='test-pass-123',
+            )
+        )
+
+    def test_custom_user_admin_uses_custom_forms(self):
+        from django.contrib import admin
+
+        from .admin import CustomUserAdmin
+        from .forms import (
+            CustomUserChangeForm,
+            CustomUserCreationForm,
+        )
+
+        registered_admin = admin.site._registry[Usuario]
+
+        self.assertIsInstance(
+            registered_admin,
+            CustomUserAdmin,
+        )
+        self.assertIs(
+            registered_admin.add_form,
+            CustomUserCreationForm,
+        )
+        self.assertIs(
+            registered_admin.form,
+            CustomUserChangeForm,
+        )
+
+    def test_admin_add_fieldsets_include_custom_name_fields(self):
+        from django.contrib import admin
+
+        registered_admin = admin.site._registry[Usuario]
+        add_fields = registered_admin.add_fieldsets[0][1]['fields']
+
+        self.assertIn('nombre', add_fields)
+        self.assertIn('apellido', add_fields)
+
+    def test_admin_change_fieldsets_include_custom_name_fields(self):
+        from django.contrib import admin
+
+        registered_admin = admin.site._registry[Usuario]
+
+        all_fields = {
+            field
+            for _, options in registered_admin.fieldsets
+            for field in options['fields']
+        }
+
+        self.assertIn('nombre', all_fields)
+        self.assertIn('apellido', all_fields)
+
+    def test_admin_add_page_displays_custom_name_fields(self):
+        app_label = Usuario._meta.app_label
+        model_name = Usuario._meta.model_name
+        url = reverse(
+            f'admin:{app_label}_{model_name}_add'
+        )
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="nombre"')
+        self.assertContains(response, 'name="apellido"')
+
+    def test_admin_change_page_displays_custom_name_fields(self):
+        app_label = Usuario._meta.app_label
+        model_name = Usuario._meta.model_name
+        url = reverse(
+            f'admin:{app_label}_{model_name}_change',
+            args=[self.admin.pk],
+        )
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="nombre"')
+        self.assertContains(response, 'name="apellido"')
+
 class TaskLifecycleTests(TestCase):
     """Pruebas automatizadas para el ciclo de vida de tareas (Hito 4)."""
 
