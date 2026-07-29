@@ -914,6 +914,199 @@ class EvaluationFlowTests(TestCase):
         with self.assertRaises(NoReverseMatch):
             reverse('vista_evaluaciones')
 
+class TaskReviewEvaluationTests(TestCase):
+    """Pruebas del proceso administrativo de revisión de tareas."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from datetime import date
+
+        from .models import (
+            EvaluacionConfig,
+            Proyecto,
+            TareaPorDesarrollar,
+        )
+
+        cls.admin = Usuario.objects.create_superuser(
+            username='admin_task_review',
+            email='admin.task.review@test.local',
+            password='test-pass-123',
+            nombre='Admin',
+            apellido='Review',
+        )
+        cls.developer = Usuario.objects.create_user(
+            username='developer_task_review',
+            email='developer.task.review@test.local',
+            password='test-pass-123',
+            nombre='Developer',
+            apellido='Review',
+        )
+        cls.proyecto = Proyecto.objects.create(
+            id='PROY-REVIEW-001',
+            nombre='Proyecto Review',
+            descripcion='Proyecto para revisar tareas',
+            fecha_inicio=date.today(),
+            fecha_fin=date.today(),
+            estado='activo',
+        )
+        cls.config = EvaluacionConfig.objects.create(
+            tiempo_entrega=25,
+            complejidad_tarea=25,
+            cumplimiento_requerimientos=25,
+            calidad_codigo=25,
+            nota_maxima=100,
+        )
+        cls.tarea = TareaPorDesarrollar.objects.create(
+            id='TASK-REVIEW-001',
+            titulo='Tarea en revisión',
+            descripcion='Tarea para evaluar',
+            fecha_vencimiento=date.today(),
+            estado='en revision',
+            proyecto=cls.proyecto,
+            usuario=cls.developer,
+        )
+
+    def setUp(self):
+        self.client = Client()
+
+    def _login(self, user):
+        self.assertTrue(
+            self.client.login(
+                username=user.username,
+                password='test-pass-123',
+            )
+        )
+
+    def _valid_post_data(self):
+        return {
+            'tarea_id': self.tarea.id,
+            'tiempo_entrega': '25.0',
+            'complejidad_tarea': '25.0',
+            'cumplimiento_requerimientos': '25.0',
+            'calidad_codigo': '25.0',
+        }
+
+    def test_anonymous_user_cannot_review_tasks(self):
+        response = self.client.get(reverse('revisar_tareas'))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response.url)
+
+    def test_developer_cannot_review_tasks(self):
+        self._login(self.developer)
+
+        response = self.client.get(reverse('revisar_tareas'))
+
+        self.assertEqual(response.status_code, 302)
+
+    def test_valid_review_creates_evaluation_and_completes_task(self):
+        from .models import Evaluacion
+
+        self._login(self.admin)
+
+        response = self.client.post(
+            reverse('revisar_tareas'),
+            self._valid_post_data(),
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        self.tarea.refresh_from_db()
+        self.assertEqual(self.tarea.estado, 'completada')
+
+        evaluacion = Evaluacion.objects.get(tarea=self.tarea)
+        self.assertEqual(evaluacion.calificacion, 100)
+        self.assertEqual(evaluacion.usuario, self.developer)
+        self.assertEqual(evaluacion.proyecto, self.proyecto)
+
+    def test_negative_score_does_not_complete_task(self):
+        from .models import Evaluacion
+
+        self._login(self.admin)
+        post_data = self._valid_post_data()
+        post_data['tiempo_entrega'] = '-1.0'
+
+        response = self.client.post(
+            reverse('revisar_tareas'),
+            post_data,
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.tarea.refresh_from_db()
+        self.assertEqual(self.tarea.estado, 'en revision')
+        self.assertFalse(
+            Evaluacion.objects.filter(tarea=self.tarea).exists()
+        )
+
+    def test_score_above_configured_limit_is_invalid(self):
+        from .models import Evaluacion
+
+        self._login(self.admin)
+        post_data = self._valid_post_data()
+        post_data['calidad_codigo'] = '26.0'
+
+        response = self.client.post(
+            reverse('revisar_tareas'),
+            post_data,
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.tarea.refresh_from_db()
+        self.assertEqual(self.tarea.estado, 'en revision')
+        self.assertFalse(
+            Evaluacion.objects.filter(tarea=self.tarea).exists()
+        )
+
+    def test_task_outside_review_state_cannot_be_evaluated(self):
+        self.tarea.estado = 'en progreso'
+        self.tarea.save(update_fields=['estado'])
+
+        self._login(self.admin)
+
+        response = self.client.post(
+            reverse('revisar_tareas'),
+            self._valid_post_data(),
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_existing_evaluation_prevents_duplicate(self):
+        from django.utils import timezone
+
+        from .models import Evaluacion
+
+        Evaluacion.objects.create(
+            titulo='Evaluación existente',
+            comentarios='Ya evaluada',
+            fecha_evaluacion=timezone.now(),
+            proyecto=self.proyecto,
+            usuario=self.developer,
+            calificacion=100,
+            tarea=self.tarea,
+        )
+
+        self._login(self.admin)
+
+        response = self.client.post(
+            reverse('revisar_tareas'),
+            self._valid_post_data(),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'Esta tarea ya tiene una evaluación registrada.',
+        )
+        self.assertEqual(
+            Evaluacion.objects.filter(tarea=self.tarea).count(),
+            1,
+        )
+
+        self.tarea.refresh_from_db()
+        self.assertEqual(self.tarea.estado, 'en revision')
+
 
 class SearchFilterModuleTests(TestCase):
     """Pruebas estructurales del módulo compartido de filtros."""

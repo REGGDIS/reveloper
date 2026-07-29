@@ -22,6 +22,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.views.decorators.http import require_POST
+from django.db import transaction
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -221,53 +222,98 @@ def marcar_tarea_en_revision(request, tarea_id):
 @login_required
 @user_passes_test(es_admin)
 def revisar_tareas(request):
-    tareas_en_revision = TareaPorDesarrollar.objects.filter(
-        estado='en revision')
+    tareas_en_revision = (
+        TareaPorDesarrollar.objects
+        .filter(estado='en revision')
+        .select_related('proyecto', 'usuario')
+    )
 
-    # Obtener la nota máxima de la configuración de evaluación
     evaluacion_config = EvaluacionConfig.objects.first()
-    # Valor por defecto
-    nota_maxima = evaluacion_config.nota_maxima if evaluacion_config else 100
+    nota_maxima = (
+        evaluacion_config.nota_maxima
+        if evaluacion_config
+        else 100
+    )
 
-    if request.method == 'POST':
+    form = EvaluacionForm(
+        request.POST or None,
+        evaluacion_config=evaluacion_config,
+    )
+
+    if request.method == 'POST' and form.is_valid():
         tarea_id = request.POST.get('tarea_id')
-        tarea = get_object_or_404(TareaPorDesarrollar, id=tarea_id)
 
-        # Procesar el formulario de evaluación
-        form = EvaluacionForm(request.POST)
-        if form.is_valid():
-            tarea.estado = 'completada'
-            tarea.save()
-
-            # Obtener los puntajes del formulario
-            tiempo_entrega = form.cleaned_data['tiempo_entrega']
-            complejidad_tarea = form.cleaned_data['complejidad_tarea']
-            cumplimiento_requerimientos = form.cleaned_data['cumplimiento_requerimientos']
-            calidad_codigo = form.cleaned_data['calidad_codigo']
-
-            # Calcular la calificación automática
-            calificacion = tiempo_entrega + complejidad_tarea + \
-                cumplimiento_requerimientos + calidad_codigo
-            comentarios = f"Evaluación automática: Tiempo de Entrega: {tiempo_entrega}, Complejidad de la Tarea: {
-                complejidad_tarea}, Cumplimiento de Requerimientos: {cumplimiento_requerimientos}, Calidad del Código: {calidad_codigo}"
-
-            # Crear evaluación automática
-            Evaluacion.objects.create(
-                titulo=f"Evaluación para {tarea.titulo}",
-                comentarios=comentarios,
-                fecha_evaluacion=timezone.now(),
-                proyecto=tarea.proyecto,
-                usuario=tarea.usuario,
-                calificacion=calificacion,
-                tarea=tarea
+        with transaction.atomic():
+            tarea = get_object_or_404(
+                TareaPorDesarrollar.objects
+                .select_for_update()
+                .select_related('proyecto', 'usuario'),
+                id=tarea_id,
+                estado='en revision',
             )
 
+            if Evaluacion.objects.filter(tarea=tarea).exists():
+                form.add_error(
+                    None,
+                    'Esta tarea ya tiene una evaluación registrada.',
+                )
+            else:
+                tiempo_entrega = form.cleaned_data[
+                    'tiempo_entrega'
+                ]
+                complejidad_tarea = form.cleaned_data[
+                    'complejidad_tarea'
+                ]
+                cumplimiento_requerimientos = form.cleaned_data[
+                    'cumplimiento_requerimientos'
+                ]
+                calidad_codigo = form.cleaned_data[
+                    'calidad_codigo'
+                ]
+
+                calificacion = (
+                    tiempo_entrega
+                    + complejidad_tarea
+                    + cumplimiento_requerimientos
+                    + calidad_codigo
+                )
+
+                comentarios = (
+                    'Evaluación automática: '
+                    f'Tiempo de Entrega: {tiempo_entrega}, '
+                    f'Complejidad de la Tarea: '
+                    f'{complejidad_tarea}, '
+                    f'Cumplimiento de Requerimientos: '
+                    f'{cumplimiento_requerimientos}, '
+                    f'Calidad del Código: {calidad_codigo}'
+                )
+
+                Evaluacion.objects.create(
+                    titulo=f'Evaluación para {tarea.titulo}',
+                    comentarios=comentarios,
+                    fecha_evaluacion=timezone.now(),
+                    proyecto=tarea.proyecto,
+                    usuario=tarea.usuario,
+                    calificacion=calificacion,
+                    tarea=tarea,
+                )
+
+                tarea.estado = 'completada'
+                tarea.save(update_fields=['estado'])
+
+        if not form.errors:
             return redirect('revisar_tareas')
 
-    else:
-        form = EvaluacionForm()
-
-    return render(request, 'revisar_tareas.html', {'tareas': tareas_en_revision, 'form': form, 'nota_maxima': nota_maxima})
+    context = {
+        'tareas': tareas_en_revision,
+        'form': form,
+        'nota_maxima': nota_maxima,
+    }
+    return render(
+        request,
+        'revisar_tareas.html',
+        context,
+    )
 
 
 @login_required
