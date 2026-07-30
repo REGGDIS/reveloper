@@ -1107,6 +1107,119 @@ class TaskReviewEvaluationTests(TestCase):
         self.tarea.refresh_from_db()
         self.assertEqual(self.tarea.estado, 'en revision')
 
+class EvaluationTaskUniquenessTests(TestCase):
+    """Pruebas de integridad entre evaluaciones y tareas."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from datetime import date
+
+        from .models import Proyecto, TareaPorDesarrollar
+
+        cls.developer = Usuario.objects.create_user(
+            username='developer_unique_eval',
+            email='developer.unique.eval@test.local',
+            password='test-pass-123',
+            nombre='Developer',
+            apellido='Unique',
+        )
+        cls.proyecto = Proyecto.objects.create(
+            id='PROY-UNIQUE-EVAL',
+            nombre='Proyecto evaluación única',
+            descripcion='Pruebas de integridad',
+            fecha_inicio=date.today(),
+            fecha_fin=date.today(),
+            estado='activo',
+        )
+        cls.tarea = TareaPorDesarrollar.objects.create(
+            id='TASK-UNIQUE-EVAL',
+            titulo='Tarea evaluación única',
+            descripcion='Solo debe admitir una evaluación',
+            fecha_vencimiento=date.today(),
+            estado='en revision',
+            proyecto=cls.proyecto,
+            usuario=cls.developer,
+        )
+
+    def _create_evaluation(self, *, titulo, tarea):
+        from django.utils import timezone
+
+        from .models import Evaluacion
+
+        return Evaluacion.objects.create(
+            titulo=titulo,
+            comentarios='Evaluación de prueba',
+            fecha_evaluacion=timezone.now(),
+            proyecto=self.proyecto,
+            usuario=self.developer,
+            calificacion=100,
+            tarea=tarea,
+        )
+
+    def test_evaluation_task_field_is_one_to_one(self):
+        from django.db.models import OneToOneField
+
+        from .models import Evaluacion
+
+        field = Evaluacion._meta.get_field('tarea')
+
+        self.assertIsInstance(field, OneToOneField)
+        self.assertTrue(field.null)
+        self.assertTrue(field.blank)
+
+    def test_task_accepts_one_evaluation(self):
+        from .models import Evaluacion
+
+        evaluacion = self._create_evaluation(
+            titulo='Primera evaluación',
+            tarea=self.tarea,
+        )
+
+        self.assertEqual(
+            Evaluacion.objects.filter(tarea=self.tarea).count(),
+            1,
+        )
+        self.assertEqual(evaluacion.tarea, self.tarea)
+
+    def test_second_evaluation_for_same_task_raises_integrity_error(self):
+        from django.db import IntegrityError, transaction
+
+        self._create_evaluation(
+            titulo='Primera evaluación',
+            tarea=self.tarea,
+        )
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                self._create_evaluation(
+                    titulo='Segunda evaluación',
+                    tarea=self.tarea,
+                )
+
+    def test_multiple_evaluations_without_task_are_allowed(self):
+        from .models import Evaluacion
+
+        self._create_evaluation(
+            titulo='Evaluación histórica uno',
+            tarea=None,
+        )
+        self._create_evaluation(
+            titulo='Evaluación histórica dos',
+            tarea=None,
+        )
+
+        self.assertEqual(
+            Evaluacion.objects.filter(tarea__isnull=True).count(),
+            2,
+        )
+
+    def test_reverse_relation_returns_single_evaluation(self):
+        evaluacion = self._create_evaluation(
+            titulo='Evaluación inversa',
+            tarea=self.tarea,
+        )
+
+        self.assertEqual(self.tarea.evaluacion, evaluacion)
 
 class SearchFilterModuleTests(TestCase):
     """Pruebas estructurales del módulo compartido de filtros."""
