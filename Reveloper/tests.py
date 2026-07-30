@@ -351,6 +351,78 @@ class MediaUploadSecurityTests(TestCase):
                     self.assertNotIn(pattern, source)
 
 
+class ExportResourcePathTests(TestCase):
+    """Pruebas para recursos usados en informes exportados."""
+
+    def test_report_logo_is_resolved_as_existing_absolute_path(self):
+        from pathlib import Path
+
+        from .views import _obtener_ruta_logo_informes
+
+        logo_path = Path(_obtener_ruta_logo_informes())
+
+        self.assertTrue(logo_path.is_absolute())
+        self.assertTrue(logo_path.exists())
+        self.assertEqual(
+            logo_path.name,
+            'logo-reveloper.png',
+        )
+
+    def test_report_logo_resolution_does_not_depend_on_cwd(self):
+        import os
+        import tempfile
+        from pathlib import Path
+
+        from .views import _obtener_ruta_logo_informes
+
+        original_cwd = Path.cwd()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            try:
+                os.chdir(temp_dir)
+
+                logo_path = Path(
+                    _obtener_ruta_logo_informes()
+                )
+
+                self.assertTrue(logo_path.is_absolute())
+                self.assertTrue(logo_path.exists())
+            finally:
+                os.chdir(original_cwd)
+
+    def test_missing_report_logo_raises_clear_error(self):
+        from unittest.mock import patch
+
+        from .views import _obtener_ruta_logo_informes
+
+        with patch(
+            'Reveloper.views.finders.find',
+            return_value=None,
+        ):
+            with self.assertRaisesRegex(
+                FileNotFoundError,
+                'No se encontró el logotipo',
+            ):
+                _obtener_ruta_logo_informes()
+
+    def test_views_do_not_use_relative_static_logo_path(self):
+        from pathlib import Path
+
+        views_path = Path(__file__).resolve().parent / 'views.py'
+        source = views_path.read_text(encoding='utf-8')
+
+        self.assertNotIn(
+            'Reveloper/static/img/logos/logo-reveloper.png',
+            source,
+        )
+        self.assertEqual(
+            source.count(
+                'logo_path = _obtener_ruta_logo_informes()'
+            ),
+            7,
+        )
+
+
 class UserCreationFormTests(TestCase):
     """Pruebas del formulario personalizado de creación de usuarios."""
 
