@@ -17,12 +17,13 @@ from matplotlib.colors import ListedColormap
 from django.contrib.auth import login as auth_login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.staticfiles import finders
+from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.views.decorators.http import require_POST
-from django.db import transaction
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -68,6 +69,20 @@ def _valor_excel_sin_zona_horaria(valor):
         return valor.replace(tzinfo=None)
 
     return datetime.combine(valor, datetime.min.time())
+
+
+def _obtener_ruta_logo_informes():
+    logo_path = finders.find(
+        'img/logos/logo-reveloper.png'
+    )
+
+    if not logo_path:
+        raise FileNotFoundError(
+            'No se encontró el logotipo utilizado '
+            'en los informes PDF.'
+        )
+
+    return logo_path
 
 
 # Vista para el inicio de sesión personalizado
@@ -467,7 +482,7 @@ def generate_pdf(request):
     story = []
 
     # Título del documento
-    logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
+    logo_path = _obtener_ruta_logo_informes()
     title = "Informe de Proyectos"
     username = f"Usuario: {request.user.username}"
     subtitle = "Lista de Proyectos:"
@@ -553,7 +568,7 @@ def generate_task_pdf(request):
     story = []
 
     # Título del documento
-    logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
+    logo_path = _obtener_ruta_logo_informes()
     title = "Informe de Tareas"
     username = f"Usuario: {request.user.username}"
 
@@ -632,7 +647,7 @@ def generate_evaluation_pdf(request):
     story = []
 
     # Título del documento
-    logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
+    logo_path = _obtener_ruta_logo_informes()
     title = "Informe de Evaluaciones"
     username = f"Usuario: {request.user.username}"
 
@@ -721,7 +736,7 @@ def generate_user_pdf(request):
     story = []
 
     # Título del documento
-    logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
+    logo_path = _obtener_ruta_logo_informes()
     title = "Informe de Usuarios"
     generated_by = f"Generado por: {request.user.username}"
     subtitle = "Lista de Usuarios:"
@@ -929,7 +944,7 @@ def generar_informe_pdf_busqueda(request):
     story = []
 
     # Título del documento
-    logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
+    logo_path = _obtener_ruta_logo_informes()
     title = "Informe de Búsqueda de Proyectos"
     username = f"Usuario: {request.user.username}"
     subtitle = f"Lista de Proyectos iniciados entre {
@@ -1047,7 +1062,7 @@ def generar_informe_pdf_tareas(request):
     story = []
 
     # Título del documento
-    logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
+    logo_path = _obtener_ruta_logo_informes()
     title = "Informe de Búsqueda de Tareas"
     subtitle = "Lista de Tareas encontradas:"
 
@@ -1105,7 +1120,7 @@ def generar_informe_pdf_usuarios(request):
     story = []
 
     # Título del documento
-    logo_path = "Reveloper/static/img/logos/logo-reveloper.png"
+    logo_path = _obtener_ruta_logo_informes()
     title = "Informe de Búsqueda de Usuarios"
     subtitle = "Lista de Usuarios encontrados:"
 
