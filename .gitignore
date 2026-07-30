@@ -8,3 +8,6 @@ __pycache__/
 .env
 .env.*
 !.env.example
+
+# Archivos estáticos recopilados para producción
+staticfiles/

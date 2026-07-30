@@ -217,6 +217,29 @@ class SettingsSecurityTests(TestCase):
             with self.subTest(variable=variable):
                 self.assertIn(variable, content)
 
+    def test_static_files_configuration(self):
+        from django.conf import settings
+
+        self.assertEqual(settings.STATIC_URL, '/static/')
+        self.assertEqual(
+            settings.STATIC_ROOT,
+            settings.BASE_DIR / 'staticfiles',
+        )
+        self.assertEqual(settings.STATICFILES_DIRS, [])
+
+    def test_collected_static_directory_is_ignored(self):
+        from django.conf import settings
+
+        gitignore_path = settings.BASE_DIR / '.gitignore'
+        content = gitignore_path.read_text(encoding='utf-8')
+
+        ignored_entries = [
+            line.strip()
+            for line in content.splitlines()
+            if line.strip() and not line.lstrip().startswith('#')
+        ]
+
+        self.assertIn('staticfiles/', ignored_entries)
 
 class UserCreationFormTests(TestCase):
     """Pruebas del formulario personalizado de creación de usuarios."""

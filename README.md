@@ -81,3 +81,29 @@ python manage.py test Reveloper --settings=ProyectEspecial.test_settings
 - **Dependencias Frontend (`node_modules`)**: El directorio `node_modules` no se versiona en el repositorio Git. Las dependencias frontend se restauran o instalan localmente mediante `npm install` o `npm ci`.
 - **Respaldos de Base de Datos**: Los respaldos reales de base de datos no se almacenan en Git. La base de datos local o de desarrollo se prepara mediante las migraciones de Django (`python manage.py migrate`).
 - **Almacenamiento Seguro de Respaldos**: Los respaldos de base de datos deben guardarse siempre fuera del repositorio y protegerse adecuadamente conforme a las políticas de seguridad.
+
+## Archivos Estáticos en Producción
+
+Los archivos estáticos originales de la aplicación se mantienen en:
+
+```text
+Reveloper/static/
+```
+
+Durante el despliegue, Django recopila los archivos estáticos de la aplicación, del panel administrativo y de Jazzmin en:
+
+```text
+staticfiles/
+```
+
+El directorio `staticfiles/` se genera automáticamente y está excluido del repositorio mediante `.gitignore`.
+
+Antes de iniciar o actualizar la aplicación en producción, ejecutar:
+
+```bash
+python manage.py collectstatic --noinput
+```
+
+El servidor web o la plataforma de despliegue debe servir el contenido de `staticfiles/` mediante la ruta pública `/static/`.
+
+Durante el desarrollo local, Django sirve automáticamente los archivos estáticos cuando `DJANGO_DEBUG=True`.
