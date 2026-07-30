@@ -241,6 +241,116 @@ class SettingsSecurityTests(TestCase):
 
         self.assertIn('staticfiles/', ignored_entries)
 
+
+class MediaUploadSecurityTests(TestCase):
+    """Pruebas que documentan la ausencia de cargas de usuarios."""
+
+    def test_models_do_not_define_file_fields(self):
+        from django.db import models
+
+        from .models import (
+            Evaluacion,
+            EvaluacionConfig,
+            Proyecto,
+            TareaPorDesarrollar,
+            TareasCompletadas,
+            Usuario,
+        )
+
+        model_classes = (
+            Usuario,
+            Proyecto,
+            TareaPorDesarrollar,
+            TareasCompletadas,
+            Evaluacion,
+            EvaluacionConfig,
+        )
+
+        file_field_types = (
+            models.FileField,
+            models.FilePathField,
+        )
+
+        for model_class in model_classes:
+            with self.subTest(model=model_class.__name__):
+                file_fields = [
+                    field
+                    for field in model_class._meta.get_fields()
+                    if isinstance(field, file_field_types)
+                ]
+
+                self.assertEqual(file_fields, [])
+
+    def test_forms_do_not_define_file_upload_fields(self):
+        from django import forms
+
+        from .forms import (
+            CustomUserChangeForm,
+            CustomUserCreationForm,
+            EvaluacionForm,
+            TareaPorDesarrollarForm,
+        )
+
+        form_classes = (
+            TareaPorDesarrollarForm,
+            CustomUserCreationForm,
+            CustomUserChangeForm,
+            EvaluacionForm,
+        )
+
+        for form_class in form_classes:
+            with self.subTest(form=form_class.__name__):
+                form = form_class()
+
+                file_fields = [
+                    field
+                    for field in form.fields.values()
+                    if isinstance(field, forms.FileField)
+                ]
+
+                self.assertEqual(file_fields, [])
+
+    def test_views_do_not_process_uploaded_files(self):
+        from pathlib import Path
+
+        views_path = Path(__file__).resolve().parent / 'views.py'
+        source = views_path.read_text(encoding='utf-8')
+
+        forbidden_patterns = (
+            'request.FILES',
+            'FileSystemStorage',
+            'default_storage',
+            'UploadedFile',
+        )
+
+        for pattern in forbidden_patterns:
+            with self.subTest(pattern=pattern):
+                self.assertNotIn(pattern, source)
+
+    def test_templates_do_not_contain_file_upload_inputs(self):
+        from pathlib import Path
+
+        templates_path = (
+            Path(__file__).resolve().parent / 'templates'
+        )
+
+        forbidden_patterns = (
+            'multipart/form-data',
+            'type="file"',
+            "type='file'",
+        )
+
+        for template_path in templates_path.rglob('*.html'):
+            source = template_path.read_text(encoding='utf-8')
+
+            for pattern in forbidden_patterns:
+                with self.subTest(
+                    template=template_path.name,
+                    pattern=pattern,
+                ):
+                    self.assertNotIn(pattern, source)
+
+
 class UserCreationFormTests(TestCase):
     """Pruebas del formulario personalizado de creación de usuarios."""
 

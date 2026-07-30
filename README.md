@@ -107,3 +107,27 @@ python manage.py collectstatic --noinput
 El servidor web o la plataforma de despliegue debe servir el contenido de `staticfiles/` mediante la ruta pública `/static/`.
 
 Durante el desarrollo local, Django sirve automáticamente los archivos estáticos cuando `DJANGO_DEBUG=True`.
+
+## Archivos Subidos por Usuarios
+
+Actualmente, Reveloper no permite que los usuarios carguen archivos, imágenes, documentos ni adjuntos.
+
+El proyecto no utiliza:
+
+- campos `FileField` o `ImageField` en sus modelos;
+- formularios con `multipart/form-data`;
+- procesamiento mediante `request.FILES`;
+- almacenamiento local en directorios `media/` o `uploads/`.
+
+Los informes PDF y Excel disponibles en el sistema se generan dinámicamente en memoria y se entregan directamente como descargas. Estos archivos no se almacenan en el servidor.
+
+Por este motivo, el proyecto no define actualmente `MEDIA_ROOT` ni rutas públicas para archivos multimedia.
+
+Antes de incorporar una función de carga de archivos, se deberá realizar una revisión específica que considere:
+
+- extensiones y tipos MIME permitidos;
+- tamaño máximo de los archivos;
+- nombres y rutas de almacenamiento seguros;
+- control de acceso a los archivos;
+- protección contra archivos ejecutables o maliciosos;
+- estrategia de almacenamiento y respaldo.
