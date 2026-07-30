@@ -140,6 +140,83 @@ class SettingsSecurityTests(TestCase):
         self.assertNotIn('DJANGO_SECRET_KEY=django-insecure', content)
         self.assertNotIn(settings.SECRET_KEY, content)
         self.assertIn('DB_PASSWORD=', content)
+    def test_environment_helpers_parse_values(self):
+        from unittest.mock import patch
+
+        from ProyectEspecial import settings as project_settings
+
+        with patch.dict(
+            'os.environ',
+            {
+                'TEST_BOOLEAN_VALUE': 'yes',
+                'TEST_LIST_VALUE': (
+                    'localhost, 127.0.0.1, example.com '
+                ),
+            },
+        ):
+            self.assertTrue(
+                project_settings._env_bool(
+                    'TEST_BOOLEAN_VALUE'
+                )
+            )
+            self.assertEqual(
+                project_settings._env_list(
+                    'TEST_LIST_VALUE'
+                ),
+                [
+                    'localhost',
+                    '127.0.0.1',
+                    'example.com',
+                ],
+            )
+
+    def test_test_environment_does_not_force_https(self):
+        from django.conf import settings
+
+        self.assertEqual(settings.ENVIRONMENT, 'testing')
+        self.assertFalse(settings.IS_PRODUCTION)
+        self.assertFalse(settings.DEBUG)
+        self.assertFalse(settings.SECURE_SSL_REDIRECT)
+        self.assertFalse(settings.SESSION_COOKIE_SECURE)
+        self.assertFalse(settings.CSRF_COOKIE_SECURE)
+        self.assertEqual(settings.SECURE_HSTS_SECONDS, 0)
+
+    def test_common_security_headers_are_enabled(self):
+        from django.conf import settings
+
+        self.assertTrue(settings.SECURE_CONTENT_TYPE_NOSNIFF)
+        self.assertTrue(settings.SESSION_COOKIE_HTTPONLY)
+        self.assertEqual(
+            settings.SECURE_REFERRER_POLICY,
+            'same-origin',
+        )
+        self.assertEqual(settings.X_FRAME_OPTIONS, 'DENY')
+
+    def test_test_environment_has_valid_allowed_hosts(self):
+        from django.conf import settings
+
+        self.assertIn('testserver', settings.ALLOWED_HOSTS)
+        self.assertIn('localhost', settings.ALLOWED_HOSTS)
+
+    def test_env_example_documents_security_variables(self):
+        from django.conf import settings
+
+        env_example_path = settings.BASE_DIR / '.env.example'
+        content = env_example_path.read_text(encoding='utf-8')
+
+        expected_variables = (
+            'DJANGO_ENV=',
+            'DJANGO_CSRF_TRUSTED_ORIGINS=',
+            'DJANGO_SECURE_HSTS_SECONDS=',
+            'DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS=',
+            'DJANGO_SECURE_HSTS_PRELOAD=',
+            'DJANGO_USE_X_FORWARDED_PROTO=',
+        )
+
+        for variable in expected_variables:
+            with self.subTest(variable=variable):
+                self.assertIn(variable, content)
+
 
 class UserCreationFormTests(TestCase):
     """Pruebas del formulario personalizado de creación de usuarios."""
