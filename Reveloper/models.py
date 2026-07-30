@@ -151,7 +151,7 @@ class Evaluacion(models.Model):
         null=True,
         blank=True,
     )
-    tarea = models.ForeignKey(
+    tarea = models.OneToOneField(
         TareaPorDesarrollar,
         on_delete=models.CASCADE,
         null=True,
