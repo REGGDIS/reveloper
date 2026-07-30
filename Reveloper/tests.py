@@ -1964,3 +1964,41 @@ class UserDisplayNameTests(TestCase):
         self.assertEqual(row[3], self.developer.apellido)
         self.assertNotEqual(row[2], self.developer.first_name)
         self.assertNotEqual(row[3], self.developer.last_name)
+
+
+class MySQLStrictModeSettingsTests(TestCase):
+    """Pruebas de configuración segura de MySQL."""
+
+    def test_default_database_uses_mysql_strict_mode(self):
+        from ProyectEspecial import settings as project_settings
+
+        database = project_settings.DATABASES['default']
+        options = database.get('OPTIONS', {})
+
+        self.assertEqual(
+            database['ENGINE'],
+            'django.db.backends.mysql',
+        )
+        self.assertEqual(
+            options.get('init_command'),
+            "SET sql_mode='STRICT_TRANS_TABLES'",
+        )
+
+    def test_test_settings_continue_using_sqlite(self):
+        from ProyectEspecial import test_settings
+
+        database = test_settings.DATABASES['default']
+        database_name = str(database['NAME'])
+
+        self.assertEqual(
+            database['ENGINE'],
+            'django.db.backends.sqlite3',
+        )
+        self.assertTrue(
+            database_name == ':memory:'
+            or database_name.startswith('file:memorydb_')
+        )
+        self.assertNotIn(
+            'init_command',
+            database.get('OPTIONS', {}),
+        )
