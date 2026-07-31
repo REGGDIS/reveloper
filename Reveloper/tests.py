@@ -2284,3 +2284,201 @@ class MySQLStrictModeSettingsTests(TestCase):
             'init_command',
             database.get('OPTIONS', {}),
         )
+
+
+class TemporaryReportFileCleanupTests(TestCase):
+    """Pruebas de limpieza de recursos en informes gráficos PDF."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from datetime import date
+
+        from .models import Evaluacion, Proyecto, Usuario
+
+        cls.admin = Usuario.objects.create_superuser(
+            username='admin_temp_pdf',
+            email='admin_temp_pdf@test.local',
+            password='test-pass-123',
+            nombre='Admin',
+            apellido='Temporal',
+        )
+        cls.developer = Usuario.objects.create_user(
+            username='developer_temp_pdf',
+            email='developer_temp_pdf@test.local',
+            password='test-pass-123',
+            nombre='Developer',
+            apellido='Temporal',
+        )
+        cls.project = Proyecto.objects.create(
+            id='PROJECT-TEMP-PDF',
+            nombre='Proyecto temporal PDF',
+            descripcion='Proyecto utilizado para probar informes.',
+            fecha_inicio=date(2026, 1, 1),
+            fecha_fin=date(2026, 12, 31),
+            estado='activo',
+        )
+        cls.evaluation = Evaluacion.objects.create(
+            titulo='Evaluación temporal',
+            comentarios='Evaluación utilizada para generar el gráfico.',
+            proyecto=cls.project,
+            usuario=cls.developer,
+            calificacion=85,
+        )
+
+    def setUp(self):
+        from django.test import Client
+
+        self.client = Client()
+
+    def _login(self, user):
+        self.assertTrue(
+            self.client.login(
+                username=user.username,
+                password='test-pass-123',
+            )
+        )
+
+    def _create_temp_path(self):
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix='.png',
+        ) as temp_file:
+            temp_path = temp_file.name
+
+        self.addCleanup(
+            lambda: Path(temp_path).unlink(missing_ok=True)
+        )
+
+        return temp_path
+
+    def _patch_named_tempfile(self, temp_path):
+        from unittest.mock import patch
+
+        return patch(
+            'Reveloper.views.tempfile.NamedTemporaryFile',
+            side_effect=lambda *args, **kwargs: open(
+                temp_path,
+                'wb+',
+            ),
+        )
+
+    def test_temporary_png_is_deleted_after_successful_pdf(self):
+        from pathlib import Path
+
+        self._login(self.developer)
+        temp_path = self._create_temp_path()
+
+        with self._patch_named_tempfile(temp_path):
+            response = self.client.get(
+                reverse('generar_informe_grafico_pdf')
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['Content-Type'],
+            'application/pdf',
+        )
+        self.assertTrue(response.content.startswith(b'%PDF'))
+        self.assertFalse(Path(temp_path).exists())
+
+    def test_temporary_png_is_deleted_when_draw_image_fails(self):
+        from pathlib import Path
+        from unittest.mock import patch
+
+        self._login(self.developer)
+        temp_path = self._create_temp_path()
+
+        with self._patch_named_tempfile(temp_path), patch(
+            'Reveloper.views.canvas.Canvas.drawImage',
+            side_effect=RuntimeError('drawImage falló'),
+        ):
+            with self.assertRaisesRegex(
+                RuntimeError,
+                'drawImage falló',
+            ):
+                self.client.get(
+                    reverse('generar_informe_grafico_pdf')
+                )
+
+        self.assertFalse(Path(temp_path).exists())
+
+    def test_admin_report_deletes_each_temporary_png(self):
+        from pathlib import Path
+
+        self._login(self.admin)
+        temp_path = self._create_temp_path()
+
+        with self._patch_named_tempfile(temp_path):
+            response = self.client.get(
+                reverse('generar_informe_grafico_pdf_admin')
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['Content-Type'],
+            'application/pdf',
+        )
+        self.assertFalse(Path(temp_path).exists())
+
+    def test_graph_resources_close_when_savefig_fails(self):
+        from io import BytesIO
+        from unittest.mock import patch
+
+        from .views import generar_grafico_evaluaciones
+
+        self._login(self.developer)
+        request = type(
+            'Request',
+            (),
+            {'user': self.developer},
+        )()
+        buffer = BytesIO()
+
+        with patch(
+            'Reveloper.views.BytesIO',
+            return_value=buffer,
+        ), patch(
+            'Reveloper.views.plt.savefig',
+            side_effect=RuntimeError('savefig falló'),
+        ), patch(
+            'Reveloper.views.plt.close',
+        ) as close_mock:
+            with self.assertRaisesRegex(
+                RuntimeError,
+                'savefig falló',
+            ):
+                generar_grafico_evaluaciones(
+                    request,
+                    self.developer,
+                )
+
+        close_mock.assert_called_once()
+        self.assertTrue(buffer.closed)
+
+    def test_graph_pdf_views_do_not_use_os_remove(self):
+        import inspect
+
+        from .views import (
+            generar_informe_grafico_pdf_admin,
+            generar_informe_grafico_pdf_desarrollador,
+        )
+
+        for view in (
+            generar_informe_grafico_pdf_admin,
+            generar_informe_grafico_pdf_desarrollador,
+        ):
+            with self.subTest(view=view.__name__):
+                source = inspect.getsource(view)
+
+                self.assertNotIn(
+                    'os.remove(temp_file_path)',
+                    source,
+                )
+                self.assertIn(
+                    '_eliminar_archivo_temporal',
+                    source,
+                )
+                self.assertIn('finally:', source)
