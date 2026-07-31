@@ -2482,3 +2482,168 @@ class TemporaryReportFileCleanupTests(TestCase):
                     source,
                 )
                 self.assertIn('finally:', source)
+
+
+class PdfResponseBufferCleanupTests(TestCase):
+    """Pruebas del cierre de buffers en informes PDF."""
+
+    def test_helper_closes_buffer_after_successful_build(self):
+        from io import BytesIO
+        from unittest.mock import Mock, patch
+
+        from .views import _construir_respuesta_pdf
+
+        buffer = BytesIO()
+        document = Mock()
+
+        def build_story(story):
+            buffer.write(b'%PDF-test-content')
+
+        document.build.side_effect = build_story
+
+        with patch(
+            'Reveloper.views.io.BytesIO',
+            return_value=buffer,
+        ), patch(
+            'Reveloper.views.SimpleDocTemplate',
+            return_value=document,
+        ):
+            response = _construir_respuesta_pdf(
+                ['contenido de prueba']
+            )
+
+        document.build.assert_called_once_with(
+            ['contenido de prueba']
+        )
+        self.assertEqual(
+            response['Content-Type'],
+            'application/pdf',
+        )
+        self.assertEqual(
+            response.content,
+            b'%PDF-test-content',
+        )
+        self.assertTrue(buffer.closed)
+
+    def test_helper_closes_buffer_when_build_fails(self):
+        from io import BytesIO
+        from unittest.mock import Mock, patch
+
+        from .views import _construir_respuesta_pdf
+
+        buffer = BytesIO()
+        document = Mock()
+        document.build.side_effect = RuntimeError(
+            'build falló'
+        )
+
+        with patch(
+            'Reveloper.views.io.BytesIO',
+            return_value=buffer,
+        ), patch(
+            'Reveloper.views.SimpleDocTemplate',
+            return_value=document,
+        ):
+            with self.assertRaisesRegex(
+                RuntimeError,
+                'build falló',
+            ):
+                _construir_respuesta_pdf(
+                    ['contenido de prueba']
+                )
+
+        self.assertTrue(buffer.closed)
+
+    def test_helper_preserves_original_build_exception(self):
+        from io import BytesIO
+        from unittest.mock import Mock, patch
+
+        from .views import _construir_respuesta_pdf
+
+        original_error = ValueError(
+            'error original del documento'
+        )
+        buffer = BytesIO()
+        document = Mock()
+        document.build.side_effect = original_error
+
+        with patch(
+            'Reveloper.views.io.BytesIO',
+            return_value=buffer,
+        ), patch(
+            'Reveloper.views.SimpleDocTemplate',
+            return_value=document,
+        ):
+            with self.assertRaises(ValueError) as context:
+                _construir_respuesta_pdf([])
+
+        self.assertIs(context.exception, original_error)
+        self.assertTrue(buffer.closed)
+
+    def test_project_pdf_still_returns_valid_pdf_response(self):
+        self.client.force_login(
+            Usuario.objects.create_superuser(
+                username='admin_pdf_buffer',
+                email='admin_pdf_buffer@test.local',
+                password='test-pass-123',
+                nombre='Admin',
+                apellido='PDF',
+            )
+        )
+
+        response = self.client.get(
+            reverse('generate_pdf')
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['Content-Type'],
+            'application/pdf',
+        )
+        self.assertTrue(
+            response.content.startswith(b'%PDF')
+        )
+
+    def test_all_simple_pdf_views_use_shared_helper(self):
+        import inspect
+
+        from .views import (
+            generate_evaluation_pdf,
+            generate_pdf,
+            generate_task_pdf,
+            generate_user_pdf,
+            generar_informe_pdf_busqueda,
+            generar_informe_pdf_tareas,
+            generar_informe_pdf_usuarios,
+        )
+
+        views = (
+            generate_pdf,
+            generate_task_pdf,
+            generate_evaluation_pdf,
+            generate_user_pdf,
+            generar_informe_pdf_busqueda,
+            generar_informe_pdf_tareas,
+            generar_informe_pdf_usuarios,
+        )
+
+        for view in views:
+            with self.subTest(view=view.__name__):
+                source = inspect.getsource(view)
+
+                self.assertIn(
+                    'return _construir_respuesta_pdf(story)',
+                    source,
+                )
+                self.assertNotIn(
+                    'SimpleDocTemplate(',
+                    source,
+                )
+                self.assertNotIn(
+                    'buffer = io.BytesIO()',
+                    source,
+                )
+                self.assertNotIn(
+                    'doc.build(story)',
+                    source,
+                )

@@ -101,6 +101,24 @@ def _eliminar_archivo_temporal(
             raise
 
 
+def _construir_respuesta_pdf(story):
+    buffer = io.BytesIO()
+
+    try:
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=letter,
+        )
+        doc.build(story)
+
+        return HttpResponse(
+            buffer.getvalue(),
+            content_type='application/pdf',
+        )
+    finally:
+        buffer.close()
+
+
 # Vista para el inicio de sesión personalizado
 
 
@@ -492,8 +510,6 @@ def buscar_tareas(request):
 @login_required
 @user_passes_test(es_admin)
 def generate_pdf(request):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
     styles = getSampleStyleSheet()
     story = []
 
@@ -571,15 +587,11 @@ def generate_pdf(request):
         story.append(HRFlowable(width="100%", thickness=1,
                      color=colors.grey, spaceBefore=1, spaceAfter=24))
 
-    doc.build(story)
-    buffer.seek(0)
-    return HttpResponse(buffer, content_type='application/pdf')
+    return _construir_respuesta_pdf(story)
 
 
 @login_required
 def generate_task_pdf(request):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
     styles = getSampleStyleSheet()
     story = []
 
@@ -650,15 +662,11 @@ def generate_task_pdf(request):
                      color=colors.grey, spaceBefore=1, spaceAfter=24))
 
     # Cerrar y guardar el PDF
-    doc.build(story)
-    buffer.seek(0)
-    return HttpResponse(buffer, content_type='application/pdf')
+    return _construir_respuesta_pdf(story)
 
 
 @login_required
 def generate_evaluation_pdf(request):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
     styles = getSampleStyleSheet()
     story = []
 
@@ -738,16 +746,12 @@ def generate_evaluation_pdf(request):
                      color=colors.grey, spaceBefore=1, spaceAfter=24))
 
     # Cerrar y guardar el PDF
-    doc.build(story)
-    buffer.seek(0)
-    return HttpResponse(buffer, content_type='application/pdf')
+    return _construir_respuesta_pdf(story)
 
 
 @login_required
 @user_passes_test(es_admin)
 def generate_user_pdf(request):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
     styles = getSampleStyleSheet()
     story = []
 
@@ -808,9 +812,7 @@ def generate_user_pdf(request):
                      color=colors.grey, spaceBefore=1, spaceAfter=24))
 
     # Cerrar y guardar el PDF
-    doc.build(story)
-    buffer.seek(0)
-    return HttpResponse(buffer, content_type='application/pdf')
+    return _construir_respuesta_pdf(story)
 
 
 def generar_grafico_evaluaciones(request, desarrollador):
@@ -1027,8 +1029,6 @@ def generar_informe_pdf_busqueda(request):
     else:
         resultados = Proyecto.objects.none()
 
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
     styles = getSampleStyleSheet()
     story = []
 
@@ -1108,9 +1108,7 @@ def generar_informe_pdf_busqueda(request):
                      color=colors.grey, spaceBefore=1, spaceAfter=24))
 
     # Cerrar y guardar el PDF
-    doc.build(story)
-    buffer.seek(0)
-    return HttpResponse(buffer, content_type='application/pdf')
+    return _construir_respuesta_pdf(story)
 
 
 @login_required
@@ -1145,8 +1143,6 @@ def generar_informe_pdf_tareas(request):
     else:
         tareas = TareaPorDesarrollar.objects.none()
 
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
     styles = getSampleStyleSheet()
     story = []
 
@@ -1184,9 +1180,7 @@ def generar_informe_pdf_tareas(request):
         story.append(HRFlowable(width="100%", thickness=1,
                      color=colors.grey, spaceBefore=1, spaceAfter=24))
 
-    doc.build(story)
-    buffer.seek(0)
-    return HttpResponse(buffer, content_type='application/pdf')
+    return _construir_respuesta_pdf(story)
 
 
 @login_required
@@ -1203,8 +1197,6 @@ def generar_informe_pdf_usuarios(request):
         fecha_alta_hasta,
     )
 
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
     styles = getSampleStyleSheet()
     story = []
 
@@ -1238,9 +1230,7 @@ def generar_informe_pdf_usuarios(request):
         story.append(HRFlowable(width="100%", thickness=1,
                      color=colors.grey, spaceBefore=1, spaceAfter=24))
 
-    doc.build(story)
-    buffer.seek(0)
-    return HttpResponse(buffer, content_type='application/pdf')
+    return _construir_respuesta_pdf(story)
 
 
 @login_required
