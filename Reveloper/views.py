@@ -2,9 +2,11 @@ import base64
 import io
 import json
 import os
+import sys
 import tempfile
 from datetime import datetime
 from io import BytesIO
+from pathlib import Path
 
 import matplotlib
 
@@ -83,6 +85,20 @@ def _obtener_ruta_logo_informes():
         )
 
     return logo_path
+
+
+def _eliminar_archivo_temporal(
+    temp_file_path,
+    suprimir_errores_secundarios=False,
+):
+    if not temp_file_path:
+        return
+
+    try:
+        Path(temp_file_path).unlink(missing_ok=True)
+    except OSError:
+        if not suprimir_errores_secundarios:
+            raise
 
 
 # Vista para el inicio de sesión personalizado
@@ -799,35 +815,66 @@ def generate_user_pdf(request):
 
 def generar_grafico_evaluaciones(request, desarrollador):
     if request.user.is_superuser:
-        evaluaciones = Evaluacion.objects.filter(usuario=desarrollador)
+        evaluaciones = Evaluacion.objects.filter(
+            usuario=desarrollador
+        )
     else:
-        evaluaciones = Evaluacion.objects.filter(usuario=request.user)
+        evaluaciones = Evaluacion.objects.filter(
+            usuario=request.user
+        )
 
-    fechas = [evaluacion.fecha_evaluacion for evaluacion in evaluaciones]
-    puntajes = [evaluacion.calificacion for evaluacion in evaluaciones]
+    fechas = [
+        evaluacion.fecha_evaluacion
+        for evaluacion in evaluaciones
+    ]
+    puntajes = [
+        evaluacion.calificacion
+        for evaluacion in evaluaciones
+    ]
 
     # Definir una paleta de colores fija
-    colores = ListedColormap(["#FF6347", "#4682B4", "#8A2BE2",
-                             "#5F9EA0", "#7FFF00", "#FF7F50", "#FFD700", "#DC143C"]).colors
+    colores = ListedColormap(
+        [
+            '#FF6347',
+            '#4682B4',
+            '#8A2BE2',
+            '#5F9EA0',
+            '#7FFF00',
+            '#FF7F50',
+            '#FFD700',
+            '#DC143C',
+        ]
+    ).colors
 
-    plt.figure(figsize=(10, 5))
-    # Usar los colores necesarios
-    plt.bar(fechas, puntajes, color=colores[:len(fechas)])
-    plt.title(f'Evaluaciones de {desarrollador.username}')
-    plt.xlabel('Fecha')
-    plt.ylabel('Puntaje')
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-
+    figure = plt.figure(figsize=(10, 5))
     buffer = BytesIO()
-    plt.savefig(buffer, format='png')
-    plt.close()
-    buffer.seek(0)
-    image_png = buffer.getvalue()
-    graph = base64.b64encode(image_png).decode('utf-8')
-    buffer.close()
 
-    return graph
+    try:
+        # Usar los colores necesarios
+        plt.bar(
+            fechas,
+            puntajes,
+            color=colores[:len(fechas)],
+        )
+        plt.title(
+            f'Evaluaciones de {desarrollador.username}'
+        )
+        plt.xlabel('Fecha')
+        plt.ylabel('Puntaje')
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+
+        plt.savefig(buffer, format='png')
+        buffer.seek(0)
+
+        image_png = buffer.getvalue()
+
+        return base64.b64encode(
+            image_png
+        ).decode('utf-8')
+    finally:
+        plt.close(figure)
+        buffer.close()
 
 
 @login_required
@@ -851,21 +898,42 @@ def generar_informe_grafico_pdf_admin(request):
         graph = generar_grafico_evaluaciones(request, desarrollador)
         graph_data = base64.b64decode(graph)
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
-            temp_file.write(graph_data)
-            temp_file_path = temp_file.name
+        temp_file_path = None
 
-        p.drawString(100, height, f"Desarrollador: {desarrollador.username}")
-        height -= 20  # Ajustar espacio entre el nombre del desarrollador y el gráfico
+        try:
+            with tempfile.NamedTemporaryFile(
+                delete=False,
+                suffix='.png',
+            ) as temp_file:
+                temp_file_path = temp_file.name
+                temp_file.write(graph_data)
 
-        p.drawImage(temp_file_path, 50, height - 250, width=500, height=200)
-        height -= 270  # Ajustar espacio después del gráfico
+            p.drawString(
+                100,
+                height,
+                f'Desarrollador: {desarrollador.username}',
+            )
+            height -= 20
 
-        if height < 320:  # Añadir una nueva página si no hay suficiente espacio
-            p.showPage()
-            height = initial_height
+            p.drawImage(
+                temp_file_path,
+                50,
+                height - 250,
+                width=500,
+                height=200,
+            )
+            height -= 270
 
-        os.remove(temp_file_path)
+            if height < 320:
+                p.showPage()
+                height = initial_height
+        finally:
+            _eliminar_archivo_temporal(
+                temp_file_path,
+                suprimir_errores_secundarios=(
+                    sys.exc_info()[0] is not None
+                ),
+            )
 
     p.save()
     pdf = buffer.getvalue()
@@ -890,21 +958,42 @@ def generar_informe_grafico_pdf_desarrollador(request):
     graph = generar_grafico_evaluaciones(request, desarrollador)
     graph_data = base64.b64decode(graph)
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
-        temp_file.write(graph_data)
-        temp_file_path = temp_file.name
+    temp_file_path = None
 
-    p.drawString(100, height - 60, f"Desarrollador: {desarrollador.username}")
-    p.drawImage(temp_file_path, 50, height - 300, width=500, height=200)
+    try:
+        with tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix='.png',
+        ) as temp_file:
+            temp_file_path = temp_file.name
+            temp_file.write(graph_data)
 
-    p.showPage()
-    p.save()
+        p.drawString(
+            100,
+            height - 60,
+            f'Desarrollador: {desarrollador.username}',
+        )
+        p.drawImage(
+            temp_file_path,
+            50,
+            height - 300,
+            width=500,
+            height=200,
+        )
 
-    pdf = buffer.getvalue()
-    buffer.close()
-    response.write(pdf)
+        p.showPage()
+        p.save()
 
-    os.remove(temp_file_path)
+        pdf = buffer.getvalue()
+        buffer.close()
+        response.write(pdf)
+    finally:
+        _eliminar_archivo_temporal(
+            temp_file_path,
+            suprimir_errores_secundarios=(
+                sys.exc_info()[0] is not None
+            ),
+        )
 
     return response
 
