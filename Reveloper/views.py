@@ -886,17 +886,82 @@ def generar_informe_grafico_pdf_admin(request):
     response['Content-Disposition'] = 'attachment; filename="informe_grafico_evaluaciones.pdf"'
 
     buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
-    initial_height = height - 40  # Espacio inicial desde la parte superior
 
-    p.drawString(100, initial_height, "Informe de Evaluaciones")
-    height = initial_height - 20  # Ajustar después del título principal
+    try:
+        p = canvas.Canvas(buffer, pagesize=letter)
+        width, height = letter
+        initial_height = height - 40  # Espacio inicial desde la parte superior
 
-    # Filtra los usuarios que no son administradores
-    desarrolladores = Usuario.objects.filter(is_staff=False)
+        p.drawString(100, initial_height, "Informe de Evaluaciones")
+        height = initial_height - 20  # Ajustar después del título principal
 
-    for desarrollador in desarrolladores:
+        # Filtra los usuarios que no son administradores
+        desarrolladores = Usuario.objects.filter(is_staff=False)
+
+        for desarrollador in desarrolladores:
+            graph = generar_grafico_evaluaciones(request, desarrollador)
+            graph_data = base64.b64decode(graph)
+
+            temp_file_path = None
+
+            try:
+                with tempfile.NamedTemporaryFile(
+                    delete=False,
+                    suffix='.png',
+                ) as temp_file:
+                    temp_file_path = temp_file.name
+                    temp_file.write(graph_data)
+
+                p.drawString(
+                    100,
+                    height,
+                    f'Desarrollador: {desarrollador.username}',
+                )
+                height -= 20
+
+                p.drawImage(
+                    temp_file_path,
+                    50,
+                    height - 250,
+                    width=500,
+                    height=200,
+                )
+                height -= 270
+
+                if height < 320:
+                    p.showPage()
+                    height = initial_height
+            finally:
+                _eliminar_archivo_temporal(
+                    temp_file_path,
+                    suprimir_errores_secundarios=(
+                        sys.exc_info()[0] is not None
+                    ),
+                )
+
+        p.save()
+        pdf = buffer.getvalue()
+        response.write(pdf)
+
+        return response
+    finally:
+        buffer.close()
+
+
+@login_required
+def generar_informe_grafico_pdf_desarrollador(request):
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="informe_grafico_evaluaciones.pdf"'
+
+    buffer = BytesIO()
+
+    try:
+        p = canvas.Canvas(buffer, pagesize=letter)
+        width, height = letter
+
+        p.drawString(100, height - 40, "Informe de Evaluaciones")
+
+        desarrollador = request.user  # Asumimos que el desarrollador está autenticado
         graph = generar_grafico_evaluaciones(request, desarrollador)
         graph_data = base64.b64decode(graph)
 
@@ -912,23 +977,22 @@ def generar_informe_grafico_pdf_admin(request):
 
             p.drawString(
                 100,
-                height,
+                height - 60,
                 f'Desarrollador: {desarrollador.username}',
             )
-            height -= 20
-
             p.drawImage(
                 temp_file_path,
                 50,
-                height - 250,
+                height - 300,
                 width=500,
                 height=200,
             )
-            height -= 270
 
-            if height < 320:
-                p.showPage()
-                height = initial_height
+            p.showPage()
+            p.save()
+
+            pdf = buffer.getvalue()
+            response.write(pdf)
         finally:
             _eliminar_archivo_temporal(
                 temp_file_path,
@@ -937,67 +1001,9 @@ def generar_informe_grafico_pdf_admin(request):
                 ),
             )
 
-    p.save()
-    pdf = buffer.getvalue()
-    buffer.close()
-    response.write(pdf)
-
-    return response
-
-
-@login_required
-def generar_informe_grafico_pdf_desarrollador(request):
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="informe_grafico_evaluaciones.pdf"'
-
-    buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
-
-    p.drawString(100, height - 40, "Informe de Evaluaciones")
-
-    desarrollador = request.user  # Asumimos que el desarrollador está autenticado
-    graph = generar_grafico_evaluaciones(request, desarrollador)
-    graph_data = base64.b64decode(graph)
-
-    temp_file_path = None
-
-    try:
-        with tempfile.NamedTemporaryFile(
-            delete=False,
-            suffix='.png',
-        ) as temp_file:
-            temp_file_path = temp_file.name
-            temp_file.write(graph_data)
-
-        p.drawString(
-            100,
-            height - 60,
-            f'Desarrollador: {desarrollador.username}',
-        )
-        p.drawImage(
-            temp_file_path,
-            50,
-            height - 300,
-            width=500,
-            height=200,
-        )
-
-        p.showPage()
-        p.save()
-
-        pdf = buffer.getvalue()
-        buffer.close()
-        response.write(pdf)
+        return response
     finally:
-        _eliminar_archivo_temporal(
-            temp_file_path,
-            suprimir_errores_secundarios=(
-                sys.exc_info()[0] is not None
-            ),
-        )
-
-    return response
+        buffer.close()
 
 # INFORMES PDF BÚSQUEDA
 # Informe PDF para la búsqueda de proyectos
