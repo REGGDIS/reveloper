@@ -2248,6 +2248,167 @@ class UserDisplayNameTests(TestCase):
         self.assertNotEqual(row[3], self.developer.last_name)
 
 
+class ExcelFormulaInjectionTests(TestCase):
+    """Pruebas de neutralización de fórmulas en exportaciones Excel."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = Usuario.objects.create_superuser(
+            username='admin_excel_security',
+            email='admin.excel.security@test.local',
+            password='test-pass-123',
+            nombre='Admin',
+            apellido='Excel',
+        )
+        cls.dangerous_user = Usuario.objects.create_user(
+            username='=SUM(A1:A2)',
+            email='@correo.test',
+            password='test-pass-123',
+            nombre='+Nombre',
+            apellido='-Apellido',
+        )
+
+    def setUp(self):
+        self.client = Client()
+
+    def _login(self):
+        self.assertTrue(
+            self.client.login(
+                username=self.admin.username,
+                password='test-pass-123',
+            )
+        )
+
+    def test_excel_value_helper_neutralizes_formula_prefixes(self):
+        from .views import _valor_excel_seguro
+
+        dangerous_values = (
+            '=SUM(A1:A2)',
+            '+123',
+            '-10+20',
+            '@comando',
+        )
+
+        for value in dangerous_values:
+            with self.subTest(value=value):
+                self.assertEqual(
+                    _valor_excel_seguro(value),
+                    f"'{value}",
+                )
+
+    def test_excel_helpers_preserve_safe_values_and_types(self):
+        from datetime import date, datetime
+
+        from .views import (
+            _fila_excel_segura,
+            _valor_excel_seguro,
+        )
+
+        safe_values = (
+            'Texto normal',
+            '',
+            42,
+            3.5,
+            None,
+            date(2026, 8, 1),
+            datetime(2026, 8, 1, 12, 30),
+        )
+
+        for value in safe_values:
+            with self.subTest(value=value):
+                self.assertEqual(
+                    _valor_excel_seguro(value),
+                    value,
+                )
+
+        self.assertEqual(
+            _fila_excel_segura([
+                '=FORMULA()',
+                'Normal',
+                10,
+                None,
+            ]),
+            [
+                "'=FORMULA()",
+                'Normal',
+                10,
+                None,
+            ],
+        )
+
+    def test_user_export_stores_dangerous_values_as_text(self):
+        from io import BytesIO
+
+        import openpyxl
+
+        self._login()
+
+        response = self.client.get(
+            reverse('exportar_usuarios_excel')
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['Content-Type'],
+            (
+                'application/vnd.openxmlformats-officedocument.'
+                'spreadsheetml.sheet'
+            ),
+        )
+
+        workbook = openpyxl.load_workbook(
+            filename=BytesIO(response.content),
+            data_only=False,
+        )
+        worksheet = workbook.active
+
+        self.assertEqual(
+            [
+                worksheet.cell(row=1, column=column).value
+                for column in range(1, 7)
+            ],
+            [
+                'ID',
+                'Username',
+                'Nombre',
+                'Apellido',
+                'Email',
+                'Fecha de Registro',
+            ],
+        )
+
+        user_row = None
+
+        for row_number in range(2, worksheet.max_row + 1):
+            if (
+                worksheet.cell(row=row_number, column=1).value
+                == self.dangerous_user.pk
+            ):
+                user_row = row_number
+                break
+
+        self.assertIsNotNone(user_row)
+
+        expected_values = (
+            "'=SUM(A1:A2)",
+            "'+Nombre",
+            "'-Apellido",
+            "'@correo.test",
+        )
+
+        for column, expected_value in zip(
+            range(2, 6),
+            expected_values,
+        ):
+            with self.subTest(column=column):
+                cell = worksheet.cell(
+                    row=user_row,
+                    column=column,
+                )
+                self.assertEqual(cell.value, expected_value)
+                self.assertEqual(cell.data_type, 's')
+
+
 class MySQLStrictModeSettingsTests(TestCase):
     """Pruebas de configuración segura de MySQL."""
 
