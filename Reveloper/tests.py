@@ -2483,6 +2483,73 @@ class TemporaryReportFileCleanupTests(TestCase):
                 )
                 self.assertIn('finally:', source)
 
+    def test_graph_pdf_buffers_close_after_successful_response(self):
+        from io import BytesIO
+        from unittest.mock import patch
+
+        for url_name, user in (
+            ('generar_informe_grafico_pdf_admin', self.admin),
+            ('generar_informe_grafico_pdf', self.developer),
+        ):
+            with self.subTest(url_name=url_name):
+                self._login(user)
+
+                pdf_buffer = BytesIO()
+                graph_buffer = BytesIO()
+
+                with patch(
+                    'Reveloper.views.BytesIO',
+                    side_effect=[
+                        pdf_buffer,
+                        graph_buffer,
+                    ],
+                ):
+                    response = self.client.get(
+                        reverse(url_name)
+                    )
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(
+                    response['Content-Type'],
+                    'application/pdf',
+                )
+                self.assertTrue(
+                    response.content.startswith(b'%PDF')
+                )
+                self.assertTrue(pdf_buffer.closed)
+                self.assertTrue(graph_buffer.closed)
+
+    def test_graph_pdf_buffers_close_when_canvas_creation_fails(self):
+        from io import BytesIO
+        from unittest.mock import patch
+
+        for url_name, user in (
+            ('generar_informe_grafico_pdf_admin', self.admin),
+            ('generar_informe_grafico_pdf', self.developer),
+        ):
+            with self.subTest(url_name=url_name):
+                self._login(user)
+                pdf_buffer = BytesIO()
+
+                with patch(
+                    'Reveloper.views.BytesIO',
+                    return_value=pdf_buffer,
+                ), patch(
+                    'Reveloper.views.canvas.Canvas',
+                    side_effect=RuntimeError(
+                        'canvas falló'
+                    ),
+                ):
+                    with self.assertRaisesRegex(
+                        RuntimeError,
+                        'canvas falló',
+                    ):
+                        self.client.get(
+                            reverse(url_name)
+                        )
+
+                self.assertTrue(pdf_buffer.closed)
+
 
 class PdfResponseBufferCleanupTests(TestCase):
     """Pruebas del cierre de buffers en informes PDF."""
