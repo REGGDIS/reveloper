@@ -26,7 +26,18 @@
                 <li><a href="{% url 'tareas_por_desarrollar' %}" class="tareas-link"><i class="fas fa-list-check gold-list-check"></i> Tareas</a></li>
                 <li><a href="{% url 'evaluaciones' %}" class="evaluaciones-link"><i class="fas fa-check-circle"></i> Evaluaciones</a></li>
                 <li><a href="{% url 'password_change' %}">Cambiar Contraseña</a></li>
-                <li><a href="{% url 'logout' %}" class="logout-link">Cerrar Sesión</a></li>
+                <li>
+                    <form
+                        method="post"
+                        action="{% url 'logout' %}"
+                        class="logout-form"
+                    >
+                        {% csrf_token %}
+                        <button type="submit" class="logout-link">
+                            Cerrar Sesión
+                        </button>
+                    </form>
+                </li>
             </ul>
         </nav>
     </header>

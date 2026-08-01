@@ -2409,6 +2409,87 @@ class ExcelFormulaInjectionTests(TestCase):
                 self.assertEqual(cell.data_type, 's')
 
 
+class AuthenticationFlowCleanupTests(TestCase):
+    """Pruebas del flujo seguro de cierre de sesión."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = Usuario.objects.create_user(
+            username='authentication_flow_user',
+            email='authentication.flow@test.local',
+            password='test-pass-123',
+            nombre='Authentication',
+            apellido='Flow',
+        )
+
+    def setUp(self):
+        self.client = Client()
+        self.assertTrue(
+            self.client.login(
+                username=self.user.username,
+                password='test-pass-123',
+            )
+        )
+
+    def test_logout_get_is_rejected_and_preserves_session(self):
+        response = self.client.get(reverse('logout'))
+
+        self.assertEqual(response.status_code, 405)
+        self.assertIn(
+            '_auth_user_id',
+            self.client.session,
+        )
+
+        home_response = self.client.get(reverse('home'))
+
+        self.assertEqual(home_response.status_code, 200)
+
+    def test_logout_post_closes_session(self):
+        response = self.client.post(reverse('logout'))
+
+        self.assertRedirects(
+            response,
+            reverse('login'),
+            fetch_redirect_response=False,
+        )
+        self.assertNotIn(
+            '_auth_user_id',
+            self.client.session,
+        )
+
+    def test_base_template_uses_post_logout_form_with_csrf(self):
+        response = self.client.get(reverse('home'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            f'action="{reverse("logout")}"',
+            html=False,
+        )
+        self.assertContains(
+            response,
+            'method="post"',
+            html=False,
+        )
+        self.assertContains(
+            response,
+            'name="csrfmiddlewaretoken"',
+            html=False,
+        )
+        self.assertNotContains(
+            response,
+            f'href="{reverse("logout")}"',
+            html=False,
+        )
+
+    def test_obsolete_custom_login_view_is_removed(self):
+        from . import views
+
+        self.assertFalse(
+            hasattr(views, 'custom_login')
+        )
+
+
 class MySQLStrictModeSettingsTests(TestCase):
     """Pruebas de configuración segura de MySQL."""
 

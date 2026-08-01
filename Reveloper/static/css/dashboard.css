@@ -112,6 +112,19 @@ body {
             animation: pulse 0.5s infinite;
           }
         }
+
+        form.logout-form {
+          margin: 0;
+        }
+
+        button.logout-link {
+          padding: 0;
+          border: 0;
+          background: none;
+          color: yellow;
+          font: inherit;
+          cursor: pointer;
+        }
       }
     }
   }
@@ -437,6 +450,19 @@ body {
               color: #ff7676;
               animation: pulse 0.5s infinite;
             }
+          }
+
+          form.logout-form {
+            margin: 0;
+          }
+
+          button.logout-link {
+            padding: 0;
+            border: 0;
+            background: none;
+            color: yellow;
+            font: inherit;
+            cursor: pointer;
           }
         }
       }
