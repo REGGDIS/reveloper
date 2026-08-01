@@ -87,6 +87,22 @@ def _obtener_ruta_logo_informes():
     return logo_path
 
 
+def _valor_excel_seguro(valor):
+    if isinstance(valor, str) and valor.startswith(
+        ('=', '+', '-', '@')
+    ):
+        return f"'{valor}"
+
+    return valor
+
+
+def _fila_excel_segura(valores):
+    return [
+        _valor_excel_seguro(valor)
+        for valor in valores
+    ]
+
+
 def _eliminar_archivo_temporal(
     temp_file_path,
     suprimir_errores_secundarios=False,
@@ -1274,8 +1290,15 @@ def exportar_tareas_excel(request):
         fecha_vencimiento = _valor_excel_sin_zona_horaria(
             tarea.fecha_vencimiento
         )
-        ws.append([tarea.id, tarea.titulo, tarea.descripcion, f"{tarea.usuario.nombre} {tarea.usuario.apellido}",
-                   fecha_creacion, fecha_vencimiento, tarea.estado])
+        ws.append(_fila_excel_segura([
+            tarea.id,
+            tarea.titulo,
+            tarea.descripcion,
+            f'{tarea.usuario.nombre} {tarea.usuario.apellido}',
+            fecha_creacion,
+            fecha_vencimiento,
+            tarea.estado,
+        ]))
 
     # Preparar respuesta HTTP
     response = HttpResponse(
@@ -1320,8 +1343,14 @@ def exportar_proyectos_excel(request):
         fecha_fin = _valor_excel_sin_zona_horaria(
             proyecto.fecha_fin
         )
-        ws.append([proyecto.id, proyecto.nombre, proyecto.descripcion,
-                  fecha_inicio, fecha_fin, proyecto.estado])
+        ws.append(_fila_excel_segura([
+            proyecto.id,
+            proyecto.nombre,
+            proyecto.descripcion,
+            fecha_inicio,
+            fecha_fin,
+            proyecto.estado,
+        ]))
 
     # Preparar respuesta HTTP
     response = HttpResponse(
@@ -1361,14 +1390,14 @@ def exportar_usuarios_excel(request):
             usuario.fecha_creacion
         )
 
-        ws.append([
+        ws.append(_fila_excel_segura([
             usuario.id,
             usuario.username,
             usuario.nombre,
             usuario.apellido,
             usuario.email,
             fecha_registro,
-        ])
+        ]))
 
     # Preparar respuesta HTTP
     response = HttpResponse(
@@ -1404,11 +1433,33 @@ def exportar_todos_usuarios_excel(request):
                     tarea.fecha_creacion, 'tzinfo') else tarea.fecha_creacion
                 fecha_vencimiento = tarea.fecha_vencimiento.replace(tzinfo=None) if tarea.fecha_vencimiento and hasattr(
                     tarea.fecha_vencimiento, 'tzinfo') else tarea.fecha_vencimiento
-                ws.append([usuario.id, usuario.username, usuario.nombre, usuario.apellido, usuario.email,
-                          fecha_registro, tarea.id, tarea.titulo, tarea.estado, fecha_creacion, fecha_vencimiento])
+                ws.append(_fila_excel_segura([
+                    usuario.id,
+                    usuario.username,
+                    usuario.nombre,
+                    usuario.apellido,
+                    usuario.email,
+                    fecha_registro,
+                    tarea.id,
+                    tarea.titulo,
+                    tarea.estado,
+                    fecha_creacion,
+                    fecha_vencimiento,
+                ]))
         else:
-            ws.append([usuario.id, usuario.username, usuario.nombre,
-                      usuario.apellido, usuario.email, fecha_registro, '', '', '', '', ''])
+            ws.append(_fila_excel_segura([
+                usuario.id,
+                usuario.username,
+                usuario.nombre,
+                usuario.apellido,
+                usuario.email,
+                fecha_registro,
+                '',
+                '',
+                '',
+                '',
+                '',
+            ]))
 
     # Preparar respuesta HTTP
     response = HttpResponse(
@@ -1441,8 +1492,14 @@ def exportar_todos_proyectos_excel(request):
         fecha_fin = _valor_excel_sin_zona_horaria(
             proyecto.fecha_fin
         )
-        ws.append([proyecto.id, proyecto.nombre, proyecto.descripcion,
-                  fecha_inicio, fecha_fin, proyecto.estado])
+        ws.append(_fila_excel_segura([
+            proyecto.id,
+            proyecto.nombre,
+            proyecto.descripcion,
+            fecha_inicio,
+            fecha_fin,
+            proyecto.estado,
+        ]))
 
     # Preparar respuesta HTTP
     response = HttpResponse(
@@ -1477,8 +1534,16 @@ def exportar_todas_tareas_excel(request):
         fecha_vencimiento = _valor_excel_sin_zona_horaria(
             tarea.fecha_vencimiento
         )
-        ws.append([tarea.id, tarea.titulo, tarea.descripcion, tarea.estado, fecha_creacion, fecha_vencimiento,
-                  tarea.proyecto.nombre, f"{tarea.usuario.nombre} {tarea.usuario.apellido}"])
+        ws.append(_fila_excel_segura([
+            tarea.id,
+            tarea.titulo,
+            tarea.descripcion,
+            tarea.estado,
+            fecha_creacion,
+            fecha_vencimiento,
+            tarea.proyecto.nombre,
+            f'{tarea.usuario.nombre} {tarea.usuario.apellido}',
+        ]))
 
     # Preparar respuesta HTTP
     response = HttpResponse(
@@ -1511,8 +1576,19 @@ def exportar_todas_evaluaciones_excel(request):
             evaluacion.fecha_evaluacion
         )
         tarea_titulo = evaluacion.tarea.titulo if evaluacion.tarea else 'Sin Tarea Asignada'
-        ws.append([evaluacion.id, evaluacion.titulo, evaluacion.calificacion, tarea_titulo, f"{evaluacion.usuario.nombre} {
-                  evaluacion.usuario.apellido}", evaluacion.comentarios, fecha_evaluacion, evaluacion.proyecto.nombre])
+        ws.append(_fila_excel_segura([
+            evaluacion.id,
+            evaluacion.titulo,
+            evaluacion.calificacion,
+            tarea_titulo,
+            (
+                f'{evaluacion.usuario.nombre} '
+                f'{evaluacion.usuario.apellido}'
+            ),
+            evaluacion.comentarios,
+            fecha_evaluacion,
+            evaluacion.proyecto.nombre,
+        ]))
 
     # Preparar respuesta HTTP
     response = HttpResponse(
