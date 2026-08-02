@@ -280,7 +280,10 @@ def revisar_tareas(request):
         .select_related('proyecto', 'usuario')
     )
 
-    evaluacion_config = EvaluacionConfig.objects.first()
+    try:
+        evaluacion_config = EvaluacionConfig.objects.get()
+    except EvaluacionConfig.DoesNotExist:
+        evaluacion_config = None
     nota_maxima = (
         evaluacion_config.nota_maxima
         if evaluacion_config
