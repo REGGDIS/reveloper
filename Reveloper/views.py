@@ -21,6 +21,7 @@ from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.staticfiles import finders
 from django.db import transaction
+from django.db.models import Count, Prefetch, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -171,23 +172,48 @@ def home(request):
 @login_required
 @user_passes_test(es_admin)
 def dashboard(request):
-    usuarios = Usuario.objects.all()
-    labels = [usuario.username for usuario in usuarios]
-    data = [usuario.tareas_completadas for usuario in usuarios]
+    usuarios = list(
+        Usuario.objects.annotate(
+            tareas_pendientes_count=Count(
+                'tareapordesarrollar',
+                filter=Q(
+                    tareapordesarrollar__estado='pendiente',
+                ),
+            )
+        )
+    )
 
-    # Datos para el gráfico de distribución de tareas pendientes por usuario
-    tareas_usuario_data = {usuario.username: {
-        'pendiente': TareaPorDesarrollar.objects.filter(usuario=usuario, estado='pendiente').count()
-    } for usuario in usuarios}
+    labels = [
+        usuario.username
+        for usuario in usuarios
+    ]
+    data = [
+        usuario.tareas_completadas
+        for usuario in usuarios
+    ]
+
+    tareas_usuario_data = {
+        usuario.username: {
+            'pendiente': usuario.tareas_pendientes_count,
+        }
+        for usuario in usuarios
+    }
 
     context = {
         'usuarios': usuarios,
         'labels_json': json.dumps(labels),
         'data_json': json.dumps(data),
         'tareas_usuario_labels_json': json.dumps(labels),
-        'tareas_usuario_data_json': json.dumps(tareas_usuario_data)
+        'tareas_usuario_data_json': json.dumps(
+            tareas_usuario_data
+        ),
     }
-    return render(request, 'admin/dashboard.html', context)
+
+    return render(
+        request,
+        'admin/dashboard.html',
+        context,
+    )
 
 
 # Vista para la página de usuarios, accesible solo para usuarios autenticados
@@ -196,15 +222,23 @@ def dashboard(request):
 @login_required
 @user_passes_test(es_admin)
 def usuarios(request):
-    usuarios = Usuario.objects.all()
-    for usuario in usuarios:
-        usuario.tareas_asignadas = TareaPorDesarrollar.objects.filter(
-            usuario=usuario)
+    usuarios = Usuario.objects.prefetch_related(
+        Prefetch(
+            'tareapordesarrollar_set',
+            queryset=TareaPorDesarrollar.objects.all(),
+            to_attr='tareas_asignadas',
+        )
+    )
 
     context = {
-        'usuarios': usuarios
+        'usuarios': usuarios,
     }
-    return render(request, 'usuarios.html', context)
+
+    return render(
+        request,
+        'usuarios.html',
+        context,
+    )
 
 
 # Vista para la página de proyectos, accesible solo para usuarios autenticados
@@ -212,17 +246,26 @@ def usuarios(request):
 
 @login_required
 def proyectos(request):
-    proyectos = Proyecto.objects.all()
-    for proyecto in proyectos:
-        proyecto.tareas = TareaPorDesarrollar.objects.select_related('usuario').filter(
-            proyecto=proyecto
+    proyectos = Proyecto.objects.prefetch_related(
+        Prefetch(
+            'tareapordesarrollar_set',
+            queryset=(
+                TareaPorDesarrollar.objects
+                .select_related('usuario')
+            ),
+            to_attr='tareas',
         )
+    )
 
     context = {
-        'proyectos': proyectos
+        'proyectos': proyectos,
     }
 
-    return render(request, 'proyectos.html', context)
+    return render(
+        request,
+        'proyectos.html',
+        context,
+    )
 
 # Vista para la página de evaluaciones, accesible solo para usuarios autenticados
 
@@ -458,7 +501,16 @@ def buscar_proyectos(request):
 
     if hay_criterios:
         resultados = _filtrar_proyectos(
-            Proyecto.objects.all(),
+            Proyecto.objects.prefetch_related(
+                Prefetch(
+                    'tareapordesarrollar_set',
+                    queryset=(
+                        TareaPorDesarrollar.objects
+                        .select_related('usuario')
+                    ),
+                    to_attr='tareas',
+                )
+            ),
             fecha_inicio_desde,
             fecha_inicio_hasta,
             proyecto_id,
@@ -466,12 +518,6 @@ def buscar_proyectos(request):
         )
     else:
         resultados = Proyecto.objects.none()
-
-    for proyecto in resultados:
-        proyecto.tareas = TareaPorDesarrollar.objects.filter(
-            proyecto=proyecto
-        )
-
 
     context = {
         'resultados': resultados,
@@ -567,7 +613,16 @@ def generate_pdf(request):
     story.append(Spacer(1, 12))
 
     # Obtener datos del contexto
-    projects = Proyecto.objects.all()
+    projects = Proyecto.objects.prefetch_related(
+        Prefetch(
+            'tareapordesarrollar_set',
+            queryset=(
+                TareaPorDesarrollar.objects
+                .select_related('usuario')
+            ),
+            to_attr='tareas',
+        )
+    )
     for project in projects:
         story.append(_parrafo_pdf_seguro(f"ID: {project.id}, Nombre: {
                      project.nombre}", styleID))
@@ -583,9 +638,7 @@ def generate_pdf(request):
         story.append(Spacer(1, 10))
 
         # Añadir tareas al PDF
-        tareas = TareaPorDesarrollar.objects.filter(
-            proyecto=project).select_related('usuario')
-        for tarea in tareas:
+        for tarea in project.tareas:
             story.append(_parrafo_pdf_seguro(f"Tarea: {tarea.titulo}", styleTaskTitle))
             story.append(_parrafo_pdf_seguro(f"Asignado a: {tarea.usuario.nombre} {
                          tarea.usuario.apellido}", styleAssignedTo))
@@ -797,7 +850,13 @@ def generate_user_pdf(request):
     story.append(_parrafo_pdf_seguro(subtitle, styleN))
     story.append(Spacer(1, 12))
 
-    usuarios = Usuario.objects.all()
+    usuarios = Usuario.objects.prefetch_related(
+        Prefetch(
+            'tareapordesarrollar_set',
+            queryset=TareaPorDesarrollar.objects.all(),
+            to_attr='tareas_asignadas',
+        )
+    )
     for usuario in usuarios:
         story.append(_parrafo_pdf_seguro(f"Nombre: {usuario.nombre} {
                      usuario.apellido}", styleUserName))
@@ -807,7 +866,7 @@ def generate_user_pdf(request):
                      usuario.date_joined}", styleN))
 
         # Añadir tareas asignadas
-        tareas_asignadas = TareaPorDesarrollar.objects.filter(usuario=usuario)
+        tareas_asignadas = usuario.tareas_asignadas
         if tareas_asignadas:
             story.append(Spacer(1, 10))
             story.append(_parrafo_pdf_seguro("Tareas Asignadas:", styleUserName))
@@ -828,15 +887,20 @@ def generate_user_pdf(request):
     return _construir_respuesta_pdf(story)
 
 
-def generar_grafico_evaluaciones(request, desarrollador):
-    if request.user.is_superuser:
-        evaluaciones = Evaluacion.objects.filter(
-            usuario=desarrollador
-        )
-    else:
-        evaluaciones = Evaluacion.objects.filter(
-            usuario=request.user
-        )
+def generar_grafico_evaluaciones(
+    request,
+    desarrollador,
+    evaluaciones=None,
+):
+    if evaluaciones is None:
+        if request.user.is_superuser:
+            evaluaciones = Evaluacion.objects.filter(
+                usuario=desarrollador
+            )
+        else:
+            evaluaciones = Evaluacion.objects.filter(
+                usuario=request.user
+            )
 
     fechas = [
         evaluacion.fecha_evaluacion
@@ -909,10 +973,26 @@ def generar_informe_grafico_pdf_admin(request):
         height = initial_height - 20  # Ajustar después del título principal
 
         # Filtra los usuarios que no son administradores
-        desarrolladores = Usuario.objects.filter(is_staff=False)
+        desarrolladores = Usuario.objects.filter(
+            is_staff=False
+        ).prefetch_related(
+            Prefetch(
+                'evaluacion_set',
+                queryset=Evaluacion.objects.only(
+                    'usuario_id',
+                    'fecha_evaluacion',
+                    'calificacion',
+                ),
+                to_attr='evaluaciones_para_grafico',
+            )
+        )
 
         for desarrollador in desarrolladores:
-            graph = generar_grafico_evaluaciones(request, desarrollador)
+            graph = generar_grafico_evaluaciones(
+                request,
+                desarrollador,
+                desarrollador.evaluaciones_para_grafico,
+            )
             graph_data = base64.b64decode(graph)
 
             temp_file_path = None
@@ -1039,7 +1119,16 @@ def generar_informe_pdf_busqueda(request):
 
     if hay_criterios:
         resultados = _filtrar_proyectos(
-            Proyecto.objects.all(),
+            Proyecto.objects.prefetch_related(
+                Prefetch(
+                    'tareapordesarrollar_set',
+                    queryset=(
+                        TareaPorDesarrollar.objects
+                        .select_related('usuario')
+                    ),
+                    to_attr='tareas',
+                )
+            ),
             fecha_inicio_desde,
             fecha_inicio_hasta,
             proyecto_id,
@@ -1108,10 +1197,7 @@ def generar_informe_pdf_busqueda(request):
         story.append(Spacer(1, 10))
 
         # Añadir tareas al PDF
-        tareas = TareaPorDesarrollar.objects.select_related('usuario').filter(
-            proyecto=proyecto
-        )
-        for tarea in tareas:
+        for tarea in proyecto.tareas:
             story.append(_parrafo_pdf_seguro(f"Tarea: {tarea.titulo}", styleTaskTitle))
             story.append(_parrafo_pdf_seguro(
                 f"Asignado a: {tarea.usuario.nombre} {tarea.usuario.apellido}", styleAssignedTo))
@@ -1407,7 +1493,13 @@ def exportar_usuarios_excel(request):
 @login_required
 @user_passes_test(es_admin)
 def exportar_todos_usuarios_excel(request):
-    usuarios = Usuario.objects.all()
+    usuarios = Usuario.objects.prefetch_related(
+        Prefetch(
+            'tareapordesarrollar_set',
+            queryset=TareaPorDesarrollar.objects.all(),
+            to_attr='tareas_asignadas',
+        )
+    )
 
     # Crear el archivo Excel
     wb = openpyxl.Workbook()
@@ -1422,7 +1514,7 @@ def exportar_todos_usuarios_excel(request):
     for usuario in usuarios:
         fecha_registro = usuario.date_joined.replace(tzinfo=None) if usuario.date_joined and hasattr(
             usuario.date_joined, 'tzinfo') else usuario.date_joined
-        tareas_asignadas = TareaPorDesarrollar.objects.filter(usuario=usuario)
+        tareas_asignadas = usuario.tareas_asignadas
 
         if tareas_asignadas:
             for tarea in tareas_asignadas:
