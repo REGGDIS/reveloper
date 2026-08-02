@@ -3029,6 +3029,261 @@ class PdfSpecialCharacterHandlingTests(TestCase):
         )
 
 
+class NPlusOneQueryOptimizationTests(TestCase):
+    """Pruebas de consultas constantes en vistas con relaciones."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from datetime import date
+
+        from .models import Proyecto, TareaPorDesarrollar
+
+        cls.admin = Usuario.objects.create_superuser(
+            username='admin_query_tests',
+            email='admin.query.tests@test.local',
+            password='test-pass-123',
+            nombre='Admin',
+            apellido='Consultas',
+        )
+
+        cls.developer = Usuario.objects.create_user(
+            username='developer_query_tests',
+            email='developer.query.tests@test.local',
+            password='test-pass-123',
+            nombre='Developer',
+            apellido='Consultas',
+        )
+
+        cls.project = Proyecto.objects.create(
+            id='PROJECT-QUERY-1',
+            nombre='Proyecto de consultas',
+            descripcion='Proyecto inicial',
+            fecha_inicio=date(2026, 8, 1),
+            fecha_fin=date(2026, 8, 31),
+            estado='activo',
+        )
+
+        TareaPorDesarrollar.objects.create(
+            id='TASK-QUERY-1',
+            usuario=cls.developer,
+            proyecto=cls.project,
+            titulo='Tarea inicial',
+            descripcion='Tarea para medir consultas',
+            fecha_vencimiento=date(2026, 8, 15),
+            estado='pendiente',
+        )
+
+    def setUp(self):
+        self.client.force_login(self.admin)
+
+    def _capture_request_queries(
+        self,
+        url_name,
+        parameters=None,
+    ):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        with CaptureQueriesContext(connection) as context:
+            response = self.client.get(
+                reverse(url_name),
+                parameters or {},
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+        return len(context)
+
+    def _create_additional_data(self):
+        from datetime import date
+
+        from .models import Proyecto, TareaPorDesarrollar
+
+        for index in range(2, 7):
+            developer = Usuario.objects.create_user(
+                username=f'developer_query_{index}',
+                email=f'developer.query.{index}@test.local',
+                password='test-pass-123',
+                nombre=f'Developer {index}',
+                apellido='Consultas',
+            )
+
+            project = Proyecto.objects.create(
+                id=f'PROJECT-QUERY-{index}',
+                nombre=f'Proyecto {index}',
+                descripcion='Proyecto adicional',
+                fecha_inicio=date(2026, 8, 1),
+                fecha_fin=date(2026, 8, 31),
+                estado='activo',
+            )
+
+            TareaPorDesarrollar.objects.create(
+                id=f'TASK-QUERY-{index}',
+                usuario=developer,
+                proyecto=project,
+                titulo=f'Tarea {index}',
+                descripcion='Tarea adicional',
+                fecha_vencimiento=date(2026, 8, 15),
+                estado='pendiente',
+            )
+
+    def test_dashboard_query_count_does_not_grow_with_users(self):
+        initial_queries = self._capture_request_queries(
+            'dashboard'
+        )
+
+        self._create_additional_data()
+
+        expanded_queries = self._capture_request_queries(
+            'dashboard'
+        )
+
+        self.assertEqual(
+            expanded_queries,
+            initial_queries,
+        )
+
+    def test_users_page_query_count_does_not_grow_with_users(self):
+        initial_queries = self._capture_request_queries(
+            'usuarios'
+        )
+
+        self._create_additional_data()
+
+        expanded_queries = self._capture_request_queries(
+            'usuarios'
+        )
+
+        self.assertEqual(
+            expanded_queries,
+            initial_queries,
+        )
+
+    def test_projects_page_query_count_does_not_grow_with_projects(self):
+        initial_queries = self._capture_request_queries(
+            'proyectos'
+        )
+
+        self._create_additional_data()
+
+        expanded_queries = self._capture_request_queries(
+            'proyectos'
+        )
+
+        self.assertEqual(
+            expanded_queries,
+            initial_queries,
+        )
+
+    def test_project_search_query_count_does_not_grow(self):
+        parameters = {
+            'fecha_inicio_desde': '2026-08-01',
+        }
+
+        initial_queries = self._capture_request_queries(
+            'buscar_proyectos',
+            parameters,
+        )
+
+        self._create_additional_data()
+
+        expanded_queries = self._capture_request_queries(
+            'buscar_proyectos',
+            parameters,
+        )
+
+        self.assertEqual(
+            expanded_queries,
+            initial_queries,
+        )
+
+    def test_project_pdf_query_count_does_not_grow(self):
+        initial_queries = self._capture_request_queries(
+            'generate_pdf'
+        )
+
+        self._create_additional_data()
+
+        expanded_queries = self._capture_request_queries(
+            'generate_pdf'
+        )
+
+        self.assertEqual(
+            expanded_queries,
+            initial_queries,
+        )
+
+    def test_user_pdf_query_count_does_not_grow(self):
+        initial_queries = self._capture_request_queries(
+            'generate_user_pdf'
+        )
+
+        self._create_additional_data()
+
+        expanded_queries = self._capture_request_queries(
+            'generate_user_pdf'
+        )
+
+        self.assertEqual(
+            expanded_queries,
+            initial_queries,
+        )
+
+    def test_filtered_project_pdf_query_count_does_not_grow(self):
+        parameters = {
+            'fecha_inicio_desde': '2026-08-01',
+        }
+
+        initial_queries = self._capture_request_queries(
+            'generar_informe_pdf_busqueda',
+            parameters,
+        )
+
+        self._create_additional_data()
+
+        expanded_queries = self._capture_request_queries(
+            'generar_informe_pdf_busqueda',
+            parameters,
+        )
+
+        self.assertEqual(
+            expanded_queries,
+            initial_queries,
+        )
+
+    def test_global_users_excel_query_count_does_not_grow(self):
+        initial_queries = self._capture_request_queries(
+            'exportar_todos_usuarios_excel'
+        )
+
+        self._create_additional_data()
+
+        expanded_queries = self._capture_request_queries(
+            'exportar_todos_usuarios_excel'
+        )
+
+        self.assertEqual(
+            expanded_queries,
+            initial_queries,
+        )
+
+    def test_admin_graph_pdf_query_count_does_not_grow(self):
+        initial_queries = self._capture_request_queries(
+            'generar_informe_grafico_pdf_admin'
+        )
+
+        self._create_additional_data()
+
+        expanded_queries = self._capture_request_queries(
+            'generar_informe_grafico_pdf_admin'
+        )
+
+        self.assertEqual(
+            expanded_queries,
+            initial_queries,
+        )
+
+
 class PdfResponseBufferCleanupTests(TestCase):
     """Pruebas del cierre de buffers en informes PDF."""
 
