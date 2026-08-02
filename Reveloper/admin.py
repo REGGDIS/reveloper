@@ -105,7 +105,15 @@ class CustomUserAdmin(BaseUserAdmin):
 admin.site.register(Proyecto)
 admin.site.register(TareaPorDesarrollar)
 admin.site.register(Evaluacion)
-admin.site.register(EvaluacionConfig)
+
+
+@admin.register(EvaluacionConfig)
+class EvaluacionConfigAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        if EvaluacionConfig.objects.exists():
+            return False
+
+        return super().has_add_permission(request)
 
 
 @admin.register(TareasCompletadas)

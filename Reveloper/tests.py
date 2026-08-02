@@ -2490,6 +2490,131 @@ class AuthenticationFlowCleanupTests(TestCase):
         )
 
 
+class EvaluationConfigSingletonTests(TestCase):
+    """Pruebas de configuración única para evaluaciones."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = Usuario.objects.create_superuser(
+            username='admin_evaluation_config',
+            email='admin.evaluation.config@test.local',
+            password='test-pass-123',
+            nombre='Admin',
+            apellido='Configuración',
+        )
+
+    def setUp(self):
+        self.client = Client()
+
+    def _create_config(self, **overrides):
+        from .models import EvaluacionConfig
+
+        values = {
+            'tiempo_entrega': 25,
+            'complejidad_tarea': 25,
+            'cumplimiento_requerimientos': 25,
+            'calidad_codigo': 25,
+            'nota_maxima': 100,
+        }
+        values.update(overrides)
+
+        return EvaluacionConfig.objects.create(**values)
+
+    def test_first_configuration_can_be_created_and_updated(self):
+        from .models import EvaluacionConfig
+
+        config = self._create_config()
+
+        config.nota_maxima = 80
+        config.save()
+        config.refresh_from_db()
+
+        self.assertEqual(config.nota_maxima, 80)
+        self.assertEqual(
+            EvaluacionConfig.objects.count(),
+            1,
+        )
+
+    def test_second_configuration_is_rejected(self):
+        from .models import EvaluacionConfig
+
+        self._create_config()
+
+        with self.assertRaisesRegex(
+            ValueError,
+            'Solo puede existir una configuración de evaluación.',
+        ):
+            self._create_config(nota_maxima=80)
+
+        self.assertEqual(
+            EvaluacionConfig.objects.count(),
+            1,
+        )
+
+    def test_admin_disables_add_when_configuration_exists(self):
+        from django.contrib import admin
+        from django.test import RequestFactory
+
+        from .models import EvaluacionConfig
+
+        request = RequestFactory().get(
+            '/admin/Reveloper/evaluacionconfig/'
+        )
+        request.user = self.admin
+
+        model_admin = admin.site._registry[
+            EvaluacionConfig
+        ]
+
+        self.assertTrue(
+            model_admin.has_add_permission(request)
+        )
+
+        self._create_config()
+
+        self.assertFalse(
+            model_admin.has_add_permission(request)
+        )
+
+    def test_review_view_uses_default_without_configuration(self):
+        self.assertTrue(
+            self.client.login(
+                username=self.admin.username,
+                password='test-pass-123',
+            )
+        )
+
+        response = self.client.get(
+            reverse('revisar_tareas')
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context['nota_maxima'],
+            100,
+        )
+
+    def test_review_view_uses_existing_configuration(self):
+        self._create_config(nota_maxima=80)
+
+        self.assertTrue(
+            self.client.login(
+                username=self.admin.username,
+                password='test-pass-123',
+            )
+        )
+
+        response = self.client.get(
+            reverse('revisar_tareas')
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context['nota_maxima'],
+            80,
+        )
+
+
 class MySQLStrictModeSettingsTests(TestCase):
     """Pruebas de configuración segura de MySQL."""
 

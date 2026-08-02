@@ -189,6 +189,14 @@ class EvaluacionConfig(models.Model):
     )
     nota_maxima = models.IntegerField(default=100)
 
+    def save(self, *args, **kwargs):
+        if EvaluacionConfig.objects.exclude(pk=self.pk).exists():
+            raise ValueError(
+                'Solo puede existir una configuración de evaluación.'
+            )
+
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return 'Configuración de Evaluación'
 
