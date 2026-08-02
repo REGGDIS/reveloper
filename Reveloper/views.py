@@ -7,6 +7,7 @@ import tempfile
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 import matplotlib
 
@@ -23,7 +24,6 @@ from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.utils.html import strip_tags
 from django.views.decorators.http import require_POST
 
 from reportlab.lib import colors
@@ -84,6 +84,13 @@ def _obtener_ruta_logo_informes():
         )
 
     return logo_path
+
+
+def _parrafo_pdf_seguro(valor, estilo):
+    return Paragraph(
+        escape(str(valor)),
+        estilo,
+    )
 
 
 def _valor_excel_seguro(valor):
@@ -552,40 +559,40 @@ def generate_pdf(request):
     story.append(Paragraph(
         f'<img src="{logo_path}" width="100" height="50" valign="middle"/>', styleN))
     story.append(Spacer(1, 20))
-    story.append(Paragraph(title, styleH))
+    story.append(_parrafo_pdf_seguro(title, styleH))
     story.append(Spacer(1, 12))
-    story.append(Paragraph(username, styleUsername))
+    story.append(_parrafo_pdf_seguro(username, styleUsername))
     story.append(Spacer(1, 12))
-    story.append(Paragraph(subtitle, styleN))
+    story.append(_parrafo_pdf_seguro(subtitle, styleN))
     story.append(Spacer(1, 12))
 
     # Obtener datos del contexto
     projects = Proyecto.objects.all()
     for project in projects:
-        story.append(Paragraph(f"ID: {project.id}, Nombre: {
+        story.append(_parrafo_pdf_seguro(f"ID: {project.id}, Nombre: {
                      project.nombre}", styleID))
         story.append(Spacer(1, 10))
 
         # Ajustar texto de la descripción
-        story.append(Paragraph(f"Descripción: {project.descripcion}", styleN))
-        story.append(Paragraph(f"Fecha de Inicio: {
+        story.append(_parrafo_pdf_seguro(f"Descripción: {project.descripcion}", styleN))
+        story.append(_parrafo_pdf_seguro(f"Fecha de Inicio: {
                      project.fecha_inicio}", styleN))
-        story.append(Paragraph(f"Fecha de Fin: {project.fecha_fin}", styleN))
+        story.append(_parrafo_pdf_seguro(f"Fecha de Fin: {project.fecha_fin}", styleN))
         story.append(
-            Paragraph(f"Estado: {project.get_estado_display()}", styleN))
+            _parrafo_pdf_seguro(f"Estado: {project.get_estado_display()}", styleN))
         story.append(Spacer(1, 10))
 
         # Añadir tareas al PDF
         tareas = TareaPorDesarrollar.objects.filter(
             proyecto=project).select_related('usuario')
         for tarea in tareas:
-            story.append(Paragraph(f"Tarea: {tarea.titulo}", styleTaskTitle))
-            story.append(Paragraph(f"Asignado a: {tarea.usuario.nombre} {
+            story.append(_parrafo_pdf_seguro(f"Tarea: {tarea.titulo}", styleTaskTitle))
+            story.append(_parrafo_pdf_seguro(f"Asignado a: {tarea.usuario.nombre} {
                          tarea.usuario.apellido}", styleAssignedTo))
-            story.append(Paragraph(f"Estado: {tarea.estado}", styleN))
-            story.append(Paragraph(f"Fecha de Creación: {
+            story.append(_parrafo_pdf_seguro(f"Estado: {tarea.estado}", styleN))
+            story.append(_parrafo_pdf_seguro(f"Fecha de Creación: {
                          tarea.fecha_creacion}", styleN))
-            story.append(Paragraph(f"Fecha de Vencimiento: {
+            story.append(_parrafo_pdf_seguro(f"Fecha de Vencimiento: {
                          tarea.fecha_vencimiento}", styleN))
             story.append(Spacer(1, 10))
 
@@ -630,9 +637,9 @@ def generate_task_pdf(request):
         f'<img src="{logo_path}" width="100" height="50" valign="middle"/>', styleN))
     # Aumentar el espaciado entre el logo y el título
     story.append(Spacer(1, 20))
-    story.append(Paragraph(title, styleH))
+    story.append(_parrafo_pdf_seguro(title, styleH))
     story.append(Spacer(1, 12))
-    story.append(Paragraph(username, styleUsername))
+    story.append(_parrafo_pdf_seguro(username, styleUsername))
     story.append(Spacer(1, 12))
 
     # Verificar si el usuario es administrador
@@ -647,19 +654,19 @@ def generate_task_pdf(request):
         ).filter(usuario=request.user)
         subtitle = "Lista de Tareas Asignadas:"
 
-    story.append(Paragraph(subtitle, styleN))
+    story.append(_parrafo_pdf_seguro(subtitle, styleN))
     story.append(Spacer(1, 12))
 
     for tarea in tareas:
-        story.append(Paragraph(f"Título: {tarea.titulo}", styleTaskTitle))
-        story.append(Paragraph(f"Descripción: {tarea.descripcion}", styleN))
-        story.append(Paragraph(f"Estado: {tarea.estado}", styleN))
-        story.append(Paragraph(f"Fecha de Creación: {
+        story.append(_parrafo_pdf_seguro(f"Título: {tarea.titulo}", styleTaskTitle))
+        story.append(_parrafo_pdf_seguro(f"Descripción: {tarea.descripcion}", styleN))
+        story.append(_parrafo_pdf_seguro(f"Estado: {tarea.estado}", styleN))
+        story.append(_parrafo_pdf_seguro(f"Fecha de Creación: {
                      tarea.fecha_creacion}", styleN))
-        story.append(Paragraph(f"Fecha de Vencimiento: {
+        story.append(_parrafo_pdf_seguro(f"Fecha de Vencimiento: {
                      tarea.fecha_vencimiento}", styleN))
-        story.append(Paragraph(f"Proyecto: {tarea.proyecto.nombre}", styleN))
-        story.append(Paragraph(f"Asignado a: {tarea.usuario.nombre} {
+        story.append(_parrafo_pdf_seguro(f"Proyecto: {tarea.proyecto.nombre}", styleN))
+        story.append(_parrafo_pdf_seguro(f"Asignado a: {tarea.usuario.nombre} {
                      tarea.usuario.apellido}", styleAssignedTo))
         story.append(Spacer(1, 10))
 
@@ -709,9 +716,9 @@ def generate_evaluation_pdf(request):
         f'<img src="{logo_path}" width="100" height="50" valign="middle"/>', styleN))
     # Aumentar el espaciado entre el logo y el título
     story.append(Spacer(1, 20))
-    story.append(Paragraph(title, styleH))
+    story.append(_parrafo_pdf_seguro(title, styleH))
     story.append(Spacer(1, 12))
-    story.append(Paragraph(username, styleUsername))
+    story.append(_parrafo_pdf_seguro(username, styleUsername))
     story.append(Spacer(1, 12))
 
     # Verificar si el usuario es administrador
@@ -726,25 +733,25 @@ def generate_evaluation_pdf(request):
         ).filter(usuario=request.user)
         subtitle = "Lista de Evaluaciones Asignadas:"
 
-    story.append(Paragraph(subtitle, styleN))
+    story.append(_parrafo_pdf_seguro(subtitle, styleN))
     story.append(Spacer(1, 12))
 
     for evaluacion in evaluaciones:
         story.append(
-            Paragraph(f"Título: {evaluacion.titulo}", styleEvaluationTitle))
-        story.append(Paragraph(f"Calificación: {
+            _parrafo_pdf_seguro(f"Título: {evaluacion.titulo}", styleEvaluationTitle))
+        story.append(_parrafo_pdf_seguro(f"Calificación: {
                      evaluacion.calificacion}", styleCalificacion))
         if evaluacion.tarea:
             story.append(
-                Paragraph(f"Tarea: {evaluacion.tarea.titulo}", styleN))
+                _parrafo_pdf_seguro(f"Tarea: {evaluacion.tarea.titulo}", styleN))
         else:
-            story.append(Paragraph("Tarea: Sin Tarea Asignada", styleN))
-        story.append(Paragraph(f"Asignado a: {evaluacion.usuario.nombre} {
+            story.append(_parrafo_pdf_seguro("Tarea: Sin Tarea Asignada", styleN))
+        story.append(_parrafo_pdf_seguro(f"Asignado a: {evaluacion.usuario.nombre} {
                      evaluacion.usuario.apellido}", styleAssignedTo))
-        story.append(Paragraph(f"Fecha de Evaluación: {
+        story.append(_parrafo_pdf_seguro(f"Fecha de Evaluación: {
                      evaluacion.fecha_evaluacion}", styleN))
         story.append(
-            Paragraph(f"Proyecto: {evaluacion.proyecto.nombre}", styleN))
+            _parrafo_pdf_seguro(f"Proyecto: {evaluacion.proyecto.nombre}", styleN))
         story.append(Spacer(1, 10))
 
         # Añadir una línea horizontal de margen a margen para separar evaluaciones
@@ -783,33 +790,33 @@ def generate_user_pdf(request):
         f'<img src="{logo_path}" width="100" height="50" valign="middle"/>', styleN))
     # Aumentar el espaciado entre el logo y el título
     story.append(Spacer(1, 20))
-    story.append(Paragraph(title, styleH))
+    story.append(_parrafo_pdf_seguro(title, styleH))
     story.append(Spacer(1, 12))
-    story.append(Paragraph(generated_by, styleUserName))
+    story.append(_parrafo_pdf_seguro(generated_by, styleUserName))
     story.append(Spacer(1, 12))
-    story.append(Paragraph(subtitle, styleN))
+    story.append(_parrafo_pdf_seguro(subtitle, styleN))
     story.append(Spacer(1, 12))
 
     usuarios = Usuario.objects.all()
     for usuario in usuarios:
-        story.append(Paragraph(f"Nombre: {usuario.nombre} {
+        story.append(_parrafo_pdf_seguro(f"Nombre: {usuario.nombre} {
                      usuario.apellido}", styleUserName))
-        story.append(Paragraph(f"Username: {usuario.username}", styleN))
-        story.append(Paragraph(f"Email: {usuario.email}", styleN))
-        story.append(Paragraph(f"Fecha de Registro: {
+        story.append(_parrafo_pdf_seguro(f"Username: {usuario.username}", styleN))
+        story.append(_parrafo_pdf_seguro(f"Email: {usuario.email}", styleN))
+        story.append(_parrafo_pdf_seguro(f"Fecha de Registro: {
                      usuario.date_joined}", styleN))
 
         # Añadir tareas asignadas
         tareas_asignadas = TareaPorDesarrollar.objects.filter(usuario=usuario)
         if tareas_asignadas:
             story.append(Spacer(1, 10))
-            story.append(Paragraph("Tareas Asignadas:", styleUserName))
+            story.append(_parrafo_pdf_seguro("Tareas Asignadas:", styleUserName))
             for tarea in tareas_asignadas:
-                story.append(Paragraph(f"- Tarea: {tarea.titulo}", styleN))
-                story.append(Paragraph(f"  Estado: {tarea.estado}", styleN))
-                story.append(Paragraph(f"  Fecha de Creación: {
+                story.append(_parrafo_pdf_seguro(f"- Tarea: {tarea.titulo}", styleN))
+                story.append(_parrafo_pdf_seguro(f"  Estado: {tarea.estado}", styleN))
+                story.append(_parrafo_pdf_seguro(f"  Fecha de Creación: {
                              tarea.fecha_creacion}", styleN))
-                story.append(Paragraph(f"  Fecha de Vencimiento: {
+                story.append(_parrafo_pdf_seguro(f"  Fecha de Vencimiento: {
                              tarea.fecha_vencimiento}", styleN))
                 story.append(Spacer(1, 5))
 
@@ -1078,26 +1085,26 @@ def generar_informe_pdf_busqueda(request):
     story.append(Paragraph(
         f'<img src="{logo_path}" width="100" height="50" valign="middle"/>', styleN))
     story.append(Spacer(1, 20))
-    story.append(Paragraph(title, styleH))
+    story.append(_parrafo_pdf_seguro(title, styleH))
     story.append(Spacer(1, 12))
-    story.append(Paragraph(username, styleUsername))
+    story.append(_parrafo_pdf_seguro(username, styleUsername))
     story.append(Spacer(1, 12))
-    story.append(Paragraph(subtitle, styleN))
+    story.append(_parrafo_pdf_seguro(subtitle, styleN))
     story.append(Spacer(1, 12))
 
     # Agregar datos al documento
     for proyecto in resultados:
-        # Strip HTML tags from project title
-        project_title = strip_tags(
-            f"<u>ID: {proyecto.id}, Nombre: {proyecto.nombre}</u>")
-        story.append(Paragraph(project_title, styleID))
+        project_title = (
+            f"ID: {proyecto.id}, Nombre: {proyecto.nombre}"
+        )
+        story.append(_parrafo_pdf_seguro(project_title, styleID))
         story.append(Spacer(1, 10))
-        story.append(Paragraph(f"Descripción: {proyecto.descripcion}", styleN))
+        story.append(_parrafo_pdf_seguro(f"Descripción: {proyecto.descripcion}", styleN))
         story.append(
-            Paragraph(f"Fecha de Inicio: {proyecto.fecha_inicio}", styleN))
-        story.append(Paragraph(f"Fecha de Fin: {proyecto.fecha_fin}", styleN))
+            _parrafo_pdf_seguro(f"Fecha de Inicio: {proyecto.fecha_inicio}", styleN))
+        story.append(_parrafo_pdf_seguro(f"Fecha de Fin: {proyecto.fecha_fin}", styleN))
         story.append(
-            Paragraph(f"Estado: {proyecto.get_estado_display()}", styleN))
+            _parrafo_pdf_seguro(f"Estado: {proyecto.get_estado_display()}", styleN))
         story.append(Spacer(1, 10))
 
         # Añadir tareas al PDF
@@ -1105,14 +1112,14 @@ def generar_informe_pdf_busqueda(request):
             proyecto=proyecto
         )
         for tarea in tareas:
-            story.append(Paragraph(f"Tarea: {tarea.titulo}", styleTaskTitle))
-            story.append(Paragraph(
+            story.append(_parrafo_pdf_seguro(f"Tarea: {tarea.titulo}", styleTaskTitle))
+            story.append(_parrafo_pdf_seguro(
                 f"Asignado a: {tarea.usuario.nombre} {tarea.usuario.apellido}", styleAssignedTo))
-            story.append(Paragraph(f"Estado: {tarea.estado}", styleN))
+            story.append(_parrafo_pdf_seguro(f"Estado: {tarea.estado}", styleN))
             story.append(
-                Paragraph(f"Fecha de Creación: {tarea.fecha_creacion}", styleN))
+                _parrafo_pdf_seguro(f"Fecha de Creación: {tarea.fecha_creacion}", styleN))
             story.append(
-                Paragraph(f"Fecha de Vencimiento: {tarea.fecha_vencimiento}", styleN))
+                _parrafo_pdf_seguro(f"Fecha de Vencimiento: {tarea.fecha_vencimiento}", styleN))
             story.append(Spacer(1, 10))
 
         story.append(Spacer(1, 12))
@@ -1172,22 +1179,22 @@ def generar_informe_pdf_tareas(request):
     logo.hAlign = 'LEFT'
     story.append(logo)
     story.append(Spacer(1, 20))
-    story.append(Paragraph(title, styleH))
+    story.append(_parrafo_pdf_seguro(title, styleH))
     story.append(Spacer(1, 12))
-    story.append(Paragraph(subtitle, styleN))
+    story.append(_parrafo_pdf_seguro(subtitle, styleN))
     story.append(Spacer(1, 12))
 
     for tarea in tareas:
-        story.append(Paragraph(f"ID: {tarea.id}", styleN))
-        story.append(Paragraph(f"Título: {tarea.titulo}", styleN))
-        story.append(Paragraph(f"Descripción: {tarea.descripcion}", styleN))
-        story.append(Paragraph(
+        story.append(_parrafo_pdf_seguro(f"ID: {tarea.id}", styleN))
+        story.append(_parrafo_pdf_seguro(f"Título: {tarea.titulo}", styleN))
+        story.append(_parrafo_pdf_seguro(f"Descripción: {tarea.descripcion}", styleN))
+        story.append(_parrafo_pdf_seguro(
             f"Asignado a: {tarea.usuario.nombre} {tarea.usuario.apellido}", styleN))
         story.append(
-            Paragraph(f"Fecha de Creación: {tarea.fecha_creacion}", styleN))
+            _parrafo_pdf_seguro(f"Fecha de Creación: {tarea.fecha_creacion}", styleN))
         story.append(
-            Paragraph(f"Fecha de Vencimiento: {tarea.fecha_vencimiento}", styleN))
-        story.append(Paragraph(f"Estado: {tarea.estado}", styleN))
+            _parrafo_pdf_seguro(f"Fecha de Vencimiento: {tarea.fecha_vencimiento}", styleN))
+        story.append(_parrafo_pdf_seguro(f"Estado: {tarea.estado}", styleN))
         story.append(Spacer(1, 12))
         story.append(HRFlowable(width="100%", thickness=1,
                      color=colors.grey, spaceBefore=1, spaceAfter=24))
@@ -1226,18 +1233,18 @@ def generar_informe_pdf_usuarios(request):
     logo.hAlign = 'LEFT'
     story.append(logo)
     story.append(Spacer(1, 20))
-    story.append(Paragraph(title, styleH))
+    story.append(_parrafo_pdf_seguro(title, styleH))
     story.append(Spacer(1, 12))
-    story.append(Paragraph(subtitle, styleN))
+    story.append(_parrafo_pdf_seguro(subtitle, styleN))
     story.append(Spacer(1, 12))
 
     for usuario in usuarios:
-        story.append(Paragraph(f"ID: {usuario.id}", styleN))
+        story.append(_parrafo_pdf_seguro(f"ID: {usuario.id}", styleN))
         story.append(
-            Paragraph(f"Nombre: {usuario.nombre} {usuario.apellido}", styleN))
-        story.append(Paragraph(f"Email: {usuario.email}", styleN))
+            _parrafo_pdf_seguro(f"Nombre: {usuario.nombre} {usuario.apellido}", styleN))
+        story.append(_parrafo_pdf_seguro(f"Email: {usuario.email}", styleN))
         story.append(
-            Paragraph(f"Fecha de Alta: {usuario.fecha_creacion}", styleN))
+            _parrafo_pdf_seguro(f"Fecha de Alta: {usuario.fecha_creacion}", styleN))
         story.append(Spacer(1, 12))
         story.append(HRFlowable(width="100%", thickness=1,
                      color=colors.grey, spaceBefore=1, spaceAfter=24))

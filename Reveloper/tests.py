@@ -2918,6 +2918,117 @@ class TemporaryReportFileCleanupTests(TestCase):
                 self.assertTrue(pdf_buffer.closed)
 
 
+class PdfSpecialCharacterHandlingTests(TestCase):
+    """Pruebas del escape de texto en informes PDF."""
+
+    def test_pdf_paragraph_helper_escapes_reportlab_markup(self):
+        from unittest.mock import Mock, patch
+
+        from .views import _parrafo_pdf_seguro
+
+        style = Mock()
+        text = (
+            'Proyecto A & Proyecto B '
+            '<b>aparente</b> 5 > 3'
+        )
+
+        with patch(
+            'Reveloper.views.Paragraph'
+        ) as paragraph:
+            result = _parrafo_pdf_seguro(
+                text,
+                style,
+            )
+
+        paragraph.assert_called_once_with(
+            (
+                'Proyecto A &amp; Proyecto B '
+                '&lt;b&gt;aparente&lt;/b&gt; 5 &gt; 3'
+            ),
+            style,
+        )
+        self.assertIs(
+            result,
+            paragraph.return_value,
+        )
+
+    def test_pdf_paragraph_preserves_special_characters_as_text(self):
+        from reportlab.lib.styles import getSampleStyleSheet
+
+        from .views import _parrafo_pdf_seguro
+
+        text = (
+            'Error <crítico> & '
+            'Texto <b>aparente</b> 5 > 3'
+        )
+
+        paragraph = _parrafo_pdf_seguro(
+            text,
+            getSampleStyleSheet()['Normal'],
+        )
+
+        self.assertEqual(
+            paragraph.getPlainText(),
+            text,
+        )
+
+    def test_project_pdf_accepts_special_characters(self):
+        from datetime import date
+
+        from .models import Proyecto, TareaPorDesarrollar
+
+        admin = Usuario.objects.create_superuser(
+            username='admin_pdf_special',
+            email='admin.pdf.special@test.local',
+            password='test-pass-123',
+            nombre='Admin & PDF',
+            apellido='<Especial>',
+        )
+
+        project = Proyecto.objects.create(
+            id='PROY-PDF-SPECIAL',
+            nombre='Proyecto A & Proyecto B',
+            descripcion=(
+                'Error <crítico> y '
+                'texto <b>aparente</b> 5 > 3'
+            ),
+            fecha_inicio=date(2026, 8, 1),
+            fecha_fin=date(2026, 8, 31),
+            estado='activo',
+        )
+
+        TareaPorDesarrollar.objects.create(
+            id='TASK-PDF-SPECIAL',
+            titulo='Tarea <urgente> & revisión',
+            descripcion=(
+                'Comparación 5 > 3 '
+                'y etiqueta <i>aparente</i>'
+            ),
+            fecha_vencimiento=date(2026, 8, 15),
+            estado='pendiente',
+            proyecto=project,
+            usuario=admin,
+        )
+
+        self.client.force_login(admin)
+
+        response = self.client.get(
+            reverse('generate_pdf')
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+        self.assertEqual(
+            response['Content-Type'],
+            'application/pdf',
+        )
+        self.assertTrue(
+            response.content.startswith(b'%PDF')
+        )
+
+
 class PdfResponseBufferCleanupTests(TestCase):
     """Pruebas del cierre de buffers en informes PDF."""
 
