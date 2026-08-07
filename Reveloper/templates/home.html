@@ -3,29 +3,43 @@
 {% block title %}Reveloper Inicio{% endblock %}
 
 {% block content %}
-<div class="container">
-    <marquee behavior="scroll" direction="left" scrollamount="10">
+<div class="container home-dashboard">
+    <section class="welcome-panel" aria-labelledby="welcome-message">
+        <span class="welcome-eyebrow">Panel principal</span>
         <h1 id="welcome-message">Bienvenido, {{ usuario.nombre }}</h1>
-    </marquee>
+        <p>Selecciona una sección para continuar.</p>
+    </section>
 
     <div class="cards">
         <a href="{% url 'proyectos' %}" class="card card-proyectos">
-            <h2>Proyectos</h2>
-            <p>Revisa los proyectos</p>
+            <span class="card-icon" aria-hidden="true"><i class="fas fa-star"></i></span>
+            <span class="card-content">
+                <h2>Proyectos</h2>
+                <p>Revisa los proyectos</p>
+            </span>
+            <i class="fas fa-chevron-right card-arrow" aria-hidden="true"></i>
         </a>
         <a href="{% url 'tareas_por_desarrollar' %}" class="card card-tareas">
-            <h2>Tareas</h2>
-            <p>Revisa las tareas</p>
+            <span class="card-icon" aria-hidden="true"><i class="fas fa-list-check"></i></span>
+            <span class="card-content">
+                <h2>Tareas</h2>
+                <p>Revisa las tareas</p>
+            </span>
+            <i class="fas fa-chevron-right card-arrow" aria-hidden="true"></i>
         </a>
         <a href="{% url 'evaluaciones' %}" class="card card-evaluaciones">
-            <h2>Evaluaciones</h2>
-            <p>Revisa tus evaluaciones</p>
+            <span class="card-icon" aria-hidden="true"><i class="fas fa-check-circle"></i></span>
+            <span class="card-content">
+                <h2>Evaluaciones</h2>
+                <p>Revisa tus evaluaciones</p>
+            </span>
+            <i class="fas fa-chevron-right card-arrow" aria-hidden="true"></i>
         </a>
     </div>
 
     {% if usuario.is_superuser %}
         <div class="admin-link">
-            <a href="/admin/" class="btn btn-primary">Panel de Administración</a>
+            <a href="/admin/" class="btn btn-primary"><i class="fas fa-cog" aria-hidden="true"></i> Panel de Administración</a>
         </div>
     {% endif %}
 </div>
