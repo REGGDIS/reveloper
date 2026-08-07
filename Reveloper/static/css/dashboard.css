@@ -1,11 +1,16 @@
 body {
-  font-family: Arial, sans-serif;
-  background: linear-gradient(to bottom, #f0f0f0 40%, #a9a9a9 100%) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  background: #f4f6f9 !important;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  color: #ffffff;
+  color: #343a40;
+}
+
+.app-main {
+  width: 100%;
+  padding: 32px 0 48px;
 }
 
 /* Estilo específico para la página de rendimiento */
@@ -48,139 +53,251 @@ body {
 /* Estilos para el encabezado */
 .header {
   z-index: 5;
-  background-color: #343a40;
+  background-color: #262b31;
   color: white;
-  padding: 5px 0;
+  min-height: 68px;
+  padding: 8px 24px;
   display: flex;
   align-items: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  gap: 24px;
+  border-bottom: 3px solid #317fd2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
 
-  img {
-    margin-left: 20px;
-  }
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
 
-  h3 {
-    margin-left: 10px;
-  }
+.header-brand img {
+  display: block;
+  height: 46px;
+  width: auto;
+}
 
-  nav {
-    margin-left: auto;
-    margin-right: 20px;
+.header-brand h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
 
-    ul {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
+.header-nav {
+  margin-left: auto;
+}
 
-      li {
-        margin-right: 30px;
+.header-menu {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 
-        a {
-          color: white;
-          text-decoration: none;
+.header-menu li {
+  display: flex;
+  align-items: center;
+}
 
-          &.revisar-tareas-link {
-            color: #ff8f8f;
-          }
+.header-menu a,
+.header-menu .logout-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #e9ecef;
+  font: inherit;
+  font-size: 0.88rem;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
 
-          &.logout-link {
-            color: yellow;
-          }
+.header-menu a:hover,
+.header-menu .logout-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  text-decoration: none;
+}
 
-          &.nav-icon i {
-            transition: color 0.3s, transform 0.3s;
-          }
+.header-menu a:focus-visible,
+.header-menu .logout-link:focus-visible {
+  outline: 2px solid #94c8ff;
+  outline-offset: 2px;
+}
 
-          &.nav-icon:hover i {
-            color: #ff5722;
-            transform: rotate(20deg);
-          }
+.header-menu a i {
+  margin-right: 6px;
+}
 
-          &.evaluaciones-link i {
-            color: rgb(253, 203, 138);
-            animation: pulse 0.5s infinite;
-          }
+.header-menu .revisar-tareas-link {
+  color: #ff9c9c;
+}
 
-          &.proyectos-link i {
-            color: #94c8ff;
-            animation: pulse 0.5s infinite;
-          }
+.header-menu .busqueda-link {
+  color: #b8d9fc;
+}
 
-          &.tareas-link i {
-            color: #ff7676;
-            animation: pulse 0.5s infinite;
-          }
-        }
+.header-menu .evaluaciones-link i {
+  color: rgb(253, 203, 138);
+  animation: none;
+}
 
-        form.logout-form {
-          margin: 0;
-        }
+.header-menu .proyectos-link i {
+  color: #94c8ff;
+  animation: none;
+}
 
-        button.logout-link {
-          padding: 0;
-          border: 0;
-          background: none;
-          color: yellow;
-          font: inherit;
-          cursor: pointer;
-        }
-      }
-    }
-  }
+.header-menu .tareas-link i {
+  color: #ff7676;
+  animation: none;
+}
+
+.header-menu form.logout-form {
+  margin: 0;
+}
+
+.header-menu .logout-link {
+  color: #f6d365;
 }
 
 /* Estilos para las tarjetas */
+.home-dashboard {
+  max-width: 1120px;
+}
+
+.welcome-panel {
+  margin-bottom: 28px;
+  padding: 28px 30px;
+  border: 1px solid #dee2e6;
+  border-left: 4px solid #317fd2;
+  border-radius: 7px;
+  background: #ffffff;
+  box-shadow: 0 2px 7px rgba(33, 37, 41, 0.06);
+}
+
+.welcome-panel .welcome-eyebrow {
+  display: block;
+  margin-bottom: 6px;
+  color: #6c757d;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.home-dashboard .welcome-panel h1 {
+  margin: 0;
+  color: #2f343a;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.welcome-panel p {
+  margin: 8px 0 0;
+  color: #6c757d;
+}
+
 .cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin: 0;
+}
+
+.cards .card {
+  position: relative;
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-height: 132px;
+  padding: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 7px;
+  box-shadow: 0 3px 9px rgba(33, 37, 41, 0.12);
+  color: #ffffff;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.cards .card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 16px rgba(33, 37, 41, 0.18);
+  filter: saturate(1.08);
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.cards .card:focus-visible {
+  outline: 3px solid rgba(49, 127, 210, 0.35);
+  outline-offset: 3px;
+}
+
+.cards .card-icon {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  margin: 50px 0;
+  flex: 0 0 48px;
+  height: 48px;
+  margin-right: 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 1.25rem;
+}
 
-  .card {
-    padding: 20px;
-    text-align: center;
-    border-radius: 8px;
-    width: 30%;
-    margin: 0 15px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    text-decoration: none;
-    color: white;
+.cards .card-content {
+  min-width: 0;
+}
 
-    &:hover {
-      text-decoration: none;
+.cards .card h2 {
+  margin: 0 0 5px;
+  color: inherit;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
 
-      h2,
-      p {
-        color: white;
-      }
-    }
-  }
+.cards .card p {
+  margin: 0;
+  color: inherit;
+  font-size: 0.9rem;
+  opacity: 0.88;
+}
 
-  .card-proyectos {
-    background-color: #317fd2 !important;
+.cards .card-arrow {
+  margin-left: auto;
+  padding-left: 12px;
+  font-size: 0.8rem;
+  opacity: 0.72;
+  transition: transform 0.2s ease;
+}
 
-    &:hover {
-      background-color: #1258a3 !important;
-    }
-  }
+.cards .card:hover .card-arrow {
+  transform: translateX(3px);
+}
 
-  .card-tareas {
-    background-color: #ff7676 !important;
-    color: rgb(45, 44, 44);
+.cards .card-proyectos {
+  background-color: #317fd2 !important;
+}
 
-    &:hover {
-      background-color: #df4b4b !important;
-    }
-  }
+.cards .card-tareas {
+  background-color: #d95f67 !important;
+}
 
-  .card-evaluaciones {
-    background-color: rgb(253, 203, 138) !important;
-    color: #ff5722;
-
-    &:hover {
-      background-color: rgb(245, 183, 101) !important;
-    }
-  }
+.cards .card-evaluaciones {
+  background-color: #e9ae62 !important;
+  color: #3c2b18;
 }
 
 /* Estilos para el contenedor de título */
@@ -202,6 +319,93 @@ body {
     display: flex;
     justify-content: center;
     margin-top: 20px;
+  }
+}
+
+.home-dashboard .admin-link {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.home-dashboard .admin-link .btn {
+  padding: 9px 16px;
+  border-color: #2369b4;
+  background-color: #2369b4;
+  box-shadow: 0 2px 5px rgba(35, 105, 180, 0.2);
+  font-weight: 500;
+}
+
+.home-dashboard .admin-link .btn i {
+  margin-right: 7px;
+}
+
+.footer {
+  padding: 16px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: #262b31;
+  color: #ced4da;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 991.98px) {
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 18px;
+  }
+
+  .header-nav {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .header-menu {
+    justify-content: flex-start;
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .app-main {
+    padding: 20px 0 32px;
+  }
+
+  .header {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .header-menu {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .header-menu a,
+  .header-menu .logout-link {
+    width: 100%;
+    white-space: normal;
+  }
+
+  .welcome-panel {
+    padding: 22px 20px;
+  }
+
+  .home-dashboard .welcome-panel h1 {
+    font-size: 1.5rem;
+  }
+
+  .home-dashboard .admin-link {
+    justify-content: stretch;
+  }
+
+  .home-dashboard .admin-link .btn {
+    width: 100%;
   }
 }
 
@@ -333,365 +537,24 @@ body {
 .table th,
 .table td {
   padding: 0.75rem;
-  body {
-    font-family: Arial, sans-serif;
-    background: linear-gradient(
-      to bottom,
-      #f0f0f0 40%,
-      #a9a9a9 100%
-    ) !important;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    color: #ffffff;
-  }
+  vertical-align: top;
+  border-top: 1px solid #dee2e6;
+}
 
-  /* Estilo específico para la página de rendimiento */
-  .body-dashboard {
-    background: #ffffff !important;
-    color: #000000;
-    position: relative;
-    top: -24px;
-    padding-top: 10px;
-    z-index: 1;
-  }
+.table thead th {
+  vertical-align: bottom;
+  border-bottom: 2px solid #dee2e6;
+}
 
-  @keyframes pulse {
-    0% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.1);
-    }
-    100% {
-      transform: scale(1);
-    }
-  }
+.table tbody + tbody {
+  border-top: 2px solid #dee2e6;
+}
 
-  .gold-check {
-    color: rgb(253, 203, 138);
-    animation: pulse 0.5s infinite;
-  }
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
 
-  .gold-star {
-    color: #94c8ff;
-    animation: pulse 0.5s infinite;
-  }
-
-  .gold-list-check {
-    color: #ff7676;
-    animation: pulse 0.5s infinite;
-  }
-
-  /* Estilos para el encabezado */
-  .header {
-    z-index: 5;
-    background-color: #343a40;
-    color: white;
-    padding: 5px 0;
-    display: flex;
-    align-items: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-
-    img {
-      margin-left: 20px;
-    }
-
-    h3 {
-      margin-left: 10px;
-    }
-
-    nav {
-      margin-left: auto;
-      margin-right: 20px;
-
-      ul {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: flex;
-
-        li {
-          margin-right: 30px;
-
-          a {
-            color: white;
-            text-decoration: none;
-
-            &.revisar-tareas-link {
-              color: #ff8f8f;
-            }
-
-            &.logout-link {
-              color: yellow;
-            }
-
-            &.nav-icon i {
-              transition: color 0.3s, transform 0.3s;
-            }
-
-            &.nav-icon:hover i {
-              color: #ff5722;
-              transform: rotate(20deg);
-            }
-
-            &.evaluaciones-link i {
-              color: rgb(253, 203, 138);
-              animation: pulse 0.5s infinite;
-            }
-
-            &.proyectos-link i {
-              color: #94c8ff;
-              animation: pulse 0.5s infinite;
-            }
-
-            &.tareas-link i {
-              color: #ff7676;
-              animation: pulse 0.5s infinite;
-            }
-          }
-
-          form.logout-form {
-            margin: 0;
-          }
-
-          button.logout-link {
-            padding: 0;
-            border: 0;
-            background: none;
-            color: yellow;
-            font: inherit;
-            cursor: pointer;
-          }
-        }
-      }
-    }
-  }
-
-  /* Estilos para las tarjetas */
-  .cards {
-    display: flex;
-    justify-content: center;
-    margin: 50px 0;
-
-    .card {
-      padding: 20px;
-      text-align: center;
-      border-radius: 8px;
-      width: 30%;
-      margin: 0 15px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-      text-decoration: none;
-      color: white;
-
-      &:hover {
-        text-decoration: none;
-
-        h2,
-        p {
-          color: white;
-        }
-      }
-    }
-
-    .card-proyectos {
-      background-color: #317fd2 !important;
-
-      &:hover {
-        background-color: #1258a3 !important;
-      }
-    }
-
-    .card-tareas {
-      background-color: #ff7676 !important;
-      color: rgb(45, 44, 44);
-
-      &:hover {
-        background-color: #df4b4b !important;
-      }
-    }
-
-    .card-evaluaciones {
-      background-color: rgb(253, 203, 138) !important;
-      color: #ff5722;
-
-      &:hover {
-        background-color: rgb(245, 183, 101) !important;
-      }
-    }
-  }
-
-  /* Estilos para el contenedor de título */
-  .container {
-    h1 {
-      margin-top: 50px;
-      font-size: 30px;
-    }
-
-    ul,
-    .user-list,
-    .project-list {
-      list-style-type: none;
-      padding: 0;
-      text-align: center;
-    }
-
-    .admin-link {
-      display: flex;
-      justify-content: center;
-      margin-top: 20px;
-    }
-  }
-
-  /* Estilos para los elementos de usuario y proyecto */
-  .user-item,
-  .project-item {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-
-    span {
-      flex: 1;
-      margin-right: 10px;
-      margin-bottom: 5px;
-    }
-
-    &.user-item {
-      background: #138496;
-      color: white;
-      border: 2px solid #ddd;
-    }
-
-    &.project-item {
-      background: #317fd2;
-      color: white;
-      border: 1px solid #ddd;
-    }
-  }
-
-  /* Estilos para las tareas */
-  .task-container,
-  .evaluation-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-bottom: 50px;
-
-    .task,
-    .evaluation-card {
-      flex: 1 1 calc(33% - 20px);
-      background-color: #fff;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      transition: transform 0.2s;
-
-      &:hover {
-        transform: scale(1.02);
-      }
-
-      h2 {
-        margin-top: 0;
-      }
-
-      p {
-        margin: 0.5em 0;
-      }
-    }
-
-    .task {
-      background: #ed9393;
-    }
-
-    .evaluation-card {
-      background: rgb(251, 221, 181);
-
-      .calificacion {
-        font-size: 1.5em;
-        color: #ff5722;
-      }
-    }
-  }
-
-  .task-item {
-    background-color: #ed9393;
-    color: black;
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 10px;
-  }
-
-  .mt-5 {
-    margin-top: 3rem;
-  }
-
-  /* Botones informes PDF*/
-  .task-btn {
-    margin-top: 20px;
-    margin-bottom: 20px;
-    display: inline-block;
-  }
-
-  .evaluation-btn {
-    margin-top: 20px;
-    margin-bottom: 20px;
-    display: inline-block;
-  }
-
-  .pdf-button {
-    margin-bottom: 20px;
-    display: inline-block;
-  }
-
-  .user-btn {
-    margin-bottom: 20px;
-    display: inline-block;
-  }
-
-  .modal-bottom .modal-dialog {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    margin: 0;
-    width: 100%;
-  }
-
-  /* Estilos para las tablas */
-  .table {
-    width: 100%;
-    max-width: 100%;
-    margin-bottom: 1rem;
-    background-color: transparent;
-    border-collapse: collapse;
-  }
-
-  .table th,
-  .table td {
-    padding: 0.75rem;
-    vertical-align: top;
-    border-top: 1px solid #dee2e6;
-  }
-
-  .table thead th {
-    vertical-align: bottom;
-    border-bottom: 2px solid #dee2e6;
-  }
-
-  .table tbody + tbody {
-    border-top: 2px solid #dee2e6;
-  }
-
-  .table-striped tbody tr:nth-of-type(odd) {
-    background-color: rgba(0, 0, 0, 0.05);
-  }
-
-  .table-bordered th,
-  .table-bordered td {
-    border: 1px solid #dee2e6;
-  }
+.table-bordered th,
+.table-bordered td {
+  border: 1px solid #dee2e6;
 }

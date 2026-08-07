@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>{% block title %}{% endblock %}</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
@@ -12,10 +13,12 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
     <header class="header">
-        <img src="{% static 'img/logos/logo-reveloper.png' %}" alt="Reveloper" width="50">
-        <h3>Reveloper</h3>
-        <nav>
-            <ul>
+        <div class="header-brand">
+            <img src="{% static 'img/logos/logo-reveloper.png' %}" alt="Reveloper" width="50">
+            <h3>Reveloper</h3>
+        </div>
+        <nav class="header-nav" aria-label="Navegación principal">
+            <ul class="header-menu">
                 <li><a href="{% url 'home' %}" class="nav-icon"><i class="fas fa-home"></i> Inicio</a></li> 
                 {% if user.is_authenticated and user.is_superuser %}
                     <li><a href="{% url 'usuarios' %}">Usuarios</a></li>
@@ -41,10 +44,10 @@
             </ul>
         </nav>
     </header>
-    <main class="flex-grow-1">
+    <main class="app-main flex-grow-1">
         {% block content %}{% endblock %}
     </main>
-    <footer class="footer bg-dark text-white py-3 mt-auto">
+    <footer class="footer mt-auto">
         <div class="container text-center">
             <span>&copy; 2024 Reveloper. Todos los derechos reservados.</span>
         </div>
